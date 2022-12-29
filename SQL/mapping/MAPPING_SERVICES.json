@@ -1,0 +1,97 @@
+{
+  "type": "TabularTranslator",
+  "mappings": [
+    {
+      "source": {
+        "path": "$[''issuetype'']"
+      },
+      "sink": {
+        "name": "ISSUE_TYPE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''linecost'']"
+      },
+      "sink": {
+        "name": "LINE_COST",
+        "type": "Float"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''quantity'']"
+      },
+      "sink": {
+        "name": "QUANTITY",
+        "type": "Float"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_sapreceipt'']"
+      },
+      "sink": {
+        "name": "SAPRECEIPT",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''unitcost'']"
+      },
+      "sink": {
+        "name": "UNIT_COST",
+        "type": "Float"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''description'']"
+      },
+      "sink": {
+        "name": "DESCRIPTION",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''transdate'']"
+      },
+      "sink": {
+        "name": "TRANS_DATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''itemnum'']"
+      },
+      "sink": {
+        "name": "ITEM_NUMBER",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_sappo'']"
+      },
+      "sink": {
+        "name": "SAPPO",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''assetnum'']"
+      },
+      "sink": {
+        "name": "ASSET_NUMBER",
+        "type": "String"
+      }
+    }
+  ],
+  "collectionReference": "$[DATA][DETAIL]",
+  "mapComplexValuesToString": true
+}

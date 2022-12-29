@@ -1,0 +1,25 @@
+{
+  "type": "TabularTranslator",
+  "mappings": [
+    {
+      "source": {
+        "path": "$[''description'']"
+      },
+      "sink": {
+        "name": "DESCRIPTION",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''location'']"
+      },
+      "sink": {
+        "name": "LOCATION",
+        "type": "String"
+      }
+    }
+  ],
+  "collectionReference": "$[DATA][DETAIL]",
+  "mapComplexValuesToString": true
+}

@@ -1,0 +1,61 @@
+{
+  "type": "TabularTranslator",
+  "mappings": [
+    {
+      "source": {
+        "path": "$['itemnum']"
+      },
+      "sink": {
+        "name": "ITEM_NUMBER",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$['maxlevel']"
+      },
+      "sink": {
+        "name": "MAX_LEVEL",
+        "type": "Int64"
+      }
+    },
+    {
+      "source": {
+        "path": "$['lastissuedate']"
+      },
+      "sink": {
+        "name": "LAST_ISSUE_DATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$['siteid']"
+      },
+      "sink": {
+        "name": "SITE_ID",
+        "type": "Int64"
+      }
+    },
+    {
+      "source": {
+        "path": "$['location']"
+      },
+      "sink": {
+        "name": "LOCATION",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$['invcost.avgcost']"
+      },
+      "sink": {
+        "name": "AVG_COST",
+        "type": "Int64"
+      }
+    }
+  ],
+  "collectionReference": "$[DATA][DETAIL]",
+  "mapComplexValuesToString": true
+}

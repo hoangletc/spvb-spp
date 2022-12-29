@@ -1,0 +1,25 @@
+{
+  "type": "TabularTranslator",
+  "mappings": [
+    {
+      "source": {
+        "path": "$[''itemnum'']"
+      },
+      "sink": {
+        "name": "ITEM_NUMBER",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''curbal'']"
+      },
+      "sink": {
+        "name": "CURBAL",
+        "type": "Float"
+      }
+    }
+  ],
+  "collectionReference": "$[DATA][DETAIL]",
+  "mapComplexValuesToString": true
+}

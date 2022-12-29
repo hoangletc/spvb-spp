@@ -1,0 +1,15 @@
+{
+  "asset": [
+    "status_description",
+    "assetnum",
+    "assetstatus_spvb_t",
+    "assetstatus_isrunning",
+    "assetstatus_spvb_c",
+    "assetstatus_spvb_l",
+    "assetstatus_changedate",
+    "assetstatus_spvb_ca",
+    "assetstatus_spvb_i",
+    "description",
+    "status"
+  ]
+}

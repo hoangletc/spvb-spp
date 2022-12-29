@@ -1,0 +1,160 @@
+{
+  "type": "TabularTranslator",
+  "mappings": [
+    {
+      "source": {
+        "path": "$[''targstartdate'']"
+      },
+      "sink": {
+        "name": "TARGET_START_DATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''reportdate'']"
+      },
+      "sink": {
+        "name": "REPORT_DATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''wostatus_changedate'']"
+      },
+      "sink": {
+        "name": "WO_STATUS_CHANGE_DATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''description'']"
+      },
+      "sink": {
+        "name": "DESCRIPTION",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_overhaul'']"
+      },
+      "sink": {
+        "name": "OVER_HAUL",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''worktype'']"
+      },
+      "sink": {
+        "name": "WORK_TYPE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''changedate'']"
+      },
+      "sink": {
+        "name": "CHANGE_DATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''reportedby'']"
+      },
+      "sink": {
+        "name": "REPORTED_BY",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''wonum'']"
+      },
+      "sink": {
+        "name": "WORK_ORDER_NUMBER",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''schedfinish'']"
+      },
+      "sink": {
+        "name": "SCHED_FINISH",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''assetnum'']"
+      },
+      "sink": {
+        "name": "ASSET_NUMBER",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''schedstart'']"
+      },
+      "sink": {
+        "name": "SCHED_START",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''siteid'']"
+      },
+      "sink": {
+        "name": "SITE_ID",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''location'']"
+      },
+      "sink": {
+        "name": "LOCATION",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''actfinish'']"
+      },
+      "sink": {
+        "name": "ACT_FINISH",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''supervisor'']"
+      },
+      "sink": {
+        "name": "SUPERVISOR",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''status'']"
+      },
+      "sink": {
+        "name": "STATUS",
+        "type": "String"
+      }
+    }
+  ],
+  "collectionReference": "$[DATA][DETAIL]",
+  "mapComplexValuesToString": true
+}

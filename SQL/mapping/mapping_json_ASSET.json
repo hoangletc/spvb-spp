@@ -1,0 +1,106 @@
+{
+  "type": "TabularTranslator",
+  "mappings": [
+    {
+      "source": {
+        "path": "$[''status_description'']"
+      },
+      "sink": {
+        "name": "STATUS_DES",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''assetnum'']"
+      },
+      "sink": {
+        "name": "ASSET_NUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''description'']"
+      },
+      "sink": {
+        "name": "DESCRIPTION",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''status'']"
+      },
+      "sink": {
+        "name": "STATUS",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''assetstatus_changedate'']"
+      },
+      "sink": {
+        "name": "ASSET_STATUS_CHANGEDATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''assetstatus_spvb_ca'']"
+      },
+      "sink": {
+        "name": "ASSET_STATUS_SPVB_CA",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''assetstatus_spvb_t'']"
+      },
+      "sink": {
+        "name": "ASSET_STATUS_SPVB_T",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''assetstatus_spvb_c'']"
+      },
+      "sink": {
+        "name": "ASSET_STATUS_SPVB_C",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''assetstatus_isrunning'']"
+      },
+      "sink": {
+        "name": "ASSET_STATUS_IS_RUNNING",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''assetstatus_spvb_i'']"
+      },
+      "sink": {
+        "name": "ASSET_STATUS_SPVB_i",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''assetstatus_spvb_l'']"
+      },
+      "sink": {
+        "name": "ASSET_STATUS_SPVB_l",
+        "type": "String"
+      }
+    }
+  ],
+  "collectionReference": "$[DATA][DETAIL]",
+  "mapComplexValuesToString": true
+}

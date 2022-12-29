@@ -1,0 +1,43 @@
+{
+  "type": "TabularTranslator",
+  "mappings": [
+    {
+      "source": {
+        "path": "$[''itemnum'']"
+      },
+      "sink": {
+        "name": "ITEM_NUMBER",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''quantity'']"
+      },
+      "sink": {
+        "name": "QUANTITY",
+        "type": "Float"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''storeloc'']"
+      },
+      "sink": {
+        "name": "STORE_LOCATION",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''binnum'']"
+      },
+      "sink": {
+        "name": "BIN_NUMBER",
+        "type": "String"
+      }
+    }
+  ],
+  "collectionReference": "$[DATA][DETAIL]",
+  "mapComplexValuesToString": true
+}

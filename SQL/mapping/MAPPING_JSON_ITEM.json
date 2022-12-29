@@ -1,0 +1,142 @@
+{
+  "type": "TabularTranslator",
+  "mappings": [
+    {
+      "source": {
+        "path": "$[''rotating'']"
+      },
+      "sink": {
+        "name": "ROTATING",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_plant'']"
+      },
+      "sink": {
+        "name": "PLANT",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''conditionenabled'']"
+      },
+      "sink": {
+        "name": "CONDITIONENABLED",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''description'']"
+      },
+      "sink": {
+        "name": "DESCRIPTION",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''orderunit'']"
+      },
+      "sink": {
+        "name": "ORDER_UNIT",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''issueunit'']"
+      },
+      "sink": {
+        "name": "ISSUE_UNIT",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''iskit'']"
+      },
+      "sink": {
+        "name": "IS_KIT",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''itemnum'']"
+      },
+      "sink": {
+        "name": "ITEM_NUMBER",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''itemtype'']"
+      },
+      "sink": {
+        "name": "ITEM_TYPE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_vendor'']"
+      },
+      "sink": {
+        "name": "VENDOR",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_machine'']"
+      },
+      "sink": {
+        "name": "MACHINE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_productline'']"
+      },
+      "sink": {
+        "name": "PRODUCT_LINE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_partno'']"
+      },
+      "sink": {
+        "name": "PARTNO",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_mustreturn'']"
+      },
+      "sink": {
+        "name": "MUST_RETURN",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''status'']"
+      },
+      "sink": {
+        "name": "STATUS",
+        "type": "String"
+      }
+    }
+  ],
+  "collectionReference": "$[DATA][DETAIL]",
+  "mapComplexValuesToString": true
+}
