@@ -1,0 +1,26 @@
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [FND].[W_CMMS_MATU_F]
+(
+	[ISSUE_TYPE] [nvarchar](1000) NULL,
+	[LINE_COST] [real] NULL,
+	[QUANTITY] [real] NULL,
+	[ISSUE_TYPE_DESCRIPTION] [nvarchar](1000) NULL,
+	[UNIT_COST] [real] NULL,
+	[STORE_LOC] [nvarchar](1000) NULL,
+	[TRANS_DATE] [nvarchar](1000) NULL,
+	[ACTUAL_DATE] [nvarchar](1000) NULL,
+	[ISSUE_UNIT] [nvarchar](1000) NULL,
+	[ITEM_NUM] [nvarchar](1000) NULL,
+	[SITE_ID] [nvarchar](1000) NULL,
+	[W_BATCH_ID] [nvarchar](1000) NULL,
+	[W_INSERT_DT] [nvarchar](1000) NULL
+)
+WITH
+(
+	DISTRIBUTION = ROUND_ROBIN,
+	HEAP
+)
+GO

@@ -1,0 +1,32 @@
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [FND].[W_CMMS_WO_F]
+(
+	[TARGET_START_DATE] [nvarchar](1000) NULL,
+	[REPORT_DATE] [nvarchar](1000) NULL,
+	[WO_STATUS_CHANGE_DATE] [nvarchar](1000) NULL,
+	[DESCRIPTION] [nvarchar](1000) NULL,
+	[OVER_HAUL] [nvarchar](1000) NULL,
+	[WORK_TYPE] [nvarchar](1000) NULL,
+	[CHANGE_DATE] [nvarchar](1000) NULL,
+	[REPORTED_BY] [nvarchar](1000) NULL,
+	[WORK_ORDER_NUMBER] [nvarchar](1000) NULL,
+	[SCHED_FINISH] [nvarchar](1000) NULL,
+	[ASSET_NUMBER] [nvarchar](1000) NULL,
+	[SCHED_START] [nvarchar](1000) NULL,
+	[SITE_ID] [nvarchar](1000) NULL,
+	[LOCATION] [nvarchar](1000) NULL,
+	[ACT_FINISH] [nvarchar](1000) NULL,
+	[SUPERVISOR] [nvarchar](1000) NULL,
+	[STATUS] [nvarchar](1000) NULL,
+	[W_BATCH_ID] [nvarchar](1000) NULL,
+	[W_INSERT_DT] [nvarchar](1000) NULL
+)
+WITH
+(
+	DISTRIBUTION = ROUND_ROBIN,
+	HEAP
+)
+GO
