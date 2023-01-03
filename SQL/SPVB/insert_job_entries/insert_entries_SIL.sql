@@ -27,19 +27,19 @@ insert into [dbo].[SAP_ETL_JOB]
 VALUES
     -- SAP2Parquet
     (
-        20410,
+        20437,
         'SIL_STG2FND',
         7,
         'SPVB_SAP_SIL_STG2FND',
-        'FND.W_SAP_MATDOC_D',
+        'FND.W_CMMS_INVT_F',
         'Load data from STG (dev) to FND (dev)',
         'Y',
         'SIL',
         'SIL',
-        'STG.W_SAP_MATDOC_FS_TEMP',
-        'FND.W_SAP_MATDOC_F_TEMP',
+        'STG.W_CMMS_INVT_FS',
+        'FND.W_CMMS_INVT_F',
         'Y',
-        'EXEC [dbo].[SAP_proc_load_stg_to_fnd] @p_tgt_table=''FND.W_SAP_MATDOC_D'', @p_batch_id=@P_BATCH_ID_VALUE',
+        'EXEC [dbo].[SAP_proc_load_stg_to_fnd] @p_tgt_table=''FND.W_CMMS_INVT_F'', @p_batch_id=@P_BATCH_ID_VALUE',
         100,
         -1,
         'N',
@@ -47,6 +47,6 @@ VALUES
         @dt,
         'STG',
         0,
-        'CONCAT_WS(''~'', MANDT, MATNR, BWKEY)'
+        'CONCAT_WS(''~'', ITEM_NUMBER, STORE_LOCATION)'
 );
 

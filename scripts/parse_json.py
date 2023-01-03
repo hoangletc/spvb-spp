@@ -1,5 +1,8 @@
 import json
+from pathlib import Path
 from typing import List
+
+from tqdm import tqdm
 
 
 def parse_member(schema: dict, d: List[dict]):
@@ -64,27 +67,38 @@ if __name__ == '__main__':
     #     ]
     # }
 
-    filename = "work_order"
+    path_out_root = Path("E:\TC Data\SPP API JSONs\edited")
+    path_out_root.mkdir(parents=True, exist_ok=True)
 
-    path_json_in = f"E:\TC Data\SPP API JSONs\{filename}.json"
-    path_json_out = f"E:\TC Data\SPP API JSONs\edited\{filename}_edited.json"
+    path_in = Path("E:\TC Data\SPP API JSONs\SPP")
     path_schema = f"E:\TC Data\spvb-spp\scripts\schemmas.json"
 
-    with open(path_json_in) as fp:
-        d: dict = json.load(fp)
+    # Load schema
     with open(path_schema) as fp:
         schemas: dict = json.load(fp)
 
         schemas = {k: set(v) for k, v in schemas.items()}
 
-    if filename not in schemas:
-        print(f"schemmas.json not contain schema for file '{filename}'")
+    # Start looping
+    for path in tqdm(path_in.glob("*/*")):
+        dir_name, file_name = path.parents[0].name, path.name
+        if not ".json" in file_name:
+            file_name = f"{file_name}.json"
 
-        schema = {}
-    else:
-        schema = schemas[filename]
+        path_out = path_out_root / dir_name / file_name
+        path_out.parent.mkdir(parents=True, exist_ok=True)
 
-    out = parse_member(schema, d)
+        with open(path) as fp:
+            d: dict = json.load(fp)
 
-    with open(path_json_out, "w+", encoding="utf-8") as fp:
-        json.dump(out, fp, indent=2, ensure_ascii=False)
+        if dir_name not in schemas:
+            print(f"schemmas.json not contain schema for file '{dir_name}'")
+
+            schema = {}
+        else:
+            schema = schemas[dir_name]
+
+        out = parse_member(schema, d)
+
+        with open(path_out, "w+", encoding="utf-8") as fp:
+            json.dump(out, fp, indent=2, ensure_ascii=False)

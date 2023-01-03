@@ -30,10 +30,10 @@
     },
     {
       "source": {
-        "path": "$[''spvb_sapreceipt'']"
+        "path": "$[''issuetype_description'']"
       },
       "sink": {
-        "name": "SAPRECEIPT",
+        "name": "ISSUE_TYPE_DESCRIPTION",
         "type": "String"
       }
     },
@@ -48,19 +48,10 @@
     },
     {
       "source": {
-        "path": "$[''issuetype_description'']"
+        "path": "$[''storeloc'']"
       },
       "sink": {
-        "name": "ISSUE_TYPE_DESCRIPTION",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''description'']"
-      },
-      "sink": {
-        "name": "DESCRIPTION",
+        "name": "STORE_LOC",
         "type": "String"
       }
     },
@@ -75,28 +66,39 @@
     },
     {
       "source": {
+        "path": "$[''actualdate'']"
+      },
+      "sink": {
+        "name": "ACTUAL_DATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''issueunit'']"
+      },
+      "sink": {
+        "name": "ISSUE_UNIT",
+        "type": "String"
+      }
+    },
+
+    {
+      "source": {
         "path": "$[''itemnum'']"
       },
       "sink": {
-        "name": "ITEM_NUMBER",
+        "name": "ITEM_NUM",
         "type": "String"
       }
     },
+
     {
       "source": {
-        "path": "$[''spvb_sappo'']"
+        "path": "$[''siteid'']"
       },
       "sink": {
-        "name": "SAPPO",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''assetnum'']"
-      },
-      "sink": {
-        "name": "ASSET_NUMBER",
+        "name": "SITE_ID",
         "type": "String"
       }
     },

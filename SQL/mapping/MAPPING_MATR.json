@@ -30,24 +30,6 @@
     },
     {
       "source": {
-        "path": "$[''spvb_sapreceipt'']"
-      },
-      "sink": {
-        "name": "SAPRECEIPT",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''unitcost'']"
-      },
-      "sink": {
-        "name": "UNIT_COST",
-        "type": "Float"
-      }
-    },
-    {
-      "source": {
         "path": "$[''issuetype_description'']"
       },
       "sink": {
@@ -57,13 +39,14 @@
     },
     {
       "source": {
-        "path": "$[''description'']"
+        "path": "$[''tostoreloc'']"
       },
       "sink": {
-        "name": "DESCRIPTION",
+        "name": "UNIT_COST",
         "type": "String"
       }
     },
+
     {
       "source": {
         "path": "$[''transdate'']"
@@ -75,28 +58,10 @@
     },
     {
       "source": {
-        "path": "$[''itemnum'']"
+        "path": "$[''actualdate'']"
       },
       "sink": {
-        "name": "ITEM_NUMBER",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''spvb_sappo'']"
-      },
-      "sink": {
-        "name": "SAPPO",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''assetnum'']"
-      },
-      "sink": {
-        "name": "ASSET_NUMBER",
+        "name": "ACTUAL_DATE",
         "type": "String"
       }
     },

@@ -26,17 +26,17 @@ insert into [dbo].[SAP_ETL_JOB]
     )
 VALUES
     (
-        20427,
+        20429,
         'SDE_JSON2STG',
         7,
         'SPVB_SAP_SDE_JSON2STG',
-        'STG.W_CMMS_ASSET_FS',
+        'STG.W_CMMS_MATR_DS',
         'Load data from JSON (dev) to STG (dev)',
         'Y',
         'SDE',
         'SDE',
-        'asset.json',
-        'STG.W_CMMS_ASSET_FS',
+        '*.json',
+        'STG.W_CMMS_MATR_DS',
         'Y',
         NULL,
         100,
@@ -46,5 +46,5 @@ VALUES
         @dt,
         'JSON',
         0,
-        'API Sample Data/edited'
+        'API Sample Data/edited/material_receipt_trans'
     );

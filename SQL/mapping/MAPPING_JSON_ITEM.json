@@ -15,7 +15,16 @@
         "path": "$[''spvb_plant'']"
       },
       "sink": {
-        "name": "PLANT",
+        "name": "SPVB_PLANT",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''status_description'']"
+      },
+      "sink": {
+        "name": "STATUS_DESCRIPTION",
         "type": "String"
       }
     },
@@ -24,7 +33,7 @@
         "path": "$[''conditionenabled'']"
       },
       "sink": {
-        "name": "CONDITIONENABLED",
+        "name": "CONDITION_ENABLED",
         "type": "String"
       }
     },
@@ -69,7 +78,7 @@
         "path": "$[''itemnum'']"
       },
       "sink": {
-        "name": "ITEM_NUMBER",
+        "name": "ITEM_NUM",
         "type": "String"
       }
     },
@@ -84,10 +93,28 @@
     },
     {
       "source": {
+        "path": "$[''spvb_oem'']"
+      },
+      "sink": {
+        "name": "SPVB_OEM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_oempartno'']"
+      },
+      "sink": {
+        "name": "SPVB_OEMPARTNO",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
         "path": "$[''spvb_vendor'']"
       },
       "sink": {
-        "name": "VENDOR",
+        "name": "SPVB_VENDOR",
         "type": "String"
       }
     },
@@ -96,7 +123,7 @@
         "path": "$[''spvb_machine'']"
       },
       "sink": {
-        "name": "MACHINE",
+        "name": "SPVB_MACHINE",
         "type": "String"
       }
     },
@@ -105,7 +132,7 @@
         "path": "$[''spvb_productline'']"
       },
       "sink": {
-        "name": "PRODUCT_LINE",
+        "name": "SPVB_PRODUCTLINE",
         "type": "String"
       }
     },
@@ -114,7 +141,7 @@
         "path": "$[''spvb_partno'']"
       },
       "sink": {
-        "name": "PARTNO",
+        "name": "SPVB_PARTNO",
         "type": "String"
       }
     },
@@ -123,7 +150,7 @@
         "path": "$[''spvb_mustreturn'']"
       },
       "sink": {
-        "name": "MUST_RETURN",
+        "name": "SPVB_MUSTRETURN",
         "type": "String"
       }
     },
@@ -133,6 +160,24 @@
       },
       "sink": {
         "name": "STATUS",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''W_BATCH_ID'']"
+      },
+      "sink": {
+        "name": "W_BATCH_ID",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''W_INSERT_DT'']"
+      },
+      "sink": {
+        "name": "W_INSERT_DT",
         "type": "String"
       }
     }

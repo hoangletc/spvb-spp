@@ -26,24 +26,29 @@ insert into [dbo].[SAP_ETL_JOB]
 VALUES
     -- SAP2Parquet
     (
-        20121,
+        20401,
         'SRI_SAP2PARQUET',
         7,
         'SPVB_SAP_SRI_SAP2PARQUET',
-        'ANLH',
+        'MATDOC',
         'Load data from SAP (prod) to parquet (dev)',
         'Y',
         'SRI',
         'SRI',
-        'SAPHANADB.ANLH',
-        'ANLH',
+        'SAPHANADB.MATDOC',
+        'MATDOC',
         'Y',
-        'SELECT TOP 100 * FROM SAPHANADB.ANLH',
+        'SELECT * FROM SAPHANADB.MATDOC 
+            WHERE 1=1 
+            AND MANDT = ''300'' 
+            AND BUDAT >= ''20211201''
+            AND BUDAT < ''20220331''
+        ',
         100,
         -1,
         'N',
         @dt,
         @dt,
-        'ANLH',
+        'MATDOC',
         0
     );

@@ -36,6 +36,24 @@
         "name": "BIN_NUMBER",
         "type": "String"
       }
+    },
+    {
+      "source": {
+        "path": "$[''W_BATCH_ID'']"
+      },
+      "sink": {
+        "name": "W_BATCH_ID",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''W_INSERT_DT'']"
+      },
+      "sink": {
+        "name": "W_INSERT_DT",
+        "type": "String"
+      }
     }
   ],
   "collectionReference": "$[DATA][DETAIL]",
