@@ -3,7 +3,7 @@
   "mappings": [
     {
       "source": {
-        "path": "$['itemnum']"
+        "path": "$[''itemnum'']"
       },
       "sink": {
         "name": "ITEM_NUMBER",
@@ -12,7 +12,7 @@
     },
     {
       "source": {
-        "path": "$['maxlevel']"
+        "path": "$[''maxlevel'']"
       },
       "sink": {
         "name": "MAX_LEVEL",
@@ -21,7 +21,7 @@
     },
     {
       "source": {
-        "path": "$['lastissuedate']"
+        "path": "$[''lastissuedate'']"
       },
       "sink": {
         "name": "LAST_ISSUE_DATE",
@@ -30,7 +30,7 @@
     },
     {
       "source": {
-        "path": "$['siteid']"
+        "path": "$[''siteid'']"
       },
       "sink": {
         "name": "SITE_ID",
@@ -39,7 +39,7 @@
     },
     {
       "source": {
-        "path": "$['location']"
+        "path": "$[''location'']"
       },
       "sink": {
         "name": "LOCATION",
@@ -48,11 +48,29 @@
     },
     {
       "source": {
-        "path": "$['invcost.avgcost']"
+        "path": "$[''invcost.avgcost'']"
       },
       "sink": {
         "name": "AVG_COST",
         "type": "Int64"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''W_BATCH_ID'']"
+      },
+      "sink": {
+        "name": "W_BATCH_ID",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''W_INSERT_DT'']"
+      },
+      "sink": {
+        "name": "W_INSERT_DT",
+        "type": "String"
       }
     }
   ],

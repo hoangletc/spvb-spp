@@ -15,6 +15,9 @@ CREATE TABLE [FND].[W_CMMS_MATU_F]
 	[ISSUE_UNIT] [nvarchar](1000) NULL,
 	[ITEM_NUM] [nvarchar](1000) NULL,
 	[SITE_ID] [nvarchar](1000) NULL,
+	[ASSET_NUM] [nvarchar](1000) NULL,
+	[BINNUM] [nvarchar](1000) NULL,
+	[REF_WO] [nvarchar](1000) NULL,
 	[W_BATCH_ID] [nvarchar](1000) NULL,
 	[W_INSERT_DT] [nvarchar](1000) NULL
 )

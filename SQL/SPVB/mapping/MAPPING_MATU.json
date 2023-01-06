@@ -92,13 +92,39 @@
         "type": "String"
       }
     },
-
     {
       "source": {
         "path": "$[''siteid'']"
       },
       "sink": {
         "name": "SITE_ID",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''assetnum'']"
+      },
+      "sink": {
+        "name": "ASSET_NUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''binnum'']"
+      },
+      "sink": {
+        "name": "BINNUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''refwo'']"
+      },
+      "sink": {
+        "name": "REF_WO",
         "type": "String"
       }
     },

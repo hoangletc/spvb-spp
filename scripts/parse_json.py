@@ -70,7 +70,7 @@ if __name__ == '__main__':
     path_out_root = Path("E:\TC Data\SPP API JSONs\edited")
     path_out_root.mkdir(parents=True, exist_ok=True)
 
-    path_in = Path("E:\TC Data\SPP API JSONs\SPP")
+    path_in = Path("E:\TC Data\SPP API JSONs\SPP\material_use_trans")
     path_schema = f"E:\TC Data\spvb-spp\scripts\schemmas.json"
 
     # Load schema
@@ -80,7 +80,7 @@ if __name__ == '__main__':
         schemas = {k: set(v) for k, v in schemas.items()}
 
     # Start looping
-    for path in tqdm(path_in.glob("*/*")):
+    for path in tqdm(path_in.glob("*")):
         dir_name, file_name = path.parents[0].name, path.name
         if not ".json" in file_name:
             file_name = f"{file_name}.json"

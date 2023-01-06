@@ -11,5 +11,21 @@
     "assetstatus_spvb_i",
     "description",
     "status"
+  ],
+  "material_use_trans": [
+    "issuetype",
+    "linecost",
+    "quantity",
+    "issuetype_description",
+    "unitcost",
+    "storeloc",
+    "binnum",
+    "transdate",
+    "actualdate",
+    "issueunit",
+    "itemnum",
+    "assetnum",
+    "siteid",
+    "refwo"
   ]
 }
