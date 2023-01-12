@@ -8,7 +8,7 @@ from tqdm import tqdm
 def parse_member(schema: dict, d: List[dict]):
     discards = {"_rowstamp", "href", "invcost_collectionref",
                 "lochierarchy_collectionref", "wostatus_collectionref",
-                "multiassetlocci_collectionref", "_imagelibref"}
+                "multiassetlocci_collectionref", "_imagelibref", "localref"}
 
     output = {}
 
@@ -17,6 +17,10 @@ def parse_member(schema: dict, d: List[dict]):
             out = {}
             for k, v in val.items():
                 if k in discards:
+                    continue
+                if isinstance(v, list):
+                    continue
+                if "ref" in k and isinstance(v, str) and v.startswith("http"):
                     continue
 
                 res = _parse(key_list + [k], v)
@@ -67,11 +71,11 @@ if __name__ == '__main__':
     #     ]
     # }
 
-    path_out_root = Path("E:\TC Data\SPP API JSONs\edited")
+    path_out_root = Path("D:\TC Data\SPP API JSONs\edited")
     path_out_root.mkdir(parents=True, exist_ok=True)
 
-    path_in = Path("E:\TC Data\SPP API JSONs\SPP\material_use_trans")
-    path_schema = f"E:\TC Data\spvb-spp\scripts\schemmas.json"
+    path_in = Path(r"D:\TC Data\SPP API JSONs\SPP\asset")
+    path_schema = r"D:\TC Data\spvb-spp\scripts\schemmas.json"
 
     # Load schema
     with open(path_schema) as fp:
@@ -88,7 +92,7 @@ if __name__ == '__main__':
         path_out = path_out_root / dir_name / file_name
         path_out.parent.mkdir(parents=True, exist_ok=True)
 
-        with open(path) as fp:
+        with open(path, encoding='utf-8') as fp:
             d: dict = json.load(fp)
 
         if dir_name not in schemas:

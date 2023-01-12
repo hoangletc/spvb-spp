@@ -3,17 +3,17 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-IF (OBJECT_ID('[dbo].[SAP_proc_load_w_sap_usage_f]') is not null)
+IF (OBJECT_ID('[dbo].[proc_load_w_sap_transaction_f]') is not null)
 BEGIN
-    DROP PROCEDURE [dbo].[SAP_proc_load_w_sap_usage_f]
+    DROP PROCEDURE [dbo].[proc_load_w_sap_transaction_f]
 END;
 GO
 
-CREATE PROC [dbo].[SAP_proc_load_w_sap_usage_f]
+CREATE PROC [dbo].[proc_load_w_sap_transaction_f]
     @p_batch_id [bigint]
 AS 
 BEGIN
-    DECLARE	@tgt_TableName nvarchar(200) = N'dbo.W_SAP_USAGE_F',
+    DECLARE	@tgt_TableName nvarchar(200) = N'dbo.W_SAP_TRANSACTION_F',
 			@sql nvarchar(max),
 	        @column_name varchar(4000),
 	        @no_row bigint	,
@@ -82,10 +82,10 @@ BEGIN
 		-- 1. Check existence and remove of temp table
         PRINT '1. Check existence and remove of temp table'
 
-        IF OBJECT_ID(N'tempdb..#W_SAP_USAGE_F_tmp') IS NOT NULL 
+        IF OBJECT_ID(N'tempdb..#W_SAP_TRANSACTION_F_tmp') IS NOT NULL 
         BEGIN
-            PRINT N'DELETE temporary table #W_SAP_USAGE_F_tmp'
-            DROP Table #W_SAP_USAGE_F_tmp
+            PRINT N'DELETE temporary table #W_SAP_TRANSACTION_F_tmp'
+            DROP Table #W_SAP_TRANSACTION_F_tmp
         END;
 
 
@@ -145,7 +145,7 @@ BEGIN
 			, GETDATE() AS W_UPDATE_DT
 			, NULL W_BATCH_ID
             , 'N' AS W_UPDATE_FLG
-        INTO #W_SAP_USAGE_F_tmp
+        INTO #W_SAP_TRANSACTION_F_tmp
         FROM [FND].[W_SAP_MATDOC_F_temp] F
             LEFT JOIN [dbo].[W_PRODUCT_D] P ON REPLACE(LTRIM(REPLACE(F.MATNR, '0', ' ')), ' ', '0') = P.PRODUCT_CODE AND P.W_DATASOURCE_NUM_ID = 1
             LEFT JOIN [dbo].[W_PLANT_SAP_D] PL ON PL.PLANT_CODE = F.WERKS
@@ -167,16 +167,16 @@ BEGIN
         -- 3.1. Mark existing records by flag 'Y'
         PRINT '3.1. Mark existing records by flag ''Y'''
 
-        UPDATE #W_SAP_USAGE_F_tmp
+        UPDATE #W_SAP_TRANSACTION_F_tmp
 		SET W_UPDATE_FLG = 'Y'
-		FROM #W_SAP_USAGE_F_tmp tg
-        INNER JOIN [dbo].[W_SAP_USAGE_F] sc 
+		FROM #W_SAP_TRANSACTION_F_tmp tg
+        INNER JOIN [dbo].[W_SAP_TRANSACTION_F] sc 
         ON sc.W_INTEGRATION_ID = tg.W_INTEGRATION_ID
 
         -- 3.2. Start updating
         PRINT '3.2. Start updating'
 
-		UPDATE  [dbo].[W_SAP_USAGE_F]
+		UPDATE  [dbo].[W_SAP_TRANSACTION_F]
 		SET DATE_WID = src.DATE_WID
 			, PRODUCT_WID = src.PRODUCT_WID
 			, PLANT_WID = src.PLANT_WID
@@ -228,14 +228,14 @@ BEGIN
 			, W_BATCH_ID = src.W_BATCH_ID
 			, W_INTEGRATION_ID = src.W_INTEGRATION_ID
 			, W_UPDATE_DT = getdate()
-        FROM [dbo].[W_SAP_USAGE_F] tgt
-        INNER JOIN #W_SAP_USAGE_F_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID
+        FROM [dbo].[W_SAP_TRANSACTION_F] tgt
+        INNER JOIN #W_SAP_TRANSACTION_F_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID
 
 
 	    -- 4. Insert non-existed records to main table from temp table
         PRINT '4. Insert non-existed records to main table from temp table'
 
-        INSERT INTO [dbo].[W_SAP_USAGE_F](
+        INSERT INTO [dbo].[W_SAP_TRANSACTION_F](
             DATE_WID
 			, PRODUCT_WID
 			, PLANT_WID
@@ -340,7 +340,7 @@ BEGIN
 			, W_UPDATE_DT
 			, W_BATCH_ID
 			, W_INTEGRATION_ID
-        FROM #W_SAP_USAGE_F_tmp
+        FROM #W_SAP_TRANSACTION_F_tmp
         where W_UPDATE_FLG = 'N'
 
 		
@@ -364,17 +364,17 @@ BEGIN
             DATEADD(HH, 7, GETDATE())
         FROM (
             SELECT *
-            FROM W_SAP_USAGE_F
+            FROM W_SAP_TRANSACTION_F
         ) M
         WHERE 1=1
             AND W_BATCH_ID = @p_batch_id
             AND W_DELETE_FLG = 'N'
 
-		SET @src_rownum = ( SELECT COUNT(1) FROM #W_SAP_USAGE_F_tmp );
+		SET @src_rownum = ( SELECT COUNT(1) FROM #W_SAP_TRANSACTION_F_tmp );
 		SET @tgt_rownum = ( 
             SELECT 
                 COUNT(DISTINCT W_INTEGRATION_ID)
-            FROM W_SAP_USAGE_F
+            FROM W_SAP_TRANSACTION_F
             WHERE 1=1
                 AND W_DELETE_FLG = 'N' 
                 AND W_BATCH_ID = @p_batch_id
