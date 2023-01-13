@@ -2,14 +2,14 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-CREATE TABLE [dbo].[W_SAP_USAGE_F]
+CREATE TABLE [dbo].[W_SAP_TRANSACTION_F]
 (
-	DATE_WID                    [nvarchar](100) NULL
-	, PRODUCT_WID               [nvarchar](100) NULL
-	, PLANT_WID                 [nvarchar](100) NULL
-	, ASSET_WID                 [nvarchar](100) NULL
-	, WO_WID                    [nvarchar](100) NULL
-	, VENDOR_WID                [nvarchar](100) NULL
+	DATE_WID                    INT NULL
+	, PRODUCT_WID               INT NULL
+	, PLANT_WID                 INT NULL
+	, ASSET_WID                 INT NOT NULL IDENTITY(1, 1)
+	, WO_WID                    INT NULL
+	, VENDOR_WID                INT NULL
 
 	, VENDOR_CODE               [nvarchar](500) NULL
 	, PLANT_CODE                [nvarchar](500) NULL
