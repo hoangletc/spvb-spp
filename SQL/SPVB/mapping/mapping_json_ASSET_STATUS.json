@@ -1,0 +1,89 @@
+{
+  "type": "TabularTranslator",
+  "mappings": [
+    {
+      "source": {
+        "path": "$[''assetstatusid'']"
+      },
+      "sink": {
+        "name": "ASSET_STATUS_ID",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''isrunning'']"
+      },
+      "sink": {
+        "name": "IS_RUNNING",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''downtime'']"
+      },
+      "sink": {
+        "name": "DOWNTIME",
+        "type": "Float"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''location'']"
+      },
+      "sink": {
+        "name": "LOCATION",
+        "type": "String"
+      }
+    },
+
+    {
+      "source": {
+        "path": "$[''changedate'']"
+      },
+      "sink": {
+        "name": "CHANGEDATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''code_description'']"
+      },
+      "sink": {
+        "name": "CODE_DESCRIPTION",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''code'']"
+      },
+      "sink": {
+        "name": "CODE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''W_BATCH_ID'']"
+      },
+      "sink": {
+        "name": "W_BATCH_ID",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''W_INSERT_DT'']"
+      },
+      "sink": {
+        "name": "W_INSERT_DT",
+        "type": "String"
+      }
+    }
+  ],
+  "collectionReference": "$[DATA][DETAIL]",
+  "mapComplexValuesToString": true
+}

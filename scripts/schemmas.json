@@ -7,7 +7,6 @@
     "children",
     "assetuid",
     "status_description",
-    "ancestor",
     "totdowntime",
     "assetnum",
     "assettype",
@@ -15,7 +14,20 @@
     "invcost",
     "isrunning",
     "location",
-    "siteid"
+    "siteid",
+    "asset_hierachical_type",
+    "parent",
+    "grandparent"
+  ],
+  "asset_status": [
+    "code",
+    "code_description",
+    "changedate",
+    "downtime",
+    "isrunning",
+    "assetstatusid",
+    "location",
+    "assetnum"
   ],
   "material_use_trans": [
     "invuselineid",
@@ -62,15 +74,7 @@
     "itemtype",
     "status"
   ],
-  "asset_status": [
-    "code",
-    "code_description",
-    "changedate",
-    "downtime",
-    "isrunning",
-    "assetstatusid",
-    "location"
-  ],
+
   "material_receipt_trans": [
     "positeid",
     "tostoreloc",

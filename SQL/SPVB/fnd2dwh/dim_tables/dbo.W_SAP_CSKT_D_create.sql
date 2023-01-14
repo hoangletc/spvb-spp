@@ -1,0 +1,30 @@
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[W_SAP_CSKT_D]
+(
+	[ASSET_WID] INT IDENTITY(1, 1),
+
+	[MANDT] [nvarchar](255) NULL,
+	[SPRAS] [nvarchar](255) NULL,
+	[KOKRS] [nvarchar](255) NULL,
+	[KOSTL] [nvarchar](255) NULL,
+	[DATBI] [nvarchar](255) NULL,
+	[KTEXT] [nvarchar](255) NULL,
+	[LTEXT] [nvarchar](255) NULL,
+	[MCTXT] [nvarchar](255) NULL,
+
+	[W_DELETE_FLG] VARCHAR(1) NULL,
+    [W_DATASOURCE_NUM_ID] INT NULL,
+    [W_INTEGRATION_ID] [nvarchar](300) NULL,
+    [W_INSERT_DT] [datetime] NULL,
+    [W_UPDATE_DT] [datetime] NULL,
+    [W_BATCH_ID] [bigint] NULL
+)
+WITH
+(
+	DISTRIBUTION = ROUND_ROBIN,
+	CLUSTERED COLUMNSTORE INDEX
+)
+GO
