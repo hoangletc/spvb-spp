@@ -2,7 +2,7 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-CREATE TABLE [dbo].[W_SAP_TRANSACTION_F]
+CREATE TABLE [dbo].[W_SAP_BALANCE_F]
 (
 	ASSET_WID                   	INT NOT NULL IDENTITY(1, 1)
 	, DATE_WID                  	INT NULL
@@ -42,7 +42,7 @@ CREATE TABLE [dbo].[W_SAP_TRANSACTION_F]
 	, W_INSERT_DT               	[DATETIME] NULL
 	, W_UPDATE_DT               	[nvarchar](200) NULL
 	, W_BATCH_ID                	[nvarchar](200) NULL
-	, W_INTEGRATION_ID          	[varbinary](500) NULL
+	, W_INTEGRATION_ID          	[nvarchar](200) NULL
 )
 WITH
 (

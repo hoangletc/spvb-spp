@@ -3,29 +3,47 @@
   "mappings": [
     {
       "source": {
-        "path": "$[''status_description'']"
+        "path": "$[''assetuid'']"
       },
       "sink": {
-        "name": "STATUS_DES",
+        "name": "ASSET_UID",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''assetnum'']"
+        "path": "$[''spvb_costcenter'']"
       },
       "sink": {
-        "name": "ASSET_NUM",
+        "name": "SPVB_COSTCENTER",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''description'']"
+        "path": "$[''changedate'']"
       },
       "sink": {
-        "name": "DESCRIPTION",
+        "name": "CHANGE_DATE",
         "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_fixedassetnum'']"
+      },
+      "sink": {
+        "name": "SPVB_FIXEDASSETNUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''totalcost'']"
+      },
+      "sink": {
+        "name": "TOTAL_COST",
+        "type": "Float"
       }
     },
     {
@@ -39,64 +57,118 @@
     },
     {
       "source": {
-        "path": "$[''assetstatus_changedate'']"
+        "path": "$[''status_description'']"
       },
       "sink": {
-        "name": "ASSET_STATUS_CHANGEDATE",
+        "name": "STATUS_DESCRIPTION",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''assetstatus_spvb_ca'']"
+        "path": "$[''totdowntime'']"
       },
       "sink": {
-        "name": "ASSET_STATUS_SPVB_CA",
+        "name": "TOTAL_DOWNTIME",
+        "type": "Float"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''assetnum'']"
+      },
+      "sink": {
+        "name": "ASSET_NUM",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''assetstatus_spvb_t'']"
+        "path": "$[''assettype'']"
       },
       "sink": {
-        "name": "ASSET_STATUS_SPVB_T",
+        "name": "ASSET_TYPE",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''assetstatus_spvb_c'']"
+        "path": "$[''spvb_costcenter_description'']"
       },
       "sink": {
-        "name": "ASSET_STATUS_SPVB_C",
+        "name": "SPVB_COSTCENTER_DESCRIPTION",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''assetstatus_isrunning'']"
+        "path": "$[''invcost'']"
       },
       "sink": {
-        "name": "ASSET_STATUS_IS_RUNNING",
+        "name": "INV_COST",
+        "type": "Float"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''isrunning'']"
+      },
+      "sink": {
+        "name": "ISRUNNING",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''assetstatus_spvb_i'']"
+        "path": "$[''location'']"
       },
       "sink": {
-        "name": "ASSET_STATUS_SPVB_i",
+        "name": "LOCATION",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''assetstatus_spvb_l'']"
+        "path": "$[''siteid'']"
       },
       "sink": {
-        "name": "ASSET_STATUS_SPVB_l",
+        "name": "SITE_ID",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''asset_hierachical_type'']"
+      },
+      "sink": {
+        "name": "ASSET_HIERACHICAL_TYPE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''parent'']"
+      },
+      "sink": {
+        "name": "PARENT",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''grandparent'']"
+      },
+      "sink": {
+        "name": "GRANDPARENT",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''description'']"
+      },
+      "sink": {
+        "name": "DESCRIPTION",
         "type": "String"
       }
     },

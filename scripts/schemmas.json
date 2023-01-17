@@ -1,11 +1,11 @@
 {
   "asset": [
+    "assetuid",
     "spvb_costcenter",
     "changedate",
     "spvb_fixedassetnum",
     "totalcost",
-    "children",
-    "assetuid",
+    "status",
     "status_description",
     "totdowntime",
     "assetnum",
@@ -17,7 +17,8 @@
     "siteid",
     "asset_hierachical_type",
     "parent",
-    "grandparent"
+    "grandparent",
+    "description"
   ],
   "asset_status": [
     "code",
@@ -27,7 +28,8 @@
     "isrunning",
     "assetstatusid",
     "location",
-    "assetnum"
+    "assetnum",
+    "operational"
   ],
   "material_use_trans": [
     "invuselineid",
@@ -92,9 +94,6 @@
     "matrectransid"
   ],
   "work_order": [
-    "pmduedate",
-    "wopriority",
-    "spvb_task_status",
     "targcompdate",
     "pmnum",
     "assetnum",
@@ -103,19 +102,16 @@
     "schedfinish",
     "supervisor",
     "targstartdate",
-    "actstart",
     "reportdate",
     "spvb_overhaul",
     "worktype",
-    "glaccount",
     "schedstart",
     "location",
-    "actfinish",
     "jpnum",
     "status",
     "description",
-    "istask",
-    "haschildren"
+    "siteid",
+    "istask"
   ],
   "inventory_use_line": [
     "invuselineid",
@@ -246,10 +242,12 @@
     "lastissuedate"
   ],
   "location": [
+    "spvb_whc_group",
     "description",
     "type",
     "locationsid",
-    "siteid",
+    "site",
+    "site_code",
     "type_description",
     "status_description",
     "location",

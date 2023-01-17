@@ -1,47 +1,53 @@
-
 SELECT TOP 100
     BUDAT AS DATE_WID
-    , ISNULL(PRODUCT.PRODUCT_WID, 0) AS PRODUCT_WID
-    , ISNULL(PLANT.PLANT_WID, 0) AS PLANT_WID
-    , ISNULL(LOC.ASSET_WID, 0) AS LOCATION_WID
-    , ISNULL(CC.ASSET_WID, 0) AS COST_CENTER_WID
+    , ISNULL(PRODUCT.PRODUCT_WID, 0)                AS PRODUCT_WID
+    , ISNULL(PLANT.PLANT_WID, 0)                    AS PLANT_WID
+    , ISNULL(LOC.ASSET_WID, 0)                      AS LOCATION_WID
+    , ISNULL(CC.ASSET_WID, 0)                       AS COST_CENTER_WID
     
-    , ACDOCA.WERKS AS PLANT_CODE
-    , BWTAR AS VALUATION_TYPE
-    , CONVERT(nvarchar(100), REPLACE(LTRIM(REPLACE(ACDOCA.MATNR, '0', ' ')), ' ', '0')) AS MATERIAL_NUMBER
-    , RCLNT AS CLIENT_CODE
-    , RLDNR AS LEDGER_CODE
-    , LOC.LGORT AS STORAGE_LOCATION
-    , RBUKRS AS COMPANY_CODE
-    , ACDOCA.BWKEY AS VALUATION_AREA
-    , NULL AS VALUATION_CLASS
-    , MAT_DAT.MTART AS MATERIAL_TYPE
-    , MAT_DAT.MATKL AS MATERIAL_GROUP --
-    , NULL AS PURCHASING_GROUP
+    , ACDOCA.WERKS                                  AS PLANT_CODE
+    , BWTAR                                         AS VALUATION_TYPE
+    , CONVERT(nvarchar(100), REPLACE(LTRIM(
+        REPLACE(ACDOCA.MATNR, '0', ' ')), ' ', '0')
+    )                                               AS MATERIAL_NUMBER
+    , RCLNT                                         AS CLIENT_CODE
+    , RLDNR                                         AS LEDGER_CODE
+    , LOC.LGORT                                     AS STORAGE_LOCATION
+    , RBUKRS                                        AS COMPANY_CODE
+    , ACDOCA.BWKEY                                  AS VALUATION_AREA
+    , NULL                                          AS VALUATION_CLASS
+    , CONVERT(NVARCHAR(8), MAT_DAT.MTART)           AS MATERIAL_TYPE
+    , CONVERT(NVARCHAR(8), MAT_DAT.MATKL)           AS MATERIAL_GROUP --
+    , NULL                                          AS PURCHASING_GROUP
     -- , CONVERT(nvarchar(100), MAT_DES.MAKTX) AS MATERIAL_DESCRIPTION
-    , RRUNIT AS BASE_UNIT_OF_MEASURE
-    , VPRSV AS PRICE_CONTROL
-    , BLDAT AS DOCUMENT_DATE
-    , BELNR AS DOCUMENT_NUMBER
-    , DOCLN AS LINE_ITEM
-    , RUNIT AS UNIT
-    , RVUNIT AS BASE_UNIT
-    , RTCUR AS CURRENCY
-    , RACCT AS ACCOUNT_NUMBER
-    , DRCRK AS DEBIT_INDICATOR
+    , CONVERT(NVARCHAR(5), RRUNIT)                  AS BASE_UNIT_OF_MEASURE
+    , CONVERT(NVARCHAR(5), VPRSV)                   AS PRICE_CONTROL
+    , CASE WHEN BLDAT = '00000000' THEN NULL 
+        ELSE CONVERT(DATE, BLDAT) END 				AS DOCUMENT_DATE
+    , CONVERT(NVARCHAR(15), BELNR)                  AS DOCUMENT_NUMBER
+    , CONVERT(NVARCHAR(10), DOCLN)                  AS LINE_ITEM
+    , CONVERT(NVARCHAR(5), RUNIT)                   AS UNIT
+    , CONVERT(NVARCHAR(5), RVUNIT)                  AS BASE_UNIT
+    , CONVERT(NVARCHAR(5), RTCUR)                   AS CURRENCY
+    , CONVERT(NVARCHAR(20), RACCT)                  AS ACCOUNT_NUMBER
+    , CONVERT(NVARCHAR(5), DRCRK)                   AS DEBIT_INDICATOR
 
-    , RCNTR AS COST_CENTER
-    , CC.KTEXT AS COST_CENTER_DESCRIPTION
+    , CASE WHEN RCNTR = '' THEN NULL 
+        ELSE CONVERT(DECIMAL(38, 20), RCNTR) END    AS COST_CENTER
+    , CASE WHEN CC.KTEXT IS NULL THEN NULL 
+        ELSE CONVERT(DECIMAL(38, 20), CC.KTEXT) END AS COST_CENTER_DESCRIPTION
 
-    , MSL AS QUANTITY
-    , HSL AS LOCAL_AMOUNT
+    , CONVERT(INT, MSL)								AS QUANTITY
+    , CONVERT(DECIMAL(38, 20), HSL)					AS LOCAL_AMOUNT
 
-    , CONCAT_WS('~', RCLNT, RLDNR, RBUKRS, GJAHR, BELNR, DOCLN) AS W_INTEGRATION_ID
-    , 'N' AS W_DELETE_FLG
-    , 1 AS W_DATASOURCE_NUM_ID
-    , GETDATE() AS W_INSERT_DT
-    , GETDATE() AS W_UPDATE_DT
-    , NULL W_BATCH_ID
+    , CONCAT_WS('~', RCLNT, RLDNR, RBUKRS, 
+                GJAHR, BELNR, DOCLN)                AS W_INTEGRATION_ID
+    , 'N'                                           AS W_DELETE_FLG
+    , 1                                             AS W_DATASOURCE_NUM_ID
+    , GETDATE()                                     AS W_INSERT_DT
+    , GETDATE()                                     AS W_UPDATE_DT
+    , NULL                                          AS W_BATCH_ID
+    , 'N'                                           AS W_UPDATE_FLG
 
 FROM [FND].[W_SAP_ACDOCA_SPP_F] ACDOCA
 

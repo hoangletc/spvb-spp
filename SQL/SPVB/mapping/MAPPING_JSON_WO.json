@@ -3,91 +3,19 @@
   "mappings": [
     {
       "source": {
-        "path": "$[''targstartdate'']"
+        "path": "$[''targcompdate'']"
       },
       "sink": {
-        "name": "TARGET_START_DATE",
+        "name": "TARGCOMPDATE",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''reportdate'']"
+        "path": "$[''pmnum'']"
       },
       "sink": {
-        "name": "REPORT_DATE",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''wostatus_changedate'']"
-      },
-      "sink": {
-        "name": "WO_STATUS_CHANGE_DATE",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''description'']"
-      },
-      "sink": {
-        "name": "DESCRIPTION",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''spvb_overhaul'']"
-      },
-      "sink": {
-        "name": "OVER_HAUL",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''worktype'']"
-      },
-      "sink": {
-        "name": "WORK_TYPE",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''changedate'']"
-      },
-      "sink": {
-        "name": "CHANGE_DATE",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''reportedby'']"
-      },
-      "sink": {
-        "name": "REPORTED_BY",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''wonum'']"
-      },
-      "sink": {
-        "name": "WORK_ORDER_NUMBER",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''schedfinish'']"
-      },
-      "sink": {
-        "name": "SCHED_FINISH",
+        "name": "PMNUM",
         "type": "String"
       }
     },
@@ -96,43 +24,34 @@
         "path": "$[''assetnum'']"
       },
       "sink": {
-        "name": "ASSET_NUMBER",
+        "name": "ASSETNUM",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''schedstart'']"
+        "path": "$[''wonum'']"
       },
       "sink": {
-        "name": "SCHED_START",
+        "name": "WONUM",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''siteid'']"
+        "path": "$[''wostatus'']"
       },
       "sink": {
-        "name": "SITE_ID",
+        "name": "WOSTATUS",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''location'']"
+        "path": "$[''schedfinish'']"
       },
       "sink": {
-        "name": "LOCATION",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''actfinish'']"
-      },
-      "sink": {
-        "name": "ACT_FINISH",
+        "name": "SCHEDFINISH",
         "type": "String"
       }
     },
@@ -147,10 +66,100 @@
     },
     {
       "source": {
+        "path": "$[''targstartdate'']"
+      },
+      "sink": {
+        "name": "TARGSTARTDATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''reportdate'']"
+      },
+      "sink": {
+        "name": "REPORTDATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_overhaul'']"
+      },
+      "sink": {
+        "name": "SPVB_OVERHAUL",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''worktype'']"
+      },
+      "sink": {
+        "name": "WORKTYPE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''schedstart'']"
+      },
+      "sink": {
+        "name": "SCHEDSTART",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''location'']"
+      },
+      "sink": {
+        "name": "LOCATION",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''jpnum'']"
+      },
+      "sink": {
+        "name": "JPNUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
         "path": "$[''status'']"
       },
       "sink": {
         "name": "STATUS",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''description'']"
+      },
+      "sink": {
+        "name": "DESCRIPTION",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''siteid'']"
+      },
+      "sink": {
+        "name": "SITEID",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''istask'']"
+      },
+      "sink": {
+        "name": "ISTASK",
         "type": "String"
       }
     },

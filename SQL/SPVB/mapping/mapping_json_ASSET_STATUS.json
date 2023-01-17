@@ -67,6 +67,24 @@
     },
     {
       "source": {
+        "path": "$[''assetnum'']"
+      },
+      "sink": {
+        "name": "ASSET_NUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''operational'']"
+      },
+      "sink": {
+        "name": "OPERATIONAL",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
         "path": "$[''W_BATCH_ID'']"
       },
       "sink": {

@@ -49,7 +49,44 @@ def parser_default(d: List[dict], res_name: str, schema: set = None):
     return {res_name: parsed}
 
 
-def parser_asset(d: List[dict], schemas: dict = None) -> dict:
+def parser_location(d: dict, schemas: dict = None) -> dict:
+    # Parse
+    loc = parser_default(d, "location", schemas['location'])['location']
+
+    # Supplement info
+    loc['site'] = loc['location'][:3]
+
+    loc = [loc]  # Return must be dict whose value is list
+
+    return {'location': loc}
+
+
+def parser_work_order(d: dict, schemas: dict = None) -> dict:
+    wo, wo_status = d, d.get('wostatus', None)
+
+    # Parse
+    if wo_status:
+        wo_status_tmp = {}
+        for w in wo_status:
+            w = parser_default(
+                w,
+                "work_order_status",
+                schemas['work_order_status']
+            )['work_order_status']
+
+            if w['status'] not in wo_status_tmp or \
+                    wo_status_tmp[w['status']]['changedate'] < w['changedate']:
+                wo_status_tmp[w['status']] = w
+
+        wo_status = list(wo_status_tmp.values())
+
+    wo = parser_default(wo, "work_order", schemas['work_order'])['work_order']
+    wo = [wo]
+
+    return {'work_order': wo, 'work_order_status': wo_status}
+
+
+def parser_asset(d: dict, schemas: dict = None) -> dict:
     asset, asset_status = d, d.get('assetstatus', None)
 
     # Parse
@@ -109,13 +146,15 @@ def parser_asset(d: List[dict], schemas: dict = None) -> dict:
     if asset_status:
         for x in asset_status:
             x['assetnum'] = asset_tmp['assetnum']
-    asset = [asset_tmp]
 
+    asset = [asset_tmp]
     return {'asset': asset, 'asset_status': asset_status}
 
 
 PARSER_MAPPING = {
-    'asset': parser_asset
+    'asset': parser_asset,
+    'location': parser_location,
+    'work_order': parser_work_order
 }
 
 
@@ -132,7 +171,7 @@ def parser_json(data: List[dict], res_name: str,
                 parsed_result: dict = PARSER_MAPPING[res_name](d, schemas)
             else:
                 parsed_result: dict = parser_default(d, res_name,
-                                                     schemas['res_name'])
+                                                     schemas[res_name])
 
             # Append parsed result(s)
             for k, v in parsed_result.items():
@@ -148,7 +187,7 @@ if __name__ == '__main__':
     path_out_root = Path("D:\TC Data\SPP API JSONs\edited")
     path_out_root.mkdir(parents=True, exist_ok=True)
 
-    path_in = Path(r"D:\TC Data\SPP API JSONs\SPP\asset")
+    path_in = Path(r"D:\TC Data\SPP API JSONs\SPP\work_order")
     path_schema = r"D:\TC Data\spvb-spp\scripts\schemmas.json"
 
     # Load schema

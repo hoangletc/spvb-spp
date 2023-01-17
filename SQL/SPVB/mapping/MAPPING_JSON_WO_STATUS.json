@@ -1,0 +1,61 @@
+{
+  "type": "TabularTranslator",
+  "mappings": [
+    {
+      "source": {
+        "path": "$[''parent'']"
+      },
+      "sink": {
+        "name": "PARENT",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''changedate'']"
+      },
+      "sink": {
+        "name": "CHANGEDATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''wostatusid'']"
+      },
+      "sink": {
+        "name": "WOSTATUSID",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''status'']"
+      },
+      "sink": {
+        "name": "STATUS",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''W_BATCH_ID'']"
+      },
+      "sink": {
+        "name": "W_BATCH_ID",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''W_INSERT_DT'']"
+      },
+      "sink": {
+        "name": "W_INSERT_DT",
+        "type": "String"
+      }
+    }
+  ],
+  "collectionReference": "$[DATA][DETAIL]",
+  "mapComplexValuesToString": true
+}

@@ -3,6 +3,15 @@
   "mappings": [
     {
       "source": {
+        "path": "$[''spvb_whc_group'']"
+      },
+      "sink": {
+        "name": "SPVB_WHC_GROUP",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
         "path": "$[''description'']"
       },
       "sink": {
@@ -12,10 +21,64 @@
     },
     {
       "source": {
+        "path": "$[''type'']"
+      },
+      "sink": {
+        "name": "TYPE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''locationsid'']"
+      },
+      "sink": {
+        "name": "LOCATIONS_ID",
+        "type": "Int64"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''site'']"
+      },
+      "sink": {
+        "name": "SITE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''type_description'']"
+      },
+      "sink": {
+        "name": "TYPE_DESCRIPTION",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''status_description'']"
+      },
+      "sink": {
+        "name": "STATUS_DESCRIPTION",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
         "path": "$[''location'']"
       },
       "sink": {
         "name": "LOCATION",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''status'']"
+      },
+      "sink": {
+        "name": "STATUS",
         "type": "String"
       }
     },
