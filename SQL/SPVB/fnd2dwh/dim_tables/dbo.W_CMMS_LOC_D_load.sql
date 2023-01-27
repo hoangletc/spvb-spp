@@ -93,25 +93,29 @@ BEGIN
         PRINT '2. Select everything into temp table'
 
 		SELECT
-             CONVERT(nvarchar(50), SPVB_WHC_GROUP) AS SPVB_WHC_GROUP
-            , CONVERT(nvarchar(50), DESCRIPTION) AS DESCRIPTION
-            , CONVERT(nvarchar(50), TYPE) AS TYPE
-            , LOCATIONS_ID AS LOCATIONS_ID
-            , CONVERT(nvarchar(5), SITE) AS SITE
-            , CONVERT(nvarchar(50), TYPE_DESCRIPTION) AS TYPE_DESCRIPTION
+            CONVERT(nvarchar(50), SPVB_WHC_GROUP)       AS SPVB_WHC_GROUP
+            , CONVERT(nvarchar(50), [DESCRIPTION])      AS [DESCRIPTION]
+            , CONVERT(nvarchar(50), [TYPE])             AS [TYPE]
+            , LOCATIONS_ID                              AS LOCATIONS_ID
+            , CONVERT(nvarchar(5), [SITE])              AS [SITE]
+            , CONVERT(nvarchar(50), TYPE_DESCRIPTION)   AS TYPE_DESCRIPTION
             , CONVERT(nvarchar(50), STATUS_DESCRIPTION) AS STATUS_DESCRIPTION
-            , CONVERT(nvarchar(50), LOCATION) AS LOCATION
-            , CONVERT(nvarchar(50), STATUS) AS STATUS
+            , CONVERT(nvarchar(50), [LOCATION])         AS [LOCATION]
+            , CONVERT(nvarchar(50), [STATUS])           AS [STATUS]
 
-			, CONVERT(nvarchar(100), CONCAT_WS('~', SPVB_WHC_GROUP, LOCATIONS_ID, [TYPE])) AS W_INTEGRATION_ID
-			, 'N' AS W_DELETE_FLG
-			, 1 AS W_DATASOURCE_NUM_ID
-			, GETDATE() AS W_INSERT_DT
-			, GETDATE() AS W_UPDATE_DT
-			, NULL W_BATCH_ID
-            , 'N' AS W_UPDATE_FLG
+            , CONVERT(
+                nvarchar(100), 
+                CONCAT_WS('~', SPVB_WHC_GROUP, 
+                        LOCATIONS_ID, [TYPE])
+            )                                           AS W_INTEGRATION_ID
+            , 'N'                                       AS W_DELETE_FLG
+            , 1                                         AS W_DATASOURCE_NUM_ID
+            , GETDATE()                                 AS W_INSERT_DT
+            , GETDATE()                                 AS W_UPDATE_DT
+            , NULL                                      AS W_BATCH_ID
+            , 'N'                                       AS W_UPDATE_FLG
         INTO #W_CMMS_LOC_D_tmp
-        FROM [FND].[W_CMMS_LOC_D] F
+        FROM [FND].[W_CMMS_LOC_D]
 
         -- 3. Update main table using W_INTEGRATION_ID
         PRINT '3. Update main table using W_INTEGRATION_ID'

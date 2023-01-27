@@ -5,8 +5,10 @@ GO
 CREATE TABLE [dbo].[W_CMMS_ASSET_D]
 (
     [ASSET_WID] INT NOT NULL IDENTITY(1, 1),
+    [LOCATION_WID] INT NULL,
 
-    [ASSET_UID] [nvarchar](20) NULL,
+    [LINE_ASSET_NUM] [nvarchar](30) NULL,
+    [LINE_ASSET_DES] [nvarchar](100) NULL,
     [SPVB_COSTCENTER] [nvarchar](100) NULL,
     [CHANGE_DATE] [nvarchar](50) NULL,
     [SPVB_FIXEDASSETNUM] [nvarchar](100) NULL,
@@ -14,7 +16,7 @@ CREATE TABLE [dbo].[W_CMMS_ASSET_D]
     [STATUS] [nvarchar](100) NULL,
     [STATUS_DESCRIPTION] [nvarchar](100) NULL,
     [TOTAL_DOWNTIME] [real] NULL,
-    [ASSET_NUM] [nvarchar](100) NULL,
+    [ASSET_NUM] [nvarchar](30) NULL,
     [ASSET_TYPE] [nvarchar](100) NULL,
     [SPVB_COSTCENTER_DESCRIPTION] [nvarchar](100) NULL,
     [INV_COST] [real] NULL,

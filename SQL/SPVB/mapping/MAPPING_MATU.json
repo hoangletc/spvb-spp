@@ -3,38 +3,29 @@
   "mappings": [
     {
       "source": {
-        "path": "$[''issuetype'']"
+        "path": "$[''orgid'']"
       },
       "sink": {
-        "name": "ISSUE_TYPE",
+        "name": "ORGID",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''linecost'']"
+        "path": "$[''itemnum'']"
       },
       "sink": {
-        "name": "LINE_COST",
-        "type": "Float"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''quantity'']"
-      },
-      "sink": {
-        "name": "QUANTITY",
-        "type": "Float"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''issuetype_description'']"
-      },
-      "sink": {
-        "name": "ISSUE_TYPE_DESCRIPTION",
+        "name": "ITEMNUM",
         "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''linecost2'']"
+      },
+      "sink": {
+        "name": "LINECOST2",
+        "type": "Float"
       }
     },
     {
@@ -42,34 +33,43 @@
         "path": "$[''unitcost'']"
       },
       "sink": {
-        "name": "UNIT_COST",
+        "name": "UNITCOST",
         "type": "Float"
       }
     },
     {
       "source": {
-        "path": "$[''storeloc'']"
+        "path": "$[''exchangerate'']"
       },
       "sink": {
-        "name": "STORE_LOC",
+        "name": "EXCHANGERATE",
+        "type": "Float"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''linetype'']"
+      },
+      "sink": {
+        "name": "LINETYPE",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''transdate'']"
+        "path": "$[''description'']"
       },
       "sink": {
-        "name": "TRANS_DATE",
+        "name": "DESCRIPTION",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''actualdate'']"
+        "path": "$[''tositeid'']"
       },
       "sink": {
-        "name": "ACTUAL_DATE",
+        "name": "TOSITEID",
         "type": "String"
       }
     },
@@ -78,26 +78,7 @@
         "path": "$[''issueunit'']"
       },
       "sink": {
-        "name": "ISSUE_UNIT",
-        "type": "String"
-      }
-    },
-
-    {
-      "source": {
-        "path": "$[''itemnum'']"
-      },
-      "sink": {
-        "name": "ITEM_NUM",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''siteid'']"
-      },
-      "sink": {
-        "name": "SITE_ID",
+        "name": "ISSUEUNIT",
         "type": "String"
       }
     },
@@ -106,7 +87,97 @@
         "path": "$[''assetnum'']"
       },
       "sink": {
-        "name": "ASSET_NUM",
+        "name": "ASSETNUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''curbal'']"
+      },
+      "sink": {
+        "name": "CURBAL",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''invuseid'']"
+      },
+      "sink": {
+        "name": "INVUSEID",
+        "type": "Int64"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''refwo'']"
+      },
+      "sink": {
+        "name": "REFWO",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''quantity'']"
+      },
+      "sink": {
+        "name": "QUANTITY",
+        "type": "Int64"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''qtyrequested'']"
+      },
+      "sink": {
+        "name": "QTYREQUESTED",
+        "type": "Int64"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''storeloc'']"
+      },
+      "sink": {
+        "name": "STORELOC",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''actualcost'']"
+      },
+      "sink": {
+        "name": "ACTUALCOST",
+        "type": "Float"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''transdate'']"
+      },
+      "sink": {
+        "name": "TRANSDATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''matusetransid'']"
+      },
+      "sink": {
+        "name": "MATUSETRANSID",
+        "type": "Int64"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''location'']"
+      },
+      "sink": {
+        "name": "LOCATION",
         "type": "String"
       }
     },
@@ -121,10 +192,46 @@
     },
     {
       "source": {
-        "path": "$[''refwo'']"
+        "path": "$[''mrnum'']"
       },
       "sink": {
-        "name": "REF_WO",
+        "name": "MRNUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''ponum'']"
+      },
+      "sink": {
+        "name": "PONUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''currencycode'']"
+      },
+      "sink": {
+        "name": "CURRENCYCODE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''issuetype'']"
+      },
+      "sink": {
+        "name": "ISSUETYPE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''actualdate'']"
+      },
+      "sink": {
+        "name": "ACTUALDATE",
         "type": "String"
       }
     },

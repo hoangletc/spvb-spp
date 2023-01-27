@@ -3,17 +3,17 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-IF (OBJECT_ID('[dbo].[proc_load_w_cmms_wo_status_d]') is not null)
+IF (OBJECT_ID('[dbo].[proc_load_w_sap_plant_extended_d]') is not null)
 BEGIN
-    DROP PROCEDURE [dbo].[proc_load_w_cmms_wo_status_d]
+    DROP PROCEDURE [dbo].[proc_load_w_sap_plant_extended_d]
 END;
 GO
 
-CREATE PROC [dbo].[proc_load_w_cmms_wo_status_d]
+CREATE PROC [dbo].[proc_load_w_sap_plant_extended_d]
     @p_batch_id [bigint]
-AS
+AS 
 BEGIN
-    DECLARE	@tgt_TableName nvarchar(200) = N'dbo.W_CMMS_WO_STATUS_D',
+    DECLARE	@tgt_TableName nvarchar(200) = N'dbo.W_SAP_PLANT_EXTENDED_D',
 			@sql nvarchar(max),
 	        @column_name varchar(4000),
 	        @no_row bigint	,
@@ -48,9 +48,9 @@ BEGIN
 
     set @v_job_id= (
         select top 1
-        JOB_ID
-    from [dbo].[SAP_ETL_JOB]
-    where 1=1 and ACTIVE_FLG='Y' and TGT_TABLE = @tgt_TableName
+            JOB_ID
+        from [dbo].[SAP_ETL_JOB]
+        where 1=1 and ACTIVE_FLG='Y' and TGT_TABLE = @tgt_TableName
     )
     set @v_jobinstance_id = convert(
         bigint, 
@@ -58,11 +58,11 @@ BEGIN
     )
     set @v_src_tablename = (
         select top 1
-        SRC_TABLE
-    from [dbo].[SAP_ETL_JOB]
-    where 1=1
-        and ACTIVE_FLG = 'Y'
-        and TGT_TABLE = @tgt_TableName
+            SRC_TABLE
+        from [dbo].[SAP_ETL_JOB]
+        where 1=1 
+            and ACTIVE_FLG = 'Y' 
+            and TGT_TABLE = @tgt_TableName
     )
 
     print '@v_jobinstance_id is ' + cast(@v_jobinstance_id as varchar)
@@ -79,13 +79,13 @@ BEGIN
 
 
     BEGIN TRY
-		-- 1. Check existence of (and remove) temp table
+		-- 1. Check existence and remove of temp table
         PRINT '1. Check existence and remove of temp table'
 
-        IF OBJECT_ID(N'tempdb..#W_CMMS_WO_STATUS_D_tmp') IS NOT NULL 
+        IF OBJECT_ID(N'tempdb..#W_SAP_PLANT_EXTENDED_D_tmp') IS NOT NULL 
         BEGIN
-            PRINT N'DELETE temporary table #W_CMMS_WO_STATUS_D_tmp'
-            DROP Table #W_CMMS_WO_STATUS_D_tmp
+            PRINT N'DELETE temporary table #W_SAP_PLANT_EXTENDED_D_tmp'
+            DROP Table #W_SAP_PLANT_EXTENDED_D_tmp
         END;
 
 
@@ -93,21 +93,26 @@ BEGIN
         PRINT '2. Select everything into temp table'
 
 		SELECT
-            CONVERT(nvarchar(20), WOSTATUSID) AS ASSET_WID
-            , CONVERT(DATETIMEOFFSET, CHANGEDATE) AS [DATE]
-            , CONVERT(nvarchar(30), PARENT) AS WO_NUM
-            , CONVERT(nvarchar(10), [STATUS]) AS [STATUS]
+            CONVERT(nvarchar(30), WERKS)    AS WERKS
+            , CONVERT(nvarchar(30), LGORT)  AS LGORT
+            , CONVERT(nvarchar(100), LGOBE) AS LGOBE
+            , CASE WHEN LGORT = 'SP05' THEN 'Central Warehouse' 
+                ELSE CONVERT(nvarchar(100), PL.PLANT_NAME_1) END AS PLANT_NAME_1
+            , CONVERT(nvarchar(100), PLANT_NAME_2) AS PLANT_NAME_2
 
-			, CONVERT(nvarchar(100), CONCAT_WS('~', PARENT, WOSTATUSID, [STATUS])) AS W_INTEGRATION_ID
+			, CONVERT([varbinary](200), CONCAT_WS('~', WERKS, LGORT, LGOBE)) AS W_INTEGRATION_ID
 			, 'N' AS W_DELETE_FLG
 			, 1 AS W_DATASOURCE_NUM_ID
 			, GETDATE() AS W_INSERT_DT
 			, GETDATE() AS W_UPDATE_DT
 			, NULL W_BATCH_ID
             , 'N' AS W_UPDATE_FLG
-        INTO #W_CMMS_WO_STATUS_D_tmp
-        FROM [FND].[W_CMMS_WO_STATUS_D] F
 
+        INTO #W_SAP_PLANT_EXTENDED_D_tmp
+        FROM [FND].[W_SAP_T001L_D] F
+        LEFT JOIN [dbo].[W_PLANT_SAP_D] PL ON 1=1
+            AND F.WERKS = PL.PLANT_CODE
+        WHERE F.MANDT = 300
 
         -- 3. Update main table using W_INTEGRATION_ID
         PRINT '3. Update main table using W_INTEGRATION_ID'
@@ -115,21 +120,22 @@ BEGIN
         -- 3.1. Mark existing records by flag 'Y'
         PRINT '3.1. Mark existing records by flag ''Y'''
 
-        UPDATE #W_CMMS_WO_STATUS_D_tmp
+        UPDATE #W_SAP_PLANT_EXTENDED_D_tmp
 		SET W_UPDATE_FLG = 'Y'
-		FROM #W_CMMS_WO_STATUS_D_tmp tg
-        INNER JOIN [dbo].[W_CMMS_WO_STATUS_D] sc
+		FROM #W_SAP_PLANT_EXTENDED_D_tmp tg
+        INNER JOIN [dbo].[W_SAP_PLANT_EXTENDED_D] sc 
         ON sc.W_INTEGRATION_ID = tg.W_INTEGRATION_ID
 
         -- 3.2. Start updating
         PRINT '3.2. Start updating'
 
-		UPDATE [dbo].[W_CMMS_WO_STATUS_D]
+		UPDATE  [dbo].[W_SAP_PLANT_EXTENDED_D]
 		SET 
-            ASSET_WID = src.ASSET_WID
-			, [DATE] = src.[DATE]
-            , WO_NUM = src.WO_NUM
-            , [STATUS] = src.[STATUS]
+            WERKS = src.WERKS
+            , LGORT = src.LGORT
+            , LGOBE = src.LGOBE
+            , PLANT_NAME_1 = src.PLANT_NAME_1
+            , PLANT_NAME_2 = src.PLANT_NAME_2
 
 			, W_DELETE_FLG = src.W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID = src.W_DATASOURCE_NUM_ID
@@ -137,75 +143,80 @@ BEGIN
 			, W_BATCH_ID = src.W_BATCH_ID
 			, W_INTEGRATION_ID = src.W_INTEGRATION_ID
 			, W_UPDATE_DT = getdate()
-        FROM [dbo].[W_CMMS_WO_STATUS_D] tgt
-        INNER JOIN #W_CMMS_WO_STATUS_D_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID
+
+        FROM [dbo].[W_SAP_PLANT_EXTENDED_D] tgt
+        INNER JOIN #W_SAP_PLANT_EXTENDED_D_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID
 
 
 	    -- 4. Insert non-existed records to main table from temp table
         PRINT '4. Insert non-existed records to main table from temp table'
 
-        INSERT INTO [dbo].[W_CMMS_WO_STATUS_D](
-            ASSET_WID
-            , [DATE]
-            , WO_NUM
-            , [STATUS]
+        INSERT INTO [dbo].[W_SAP_PLANT_EXTENDED_D](
+             WERKS
+            , LGORT
+            , LGOBE
+            , PLANT_NAME_1
+            , PLANT_NAME_2
 
             , W_DELETE_FLG
-            , W_DATASOURCE_NUM_ID
-            , W_INSERT_DT
-            , W_UPDATE_DT
-            , W_BATCH_ID
-            , W_INTEGRATION_ID
+			, W_DATASOURCE_NUM_ID
+			, W_INSERT_DT
+			, W_UPDATE_DT
+			, W_BATCH_ID
+			, W_INTEGRATION_ID
         )
         SELECT
-            ASSET_WID
-            , [DATE]
-            , WO_NUM
-            , [STATUS]
+            WERKS
+            , LGORT
+            , LGOBE
+            , PLANT_NAME_1
+            , PLANT_NAME_2
 
             , W_DELETE_FLG
-            , W_DATASOURCE_NUM_ID
-            , W_INSERT_DT
-            , W_UPDATE_DT
-            , W_BATCH_ID
-            , W_INTEGRATION_ID
-        FROM #W_CMMS_WO_STATUS_D_tmp
-        where W_UPDATE_FLG = 'N'		
+			, W_DATASOURCE_NUM_ID
+			, W_INSERT_DT
+			, W_UPDATE_DT
+			, W_BATCH_ID
+			, W_INTEGRATION_ID
+        FROM #W_SAP_PLANT_EXTENDED_D_tmp
+        where W_UPDATE_FLG = 'N'
+
+		
 
 		/*delete & re-insert data refresh*/
 		DELETE FROM [dbo].[SAP_ETL_DATAFRESH_CONF] WHERE UPPER(TABLE_NAME) = UPPER(@tgt_TableName)
 
-		INSERT INTO [dbo].[SAP_ETL_DATAFRESH_CONF](
-            TABLE_NAME,
-            REFRESH_DATE,
-            IS_FULLLOAD,
-            IS_EXIST_SSAS,
+		INSERT INTO [dbo].[SAP_ETL_DATAFRESH_CONF]
+        (
+            TABLE_NAME, 
+            REFRESH_DATE, 
+            IS_FULLLOAD, 
+            IS_EXIST_SSAS, 
             LAST_UPDATE_DATE
-            )
-        SELECT DISTINCT
-            @tgt_TableName,
-            NULL,
-            'Y',
-            'Y',
+        )
+        SELECT DISTINCT 
+            @tgt_TableName, 
+            NULL, 
+            'Y', 
+            'Y', 
             DATEADD(HH, 7, GETDATE())
         FROM (
-                SELECT *
-            FROM W_CMMS_WO_STATUS_D
-            ) M
+            SELECT *
+            FROM W_SAP_PLANT_EXTENDED_D
+        ) M
         WHERE 1=1
             AND W_BATCH_ID = @p_batch_id
             AND W_DELETE_FLG = 'N'
 
-            SET @src_rownum = ( SELECT COUNT(1)
-        FROM #W_CMMS_WO_STATUS_D_tmp );
-            SET @tgt_rownum = ( 
-                SELECT
-            COUNT(DISTINCT W_INTEGRATION_ID)
-        FROM W_CMMS_WO_STATUS_D
-        WHERE 1=1
-            AND W_DELETE_FLG = 'N'
-            AND W_BATCH_ID = @p_batch_id
-            );
+		SET @src_rownum = ( SELECT COUNT(1) FROM #W_SAP_PLANT_EXTENDED_D_tmp );
+		SET @tgt_rownum = ( 
+            SELECT 
+                COUNT(DISTINCT W_INTEGRATION_ID)
+            FROM W_SAP_PLANT_EXTENDED_D
+            WHERE 1=1
+                AND W_DELETE_FLG = 'N' 
+                AND W_BATCH_ID = @p_batch_id
+        );
 
 	END TRY
 

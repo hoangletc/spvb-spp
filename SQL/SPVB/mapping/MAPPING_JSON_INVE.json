@@ -3,28 +3,28 @@
   "mappings": [
     {
       "source": {
-        "path": "$[''itemnum'']"
+        "path": "$[''issueunit'']"
       },
       "sink": {
-        "name": "ITEM_NUMBER",
+        "name": "ISSUE_UNIT",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''maxlevel'']"
+        "path": "$[''minlevel'']"
       },
       "sink": {
-        "name": "MAX_LEVEL",
+        "name": "MIN_LEVEL",
         "type": "Int64"
       }
     },
     {
       "source": {
-        "path": "$[''lastissuedate'']"
+        "path": "$[''inventoryid'']"
       },
       "sink": {
-        "name": "LAST_ISSUE_DATE",
+        "name": "INVE_ID",
         "type": "String"
       }
     },
@@ -39,20 +39,49 @@
     },
     {
       "source": {
-        "path": "$[''location'']"
+        "path": "$[''status_description'']"
       },
       "sink": {
-        "name": "LOCATION",
+        "name": "STATUS_DESC",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''invcost.avgcost'']"
+        "path": "$[''orderunit'']"
       },
       "sink": {
-        "name": "AVG_COST",
-        "type": "Int64"
+        "name": "ORDER_UNIT",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''itemnum'']"
+      },
+      "sink": {
+        "name": "ITEM_NUM",
+        "type": "String"
+      }
+    },
+
+    {
+      "source": {
+        "path": "$[''lastissuedate'']"
+      },
+      "sink": {
+        "name": "LAST_ISSUE_DATE",
+        "type": "String"
+      }
+    },
+
+    {
+      "source": {
+        "path": "$[''location'']"
+      },
+      "sink": {
+        "name": "LOCATION",
+        "type": "String"
       }
     },
     {

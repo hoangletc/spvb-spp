@@ -1,0 +1,25 @@
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[W_SAP_PLANT_EXTENDED_D]
+(
+    [PLANT_WID] INT NOT NULL IDENTITY(1, 1),
+
+
+    [WERKS] [nvarchar](30) NULL,
+    [LGORT] [nvarchar](30) NULL,
+    [LGOBE] [nvarchar](100) NULL,
+
+    [PLANT_NAME_1] [nvarchar](100) NULL,
+    [PLANT_NAME_2] [nvarchar](100) NULL,
+
+    [W_DELETE_FLG] VARCHAR(1) NULL,
+    [W_DATASOURCE_NUM_ID] INT NULL,
+    [W_INTEGRATION_ID] [nvarchar](300) NULL,
+    [W_INSERT_DT] [datetime] NULL,
+    [W_UPDATE_DT] [datetime] NULL,
+    [W_BATCH_ID] [bigint] NULL
+)
+    WITH(DISTRIBUTION = ROUND_ROBIN, HEAP)
+GO

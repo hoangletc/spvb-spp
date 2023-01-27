@@ -3,56 +3,46 @@
   "mappings": [
     {
       "source": {
+        "path": "$[''financialperiod'']"
+      },
+      "sink": {
+        "name": "FINANCIALPERIOD",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''unitcost'']"
+      },
+      "sink": {
+        "name": "UNITCOST",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''currencycode'']"
+      },
+      "sink": {
+        "name": "CURRENCYCODE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
         "path": "$[''issuetype'']"
       },
       "sink": {
-        "name": "ISSUE_TYPE",
+        "name": "ISSUETYPE",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''linecost'']"
+        "path": "$[''spvb_sapreceipt'']"
       },
       "sink": {
-        "name": "LINE_COST",
-        "type": "Float"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''quantity'']"
-      },
-      "sink": {
-        "name": "QUANTITY",
-        "type": "Float"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''issuetype_description'']"
-      },
-      "sink": {
-        "name": "ISSUE_TYPE_DESCRIPTION",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''tostoreloc'']"
-      },
-      "sink": {
-        "name": "UNIT_COST",
-        "type": "String"
-      }
-    },
-
-    {
-      "source": {
-        "path": "$[''transdate'']"
-      },
-      "sink": {
-        "name": "TRANS_DATE",
+        "name": "SPVB_SAPRECEIPT",
         "type": "String"
       }
     },
@@ -61,7 +51,286 @@
         "path": "$[''actualdate'']"
       },
       "sink": {
-        "name": "ACTUAL_DATE",
+        "name": "ACTUALDATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_sappo'']"
+      },
+      "sink": {
+        "name": "SPVB_SAPPO",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''currencylinecost'']"
+      },
+      "sink": {
+        "name": "CURRENCYLINECOST",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''totalcurbal'']"
+      },
+      "sink": {
+        "name": "TOTALCURBAL",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''siteid'']"
+      },
+      "sink": {
+        "name": "SITEID",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''qtyoverreceived'']"
+      },
+      "sink": {
+        "name": "QTYOVERRECEIVED",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''linecost'']"
+      },
+      "sink": {
+        "name": "LINECOST",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''issue'']"
+      },
+      "sink": {
+        "name": "ISSUE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''polinenum'']"
+      },
+      "sink": {
+        "name": "POLINENUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''itemnum'']"
+      },
+      "sink": {
+        "name": "ITEMNUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''linetype'']"
+      },
+      "sink": {
+        "name": "LINETYPE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''description'']"
+      },
+      "sink": {
+        "name": "DESCRIPTION",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_sapremark'']"
+      },
+      "sink": {
+        "name": "SPVB_SAPREMARK",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''curbal'']"
+      },
+      "sink": {
+        "name": "CURBAL",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''quantity'']"
+      },
+      "sink": {
+        "name": "QUANTITY",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''actualcost'']"
+      },
+      "sink": {
+        "name": "ACTUALCOST",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''transdate'']"
+      },
+      "sink": {
+        "name": "TRANSDATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''fromsiteid'']"
+      },
+      "sink": {
+        "name": "FROMSITEID",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''linetype_description'']"
+      },
+      "sink": {
+        "name": "LINETYPE_DESCRIPTION",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''positeid'']"
+      },
+      "sink": {
+        "name": "POSITEID",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''tostoreloc'']"
+      },
+      "sink": {
+        "name": "TOSTORELOC",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''ponum'']"
+      },
+      "sink": {
+        "name": "PONUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''refwo'']"
+      },
+      "sink": {
+        "name": "REFWO",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''asstnum'']"
+      },
+      "sink": {
+        "name": "ASSTNUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''shipmentnum'']"
+      },
+      "sink": {
+        "name": "SHIPMENTNUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''mrnum'']"
+      },
+      "sink": {
+        "name": "MRNUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''tobin'']"
+      },
+      "sink": {
+        "name": "TOBIN",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''invuselineid'']"
+      },
+      "sink": {
+        "name": "INVUSELINEID",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''receivedunit'']"
+      },
+      "sink": {
+        "name": "RECEIVEDUNIT",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''exchangerate'']"
+      },
+      "sink": {
+        "name": "EXCHANGERATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''fromstoreloc'']"
+      },
+      "sink": {
+        "name": "FROMSTORELOC",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''matrectransid'']"
+      },
+      "sink": {
+        "name": "MATRECTRANSID",
         "type": "String"
       }
     },

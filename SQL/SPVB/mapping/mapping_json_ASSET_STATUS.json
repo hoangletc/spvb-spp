@@ -3,47 +3,10 @@
   "mappings": [
     {
       "source": {
-        "path": "$[''assetstatusid'']"
+        "path": "$[''code'']"
       },
       "sink": {
-        "name": "ASSET_STATUS_ID",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''isrunning'']"
-      },
-      "sink": {
-        "name": "IS_RUNNING",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''downtime'']"
-      },
-      "sink": {
-        "name": "DOWNTIME",
-        "type": "Float"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''location'']"
-      },
-      "sink": {
-        "name": "LOCATION",
-        "type": "String"
-      }
-    },
-
-    {
-      "source": {
-        "path": "$[''changedate'']"
-      },
-      "sink": {
-        "name": "CHANGEDATE",
+        "name": "CODE",
         "type": "String"
       }
     },
@@ -58,10 +21,46 @@
     },
     {
       "source": {
-        "path": "$[''code'']"
+        "path": "$[''changedate'']"
       },
       "sink": {
-        "name": "CODE",
+        "name": "CHANGEDATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''downtime'']"
+      },
+      "sink": {
+        "name": "DOWNTIME",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''isrunning'']"
+      },
+      "sink": {
+        "name": "ISRUNNING",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''assetstatusid'']"
+      },
+      "sink": {
+        "name": "ASSETSTATUSID",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''location'']"
+      },
+      "sink": {
+        "name": "LOCATION",
         "type": "String"
       }
     },
@@ -70,7 +69,7 @@
         "path": "$[''assetnum'']"
       },
       "sink": {
-        "name": "ASSET_NUM",
+        "name": "ASSETNUM",
         "type": "String"
       }
     },
@@ -80,6 +79,51 @@
       },
       "sink": {
         "name": "OPERATIONAL",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''wonum'']"
+      },
+      "sink": {
+        "name": "WONUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_issue'']"
+      },
+      "sink": {
+        "name": "SPVB_ISSUE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_ca'']"
+      },
+      "sink": {
+        "name": "SPVB_CA",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_pa'']"
+      },
+      "sink": {
+        "name": "SPVB_PA",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''remarks'']"
+      },
+      "sink": {
+        "name": "REMARKS",
         "type": "String"
       }
     },

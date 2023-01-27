@@ -1,43 +1,51 @@
-WITH TMP_ASSET_LINE_INFO AS (
-    # NOTE: Nên để phần tìm Line info của mỗi asset vào Python script thay vì phải chạy lại mỗi lần query như vầy
-    select
-        T1.ASSET_WID,
-        T1.ASSET_NUM AS ASSET_NUM,
-        T2.ASSET_NUM AS LINE_ASSET_NUM,
-        T2.[DESCRIPTION] AS LINE_DESCRIPTION
-    from [dbo].[W_CMMS_ASSET_D] T1, [dbo].[W_CMMS_ASSET_D] T2
-    where 1=1
-        AND T2.ASSET_NUM = CASE 
-            WHEN T1.ASSET_HIERACHICAL_TYPE = 'machine' THEN T1.[PARENT]
-            WHEN T1.ASSET_HIERACHICAL_TYPE = 'component' THEN T1.[GRANDPARENT]
-            ELSE T1.[ASSET_NUM]
-        END
-)
-    SELECT TOP 100
-        TMP_ASST_L_INF.LINE_ASSET_NUM AS LINE_ASSET_NUM
-        , TMP_ASST_L_INF.LINE_DESCRIPTION AS LINE_DESCRIPTION
-        , F.ASSET_NUM AS ASSET_NUM
-        , CONVERT(DECIMAL(38,20), DOWNTIME) * 60 AS DOWNTIME
-        , CONVERT(nvarchar(100), ASST.DESCRIPTION) AS NAME
-        , NULL AS ANALYSIS_1 -- NOTE: Không biết là cột nào
-        , NULL AS ANALYSIS_2 -- NOTE: Không biết là cột nào
-        , CONVERT(nvarchar(5), CODE) AS ANALYSIS_3
-        , CONVERT(nvarchar(50), CODE_DESCRIPTION) AS DOWNTIME_CODE
-        , NULL AS ISSUE -- NOTE: Không biết là cột nào
-        
-        , CONCAT_WS('~', ASSET_STATUS_ID, F.LOCATION, CHANGEDATE, CODE) AS W_INTEGRATION_ID
-        , 'N' AS W_DELETE_FLG
-        , 1 AS W_DATASOURCE_NUM_ID
-        , GETDATE() AS W_INSERT_DT
-        , GETDATE() AS W_UPDATE_DT
-        , NULL W_BATCH_ID
-        , 'N' AS W_UPDATE_FLG
-    FROM [FND].[W_CMMS_ASSET_STATUS_F] F
-        LEFT JOIN [dbo].[W_PLANT_SAP_D] PLANT ON 1=1
-            AND PLANT.PLANT_NAME_2 = LEFT(F.LOCATION, 3)
-        LEFT JOIN [dbo].[W_CMMS_LOC_D] LOC ON 1=1
-            AND LOC.LOCATION = F.LOCATION
-        LEFT JOIN [dbo].[W_CMMS_ASSET_D] ASST ON 1=1
-            AND ASST.ASSET_NUM = F.ASSET_NUM
-        LEFT JOIN TMP_ASSET_LINE_INFO AS TMP_ASST_L_INF ON 1=1
-            AND F.ASSET_NUM = TMP_ASST_L_INF.ASSET_NUM
+SELECT TOP 100
+    FORMAT(CONVERT(DATE, CHANGEDATE), 'yyyymmdd')   AS DATE_WID
+    , ISNULL(PLANT.PLANT_WID, 0)                    AS PLANT_WID
+    , ISNULL(LOC.LOC_WID, 0)                        AS LOCATION_WID
+    , ISNULL(AST.ASSET_WID, 0)                      AS ASSET_WID
+
+    , AST.LINE_ASSET_NUM                            AS LINE_ASSET_NUM
+    , AST.LINE_ASSET_DES                            AS LINE_ASSET_DESC
+    , AS_ST.ASSETNUM                                AS ASSET_NUM
+    , CONVERT(DECIMAL(38,20), DOWNTIME) * 60        AS DOWNTIME
+    , CONVERT(nvarchar(100), AST.DESCRIPTION)       AS [NAME]
+    , CASE WHEN WONUM IS NULL 
+        THEN 'PRO' ELSE 'ME' END                    AS ANALYSIS_1 
+    , CASE 
+        WHEN LEFT(CODE, 1) = 'M' THEN 'Material'  
+        WHEN LEFT(CODE, 1) = 'O' THEN 'Operation' 
+        WHEN LEFT(CODE, 1) = 'E' THEN 'Equipment' 
+        WHEN LEFT(CODE, 1) = 'A' THEN 'Adjustment' 
+        WHEN LEFT(CODE, 1) = 'S' THEN 'Shutdown' 
+        WHEN LEFT(CODE, 1) = 'R' THEN 'Routine' 
+        ELSE ' ' END                                AS ANALYSIS_2
+    , CONVERT(nvarchar(5), CODE)                    AS ANALYSIS_3
+    , CONVERT(nvarchar(50), CODE_DESCRIPTION)       AS DOWNTIME_CODE
+    , CASE WHEN SPVB_ISSUE IS NULL THEN NULL
+        ELSE CONVERT(NVARCHAR(100), SPVB_ISSUE) END AS ISSUE
+    , CASE WHEN SPVB_CA IS NULL THEN NULL
+        ELSE CONVERT(NVARCHAR(50), SPVB_CA) END     AS CORRECTIVE_ACTION
+    , CASE WHEN SPVB_PA IS NULL THEN NULL
+        ELSE CONVERT(NVARCHAR(50), SPVB_PA) END     AS PREVENTIVE_ACTION
+    , CASE WHEN REMARKS IS NULL THEN NULL
+        ELSE CONVERT(NVARCHAR(50), REMARKS) END     AS REMARKS
+    
+    , CONVERT(
+        NVARCHAR(200), 
+        CONCAT_WS('~', ASSETSTATUSID, AS_ST.[LOCATION], 
+                    DOWNTIME, CODE, AS_ST.ASSETNUM)
+    )                                               AS W_INTEGRATION_ID
+    , 'N'                                           AS W_DELETE_FLG
+    , 1                                             AS W_DATASOURCE_NUM_ID
+    , GETDATE()                                     AS W_INSERT_DT
+    , GETDATE()                                     AS W_UPDATE_DT
+    , NULL                                          AS W_BATCH_ID
+    , 'N'                                           AS W_UPDATE_FLG
+-- INTO #W_CMMS_DOWNTIME_F_tmp
+FROM [FND].[W_CMMS_ASSET_STATUS_F] AS_ST
+    LEFT JOIN [dbo].[W_PLANT_SAP_D] PLANT ON 1=1
+        AND PLANT.PLANT_NAME_2 = LEFT(AS_ST.LOCATION, 3)
+    LEFT JOIN [dbo].[W_CMMS_LOC_D] LOC ON 1=1
+        AND LOC.[LOCATION] = LEFT(AS_ST.[LOCATION], 7)
+    LEFT JOIN [dbo].[W_CMMS_ASSET_D] AST ON 1=1
+        AND AST.ASSET_NUM = AS_ST.ASSETNUM
