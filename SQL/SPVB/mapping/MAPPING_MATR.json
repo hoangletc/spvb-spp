@@ -3,137 +3,11 @@
   "mappings": [
     {
       "source": {
-        "path": "$[''financialperiod'']"
+        "path": "$[''curbal'']"
       },
       "sink": {
-        "name": "FINANCIALPERIOD",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''unitcost'']"
-      },
-      "sink": {
-        "name": "UNITCOST",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''currencycode'']"
-      },
-      "sink": {
-        "name": "CURRENCYCODE",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''issuetype'']"
-      },
-      "sink": {
-        "name": "ISSUETYPE",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''spvb_sapreceipt'']"
-      },
-      "sink": {
-        "name": "SPVB_SAPRECEIPT",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''actualdate'']"
-      },
-      "sink": {
-        "name": "ACTUALDATE",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''spvb_sappo'']"
-      },
-      "sink": {
-        "name": "SPVB_SAPPO",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''currencylinecost'']"
-      },
-      "sink": {
-        "name": "CURRENCYLINECOST",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''totalcurbal'']"
-      },
-      "sink": {
-        "name": "TOTALCURBAL",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''siteid'']"
-      },
-      "sink": {
-        "name": "SITEID",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''qtyoverreceived'']"
-      },
-      "sink": {
-        "name": "QTYOVERRECEIVED",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''linecost'']"
-      },
-      "sink": {
-        "name": "LINECOST",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''issue'']"
-      },
-      "sink": {
-        "name": "ISSUE",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''polinenum'']"
-      },
-      "sink": {
-        "name": "POLINENUM",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''itemnum'']"
-      },
-      "sink": {
-        "name": "ITEMNUM",
-        "type": "String"
+        "name": "CURBAL",
+        "type": "Float"
       }
     },
     {
@@ -147,56 +21,47 @@
     },
     {
       "source": {
-        "path": "$[''description'']"
+        "path": "$[''receivedunit'']"
       },
       "sink": {
-        "name": "DESCRIPTION",
+        "name": "RECEIVED_UNIT",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''spvb_sapremark'']"
+        "path": "$[''totalcurbal'']"
       },
       "sink": {
-        "name": "SPVB_SAPREMARK",
+        "name": "TOTAL_CURBAL",
+        "type": "Float"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''tobin'']"
+      },
+      "sink": {
+        "name": "TOBIN",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''curbal'']"
+        "path": "$[''unitcost'']"
       },
       "sink": {
-        "name": "CURBAL",
-        "type": "String"
+        "name": "UNIT_COST",
+        "type": "Float"
       }
     },
     {
       "source": {
-        "path": "$[''quantity'']"
+        "path": "$[''polinenum'']"
       },
       "sink": {
-        "name": "QUANTITY",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''actualcost'']"
-      },
-      "sink": {
-        "name": "ACTUALCOST",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''transdate'']"
-      },
-      "sink": {
-        "name": "TRANSDATE",
-        "type": "String"
+        "name": "PO_LINE_NUM",
+        "type": "Int64"
       }
     },
     {
@@ -204,43 +69,7 @@
         "path": "$[''fromsiteid'']"
       },
       "sink": {
-        "name": "FROMSITEID",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''linetype_description'']"
-      },
-      "sink": {
-        "name": "LINETYPE_DESCRIPTION",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''positeid'']"
-      },
-      "sink": {
-        "name": "POSITEID",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''tostoreloc'']"
-      },
-      "sink": {
-        "name": "TOSTORELOC",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''ponum'']"
-      },
-      "sink": {
-        "name": "PONUM",
+        "name": "FROM_SITEID",
         "type": "String"
       }
     },
@@ -255,19 +84,118 @@
     },
     {
       "source": {
-        "path": "$[''asstnum'']"
+        "path": "$[''spvb_sappo'']"
       },
       "sink": {
-        "name": "ASSTNUM",
+        "name": "SPVB_SAPPO",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''shipmentnum'']"
+        "path": "$[''financialperiod'']"
       },
       "sink": {
-        "name": "SHIPMENTNUM",
+        "name": "FINANCIAL_PERIOD",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''description'']"
+      },
+      "sink": {
+        "name": "DESCRIPTION",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''actualdate'']"
+      },
+      "sink": {
+        "name": "ACTUALDATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_sapreceipt'']"
+      },
+      "sink": {
+        "name": "SPVB_SAPRECEIPT",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''qtyoverreceived'']"
+      },
+      "sink": {
+        "name": "QTYOVERRECEIVED",
+        "type": "Float"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''binnum'']"
+      },
+      "sink": {
+        "name": "BINNUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''fromstoreloc'']"
+      },
+      "sink": {
+        "name": "FROM_STORELOC",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''currencycode'']"
+      },
+      "sink": {
+        "name": "CURRENCY_CODE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''ponum'']"
+      },
+      "sink": {
+        "name": "PONUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''issueunit'']"
+      },
+      "sink": {
+        "name": "ISSUE_UNIT",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''positeid'']"
+      },
+      "sink": {
+        "name": "PO_SITEID",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''itemnum'']"
+      },
+      "sink": {
+        "name": "ITEM_NUM",
         "type": "String"
       }
     },
@@ -282,29 +210,38 @@
     },
     {
       "source": {
-        "path": "$[''tobin'']"
+        "path": "$[''tostoreloc'']"
       },
       "sink": {
-        "name": "TOBIN",
+        "name": "TO_STORELOC",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''invuselineid'']"
+        "path": "$[''linecost'']"
       },
       "sink": {
-        "name": "INVUSELINEID",
-        "type": "String"
+        "name": "LINECOST",
+        "type": "Float"
       }
     },
     {
       "source": {
-        "path": "$[''receivedunit'']"
+        "path": "$[''actualcost'']"
       },
       "sink": {
-        "name": "RECEIVEDUNIT",
-        "type": "String"
+        "name": "ACTUALCOST",
+        "type": "Float"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''matrectransid'']"
+      },
+      "sink": {
+        "name": "MATR_ID",
+        "type": "Int64"
       }
     },
     {
@@ -313,24 +250,105 @@
       },
       "sink": {
         "name": "EXCHANGERATE",
+        "type": "Float"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_dnd'']"
+      },
+      "sink": {
+        "name": "SPVB_DND",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''fromstoreloc'']"
+        "path": "$[''transdate'']"
       },
       "sink": {
-        "name": "FROMSTORELOC",
+        "name": "TRANSDATE",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''matrectransid'']"
+        "path": "$[''assetnum'']"
       },
       "sink": {
-        "name": "MATRECTRANSID",
+        "name": "ASSET_NUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''issuetype'']"
+      },
+      "sink": {
+        "name": "ISSUE_TYPE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''currencylinecost'']"
+      },
+      "sink": {
+        "name": "CURRENCYLINECOST",
+        "type": "Float"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''quantity'']"
+      },
+      "sink": {
+        "name": "QUANTITY",
+        "type": "Float"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_sapremark'']"
+      },
+      "sink": {
+        "name": "SPVB_SAPREMARK",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''invuselineid'']"
+      },
+      "sink": {
+        "name": "INVUSELINE_ID",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''linetype_description'']"
+      },
+      "sink": {
+        "name": "LINETYPE_DESCRIPTION",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''siteid'']"
+      },
+      "sink": {
+        "name": "SITE_ID",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''issue'']"
+      },
+      "sink": {
+        "name": "ISSUE",
         "type": "String"
       }
     },
@@ -340,7 +358,7 @@
       },
       "sink": {
         "name": "W_BATCH_ID",
-        "type": "String"
+        "type": "Int64"
       }
     },
     {

@@ -4,26 +4,26 @@ SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [FND].[W_CMMS_ITEM_D]
 (
-	[ROTATING] [nvarchar](max) NULL,
-	[SPVB_PLANT] [nvarchar](max) NULL,
-	[STATUS_DESCRIPTION] [nvarchar](max) NULL,
-	[CONDITION_ENABLED] [nvarchar](max) NULL,
-	[DESCRIPTION] [nvarchar](max) NULL,
-	[ORDER_UNIT] [nvarchar](max) NULL,
-	[ISSUE_UNIT] [nvarchar](max) NULL,
-	[IS_KIT] [nvarchar](max) NULL,
-	[ITEM_NUM] [nvarchar](max) NULL,
-	[ITEM_TYPE] [nvarchar](max) NULL,
-	[SPVB_OEM] [nvarchar](max) NULL,
-	[SPVB_OEMPARTNO] [nvarchar](max) NULL,
-	[SPVB_VENDOR] [nvarchar](max) NULL,
-	[SPVB_MACHINE] [nvarchar](max) NULL,
-	[SPVB_PRODUCTLINE] [nvarchar](max) NULL,
-	[SPVB_PARTNO] [nvarchar](max) NULL,
-	[SPVB_MUSTRETURN] [nvarchar](max) NULL,
-	[STATUS] [nvarchar](max) NULL,
-	[W_BATCH_ID] [nvarchar](max) NULL,
-	[W_INSERT_DT] [nvarchar](max) NULL
+	[DESCRIPTION] [nvarchar](100) NULL,
+	[ISKIT] [nvarchar](100) NULL,
+	[ISSUE_UNIT] [nvarchar](100) NULL,
+	[ITEM_NUM] [nvarchar](100) NULL,
+	[ITEM_TYPE] [nvarchar](100) NULL,
+	[LOT_TYPE] [nvarchar](100) NULL,
+	[LOT_TYPE_DESCRIPTION] [nvarchar](100) NULL,
+	[ORDER_UNIT] [nvarchar](100) NULL,
+	[SPP_CLASSIFICATION] [nvarchar](100) NULL,
+	[SPP_CLASSIFICATION_DESCRIPTION] [nvarchar](100) NULL,
+	[SPVB_ITEM_MUSTNO] [nvarchar](100) NULL,
+	[SPVB_MAX] [nvarchar](100) NULL,
+	[SPVB_MIN] [nvarchar](100) NULL,
+	[SPVB_MUSTRETURN] [nvarchar](100) NULL,
+	[SPVB_PLANT] [nvarchar](100) NULL,
+	[STATUS] [nvarchar](100) NULL,
+	[STATUS_DESCRIPTION] [nvarchar](100) NULL,
+	[ITEM_ID] [bigint] NULL,
+	[W_BATCH_ID] BIGINT NULL,
+	[W_INSERT_DT] DATETIME NULL
 )
 WITH
 (

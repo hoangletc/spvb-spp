@@ -1,0 +1,54 @@
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [FND].[W_CMMS_MATR_F]
+(
+	[CURBAL] [real] NULL,
+	[LINETYPE] [nvarchar](200) NULL,
+	[RECEIVED_UNIT] [nvarchar](200) NULL,
+	[TOTAL_CURBAL] [real] NULL,
+	[TOBIN] [nvarchar](200) NULL,
+	[UNIT_COST] [real] NULL,
+	[PO_LINE_NUM] [bigint] NULL,
+	[FROM_SITEID] [nvarchar](200) NULL,
+	[REFWO] [nvarchar](200) NULL,
+	[SPVB_SAPPO] [nvarchar](200) NULL,
+	[FINANCIAL_PERIOD] [nvarchar](200) NULL,
+	[DESCRIPTION] [nvarchar](200) NULL,
+	[ACTUALDATE] DATETIME NULL,
+	[SPVB_SAPRECEIPT] [nvarchar](200) NULL,
+	[QTYOVERRECEIVED] [real] NULL,
+	[BINNUM] [nvarchar](200) NULL,
+	[FROM_STORELOC] [nvarchar](200) NULL,
+	[CURRENCY_CODE] [nvarchar](200) NULL,
+	[PONUM] [nvarchar](200) NULL,
+	[ISSUE_UNIT] [nvarchar](200) NULL,
+	[PO_SITEID] [nvarchar](200) NULL,
+	[ITEM_NUM] [nvarchar](200) NULL,
+	[MRNUM] [nvarchar](200) NULL,
+	[TO_STORELOC] [nvarchar](200) NULL,
+	[LINECOST] [real] NULL,
+	[ACTUALCOST] [real] NULL,
+	[MATR_ID] [bigint] NULL,
+	[EXCHANGERATE] [real] NULL,
+	[SPVB_DND] [nvarchar](200) NULL,
+	[TRANSDATE] DATETIME NULL,
+	[ASSET_NUM] [nvarchar](200) NULL,
+	[ISSUE_TYPE] [nvarchar](200) NULL,
+	[CURRENCYLINECOST] [real] NULL,
+	[QUANTITY] [real] NULL,
+	[SPVB_SAPREMARK] [nvarchar](200) NULL,
+	[INVUSELINE_ID] [nvarchar](200) NULL,
+	[LINETYPE_DESCRIPTION] [nvarchar](200) NULL,
+	[SITE_ID] [nvarchar](200) NULL,
+	[ISSUE] [nvarchar](200) NULL,
+	[W_BATCH_ID] [bigint] NULL,
+	[W_INSERT_DT] DATETIME NULL
+)
+WITH
+(
+	DISTRIBUTION = ROUND_ROBIN,
+	HEAP
+)
+GO

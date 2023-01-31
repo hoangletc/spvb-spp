@@ -1,0 +1,33 @@
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [FND].[W_CMMS_INVU_D]
+(
+	[DESCRIPTION] [nvarchar](200) NULL,
+	[CURRENCY_CODE] [nvarchar](200) NULL,
+	[INVUSE_NUM] [nvarchar](200) NULL,
+	[INV_OWNER] [nvarchar](200) NULL,
+	[INVU_ID] [bigint] NULL,
+	[FROM_STORELOC] [nvarchar](200) NULL,
+	[STATUS_DESCRIPTION] [nvarchar](200) NULL,
+	[CHANGEDATE] [nvarchar](200) NULL,
+	[USETYPE_DESCRIPTION] [nvarchar](200) NULL,
+	[EXCHANGEDATE] [nvarchar](200) NULL,
+	[RECEIPTS_DESCRIPTION] [nvarchar](200) NULL,
+	[RECEIPTS] [nvarchar](200) NULL,
+	[SPVB_INTERNAL] [nvarchar](200) NULL,
+	[USETYPE] [nvarchar](200) NULL,
+	[STATUS] [nvarchar](200) NULL,
+	[ITEM_NUM] [nvarchar](200) NULL,
+	[ASSET_NUM] [nvarchar](200) NULL,
+	[MATU_ID] [bigint] NULL,
+	[W_BATCH_ID] BIGINT NULL,
+	[W_INSERT_DT] DATETIME NULL
+)
+WITH
+(
+	DISTRIBUTION = ROUND_ROBIN,
+	HEAP
+)
+GO

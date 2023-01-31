@@ -3,28 +3,82 @@
   "mappings": [
     {
       "source": {
-        "path": "$[''invuseline'']"
+        "path": "$[''invuselineid'']"
       },
       "sink": {
-        "name": "INVUSELINE",
-        "type": "String"
+        "name": "INVUSELINE_ID",
+        "type": "Int64"
       }
     },
     {
       "source": {
-        "path": "$[''curbal'']"
+        "path": "$[''unitcost'']"
       },
       "sink": {
-        "name": "CURBAL",
+        "name": "UNITCOST",
         "type": "Float"
       }
     },
     {
       "source": {
-        "path": "$[''location'']"
+        "path": "$[''spvb_extreasoncode'']"
       },
       "sink": {
-        "name": "LOCATION",
+        "name": "SPVB_EXTREASONCODE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_extreasoncode_description'']"
+      },
+      "sink": {
+        "name": "SPVB_EXTREASONCODE_DESCRIPTION",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_mustreturn'']"
+      },
+      "sink": {
+        "name": "SPVB_MUSTRETURN",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_returnfromissue'']"
+      },
+      "sink": {
+        "name": "SPVB_RETURNFROMISSUE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_mustreturn_org'']"
+      },
+      "sink": {
+        "name": "SPVB_MUSTRETURN_ORG",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''returnedqty'']"
+      },
+      "sink": {
+        "name": "RETURNED_QTY",
+        "type": "Float"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''remark'']"
+      },
+      "sink": {
+        "name": "REMARK",
         "type": "String"
       }
     },
@@ -39,155 +93,10 @@
     },
     {
       "source": {
-        "path": "$[''unitcost'']"
-      },
-      "sink": {
-        "name": "UNITCOST",
-        "type": "Float"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''qtyrequested'']"
-      },
-      "sink": {
-        "name": "QTY_REQUESTED",
-        "type": "Float"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''refwo'']"
-      },
-      "sink": {
-        "name": "REFWO",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''storeloc'']"
-      },
-      "sink": {
-        "name": "STORELOC",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
         "path": "$[''description'']"
       },
       "sink": {
         "name": "DESCRIPTION",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''linecost2'']"
-      },
-      "sink": {
-        "name": "LINECOST2",
-        "type": "Float"
-      }
-    },
-
-    {
-      "source": {
-        "path": "$[''binnum'']"
-      },
-      "sink": {
-        "name": "BINNUM",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''currencycode'']"
-      },
-      "sink": {
-        "name": "CURRENCY_CODE",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''ponum'']"
-      },
-      "sink": {
-        "name": "PONUM",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''issueunit'']"
-      },
-      "sink": {
-        "name": "ISSUE_UNIT",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''itemnum'']"
-      },
-      "sink": {
-        "name": "ITEM_NUM",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''invuseid'']"
-      },
-      "sink": {
-        "name": "INVUSE_ID",
-        "type": "Int64"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''mrnum'']"
-      },
-      "sink": {
-        "name": "MRNUM",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''actualcost'']"
-      },
-      "sink": {
-        "name": "ACTUAL_COST",
-        "type": "Float"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''exchangerate'']"
-      },
-      "sink": {
-        "name": "EXCHANGERATE",
-        "type": "Float"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''transdate'']"
-      },
-      "sink": {
-        "name": "TRANSDATE",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''assetnum'']"
-      },
-      "sink": {
-        "name": "ASSET_NUM",
         "type": "String"
       }
     },
@@ -202,20 +111,74 @@
     },
     {
       "source": {
-        "path": "$[''issuetype'']"
+        "path": "$[''invusenum'']"
       },
       "sink": {
-        "name": "ISSUE_TYPE",
+        "name": "INVUSE_NUM",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''orgid'']"
+        "path": "$[''actualdate'']"
       },
       "sink": {
-        "name": "ORG_ID",
+        "name": "ACTUALDATE",
         "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''receivedqty'']"
+      },
+      "sink": {
+        "name": "RECEIVED_QTY",
+        "type": "Float"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''assetnum'']"
+      },
+      "sink": {
+        "name": "ASSET_NUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''costcenter'']"
+      },
+      "sink": {
+        "name": "COSTCENTER",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''fromstoreloc'']"
+      },
+      "sink": {
+        "name": "FROM_STORELOC",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''refwo'']"
+      },
+      "sink": {
+        "name": "REFWO",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''linecost'']"
+      },
+      "sink": {
+        "name": "LINECOST",
+        "type": "Float"
       }
     },
     {
@@ -229,10 +192,91 @@
     },
     {
       "source": {
-        "path": "$[''invuselineid'']"
+        "path": "$[''costcenter_description'']"
       },
       "sink": {
-        "name": "INVUSELINE_ID",
+        "name": "COSTCENTER_DESCRIPTION",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''invuselinenum'']"
+      },
+      "sink": {
+        "name": "INVUSELINE_NUM",
+        "type": "Int64"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''itemnum'']"
+      },
+      "sink": {
+        "name": "ITEM_NUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''itemsetid'']"
+      },
+      "sink": {
+        "name": "ITEMSETID",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''location'']"
+      },
+      "sink": {
+        "name": "LOCATION",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_sappo'']"
+      },
+      "sink": {
+        "name": "SPVB_SAPPO",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''usetype'']"
+      },
+      "sink": {
+        "name": "USE_TYPE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''enterby'']"
+      },
+      "sink": {
+        "name": "ENTER_BY",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_wonumref'']"
+      },
+      "sink": {
+        "name": "SPVB_WONUMREF",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_reason'']"
+      },
+      "sink": {
+        "name": "SPVB_REASON",
         "type": "String"
       }
     },
@@ -242,7 +286,7 @@
       },
       "sink": {
         "name": "MATU_ID",
-        "type": "Int64"
+        "type": "String"
       }
     },
     {

@@ -4,22 +4,32 @@ SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [FND].[W_CMMS_MATU_F]
 (
-	[ISSUE_TYPE] [nvarchar](1000) NULL,
-	[LINE_COST] [real] NULL,
+	[CURBAL] [real] NULL,
+	[LOCATION] [nvarchar](200) NULL,
+	[LINE_TYPE] [nvarchar](200) NULL,
+	[UNITCOST] [real] NULL,
+	[QTY_REQUESTED] [real] NULL,
+	[REFWO] [nvarchar](200) NULL,
+	[STORELOC] [nvarchar](200) NULL,
+	[DESCRIPTION] [nvarchar](200) NULL,
+	[LINECOST2] [real] NULL,
+	[BINNUM] [nvarchar](200) NULL,
+	[CURRENCYCODE] [nvarchar](200) NULL,
+	[PONUM] [nvarchar](200) NULL,
+	[ISSUE_UNIT] [nvarchar](200) NULL,
+	[ITEM_NUM] [nvarchar](200) NULL,
+	[INVUSE_ID] [bigint] NULL,
+	[MRNUM] [nvarchar](200) NULL,
+	[ACTUAL_COST] [real] NULL,
+	[EXCHANGERATE] [real] NULL,
+	[TRANSDATE] DATETIME NULL,
+	[ASSET_NUM] [nvarchar](200) NULL,
+	[TO_SITEID] [nvarchar](200) NULL,
+	[ISSUE_TYPE] [nvarchar](200) NULL,
+	[ORGID] [nvarchar](200) NULL,
 	[QUANTITY] [real] NULL,
-	[ISSUE_TYPE_DESCRIPTION] [nvarchar](1000) NULL,
-	[UNIT_COST] [real] NULL,
-	[STORE_LOC] [nvarchar](1000) NULL,
-	[TRANS_DATE] [nvarchar](1000) NULL,
-	[ACTUAL_DATE] [nvarchar](1000) NULL,
-	[ISSUE_UNIT] [nvarchar](1000) NULL,
-	[ITEM_NUM] [nvarchar](1000) NULL,
-	[SITE_ID] [nvarchar](1000) NULL,
-	[ASSET_NUM] [nvarchar](1000) NULL,
-	[BINNUM] [nvarchar](1000) NULL,
-	[REF_WO] [nvarchar](1000) NULL,
-	[W_BATCH_ID] [nvarchar](1000) NULL,
-	[W_INSERT_DT] [nvarchar](1000) NULL
+	[W_BATCH_ID] [bigint] NULL,
+	[W_INSERT_DT] DATETIME NULL
 )
 WITH
 (

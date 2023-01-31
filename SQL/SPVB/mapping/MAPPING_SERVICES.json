@@ -3,56 +3,47 @@
   "mappings": [
     {
       "source": {
-        "path": "$[''issuetype'']"
+        "path": "$[''assetnum'']"
       },
       "sink": {
-        "name": "ISSUE_TYPE",
+        "name": "ASSET_NUM",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''linecost'']"
+        "path": "$[''changedate'']"
       },
       "sink": {
-        "name": "LINE_COST",
-        "type": "Float"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''quantity'']"
-      },
-      "sink": {
-        "name": "QUANTITY",
-        "type": "Float"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''spvb_sapreceipt'']"
-      },
-      "sink": {
-        "name": "SAPRECEIPT",
+        "name": "CHANGEDATE",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''unitcost'']"
+        "path": "$[''currencycode'']"
       },
       "sink": {
-        "name": "UNIT_COST",
+        "name": "CURRENCY_CODE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''currencylinecost'']"
+      },
+      "sink": {
+        "name": "CURRENCY_LINECOST",
         "type": "Float"
       }
     },
     {
       "source": {
-        "path": "$[''issuetype_description'']"
+        "path": "$[''currencyunitcost'']"
       },
       "sink": {
-        "name": "ISSUE_TYPE_DESCRIPTION",
-        "type": "String"
+        "name": "CURRENCY_UNITCOST",
+        "type": "Float"
       }
     },
     {
@@ -66,10 +57,55 @@
     },
     {
       "source": {
-        "path": "$[''transdate'']"
+        "path": "$[''enterdate'']"
       },
       "sink": {
-        "name": "TRANS_DATE",
+        "name": "ENTERDATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''exchangerate'']"
+      },
+      "sink": {
+        "name": "EXCHANGERATE",
+        "type": "Float"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''externalrefid'']"
+      },
+      "sink": {
+        "name": "EXTERNALREFID",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''financialperiod'']"
+      },
+      "sink": {
+        "name": "FINANCIALPERIOD",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''issuetype'']"
+      },
+      "sink": {
+        "name": "ISSUE_TYPE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''issuetype_description'']"
+      },
+      "sink": {
+        "name": "ISSUE_TYPE_DESC",
         "type": "String"
       }
     },
@@ -78,7 +114,115 @@
         "path": "$[''itemnum'']"
       },
       "sink": {
-        "name": "ITEM_NUMBER",
+        "name": "ITEM_NUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''linecost'']"
+      },
+      "sink": {
+        "name": "LINECOST",
+        "type": "Float"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''linetype'']"
+      },
+      "sink": {
+        "name": "LINETYPE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''location'']"
+      },
+      "sink": {
+        "name": "LOCATION",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''polinenum'']"
+      },
+      "sink": {
+        "name": "POLINENUM",
+        "type": "Int64"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''ponum'']"
+      },
+      "sink": {
+        "name": "PONUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''quantity'']"
+      },
+      "sink": {
+        "name": "QUANTITY",
+        "type": "Float"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''refwo'']"
+      },
+      "sink": {
+        "name": "REFWO",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''remark'']"
+      },
+      "sink": {
+        "name": "REMARK",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''sendersysid'']"
+      },
+      "sink": {
+        "name": "SENDER_SYSID",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''servrectransid'']"
+      },
+      "sink": {
+        "name": "SERV_ID",
+        "type": "Int64"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''siteid'']"
+      },
+      "sink": {
+        "name": "SITE_ID",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_costcenter'']"
+      },
+      "sink": {
+        "name": "SPVB_COSTCENTER",
         "type": "String"
       }
     },
@@ -87,16 +231,70 @@
         "path": "$[''spvb_sappo'']"
       },
       "sink": {
-        "name": "SAPPO",
+        "name": "SPVB_SAPPO",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''assetnum'']"
+        "path": "$[''spvb_sapreceipt'']"
       },
       "sink": {
-        "name": "ASSET_NUMBER",
+        "name": "SPVB_SAPRECEIPT",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_sapremark'']"
+      },
+      "sink": {
+        "name": "SPVB_SAPREMARK",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''status'']"
+      },
+      "sink": {
+        "name": "STATUS",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''status_description'']"
+      },
+      "sink": {
+        "name": "STATUS_DESCRIPTION",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''transdate'']"
+      },
+      "sink": {
+        "name": "TRANSDATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''unitcost'']"
+      },
+      "sink": {
+        "name": "UNITCOST",
+        "type": "Float"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''actualdate'']"
+      },
+      "sink": {
+        "name": "ACTUALDATE",
         "type": "String"
       }
     },
@@ -106,7 +304,7 @@
       },
       "sink": {
         "name": "W_BATCH_ID",
-        "type": "String"
+        "type": "Int64"
       }
     },
     {

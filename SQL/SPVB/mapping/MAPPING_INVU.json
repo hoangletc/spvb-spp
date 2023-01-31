@@ -12,136 +12,46 @@
     },
     {
       "source": {
-        "path": "$[''iskit'']"
+        "path": "$[''currencycode'']"
       },
       "sink": {
-        "name": "ISKIT",
+        "name": "CURRENCY_CODE",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''issueunit'']"
+        "path": "$[''invusenum'']"
       },
       "sink": {
-        "name": "ISSUE_UNIT",
+        "name": "INVUSE_NUM",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''itemnum'']"
+        "path": "$[''invowner'']"
       },
       "sink": {
-        "name": "ITEM_NUM",
+        "name": "INV_OWNER",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''itemtype'']"
+        "path": "$[''invuseid'']"
       },
       "sink": {
-        "name": "ITEM_TYPE",
-        "type": "String"
+        "name": "INVU_ID",
+        "type": "Int64"
       }
     },
     {
       "source": {
-        "path": "$[''lottype'']"
+        "path": "$[''fromstoreloc'']"
       },
       "sink": {
-        "name": "LOT_TYPE",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''lottype_description'']"
-      },
-      "sink": {
-        "name": "LOT_TYPE_DESCRIPTION",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''orderunit'']"
-      },
-      "sink": {
-        "name": "ORDER_UNIT",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''sppclassification'']"
-      },
-      "sink": {
-        "name": "SPP_CLASSIFICATION",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''sppclassification_description'']"
-      },
-      "sink": {
-        "name": "SPP_CLASSIFICATION_DESCRIPTION",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''spvb_item_mustno'']"
-      },
-      "sink": {
-        "name": "SPVB_ITEM_MUSTNO",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''spvb_max'']"
-      },
-      "sink": {
-        "name": "SPVB_MAX",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''spvb_min'']"
-      },
-      "sink": {
-        "name": "SPVB_MIN",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''spvb_mustreturn'']"
-      },
-      "sink": {
-        "name": "SPVB_MUSTRETURN",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''spvb_plant'']"
-      },
-      "sink": {
-        "name": "SPVB_PLANT",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''status'']"
-      },
-      "sink": {
-        "name": "STATUS",
+        "name": "FROM_STORELOC",
         "type": "String"
       }
     },
@@ -156,10 +66,100 @@
     },
     {
       "source": {
-        "path": "$[''itemid'']"
+        "path": "$[''changedate'']"
       },
       "sink": {
-        "name": "ITEM_ID",
+        "name": "CHANGEDATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''usetype_description'']"
+      },
+      "sink": {
+        "name": "USETYPE_DESCRIPTION",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''exchangedate'']"
+      },
+      "sink": {
+        "name": "EXCHANGEDATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''receipts_description'']"
+      },
+      "sink": {
+        "name": "RECEIPTS_DESCRIPTION",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''receipts'']"
+      },
+      "sink": {
+        "name": "RECEIPTS",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_internal'']"
+      },
+      "sink": {
+        "name": "SPVB_INTERNAL",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''usetype'']"
+      },
+      "sink": {
+        "name": "USETYPE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''status'']"
+      },
+      "sink": {
+        "name": "STATUS",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''itemnum'']"
+      },
+      "sink": {
+        "name": "ITEM_NUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''assetnum'']"
+      },
+      "sink": {
+        "name": "ASSET_NUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''matusetransid'']"
+      },
+      "sink": {
+        "name": "MATU_ID",
         "type": "Int64"
       }
     },
@@ -169,7 +169,7 @@
       },
       "sink": {
         "name": "W_BATCH_ID",
-        "type": "String"
+        "type": "Int64"
       }
     },
     {
