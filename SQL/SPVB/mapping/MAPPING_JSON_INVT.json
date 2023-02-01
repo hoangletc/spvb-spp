@@ -3,11 +3,83 @@
   "mappings": [
     {
       "source": {
+        "path": "$[''actualdate'']"
+      },
+      "sink": {
+        "name": "ACTUALDATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''binnum'']"
+      },
+      "sink": {
+        "name": "BIN_NUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''curbal'']"
+      },
+      "sink": {
+        "name": "CURBAL",
+        "type": "Float"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''externalrefid'']"
+      },
+      "sink": {
+        "name": "EXTERNAL_REFID",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''invtransid'']"
+      },
+      "sink": {
+        "name": "INVTRANS_ID",
+        "type": "Int64"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''invuseline'']"
+      },
+      "sink": {
+        "name": "INVUSELINE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
         "path": "$[''itemnum'']"
       },
       "sink": {
-        "name": "ITEM_NUMBER",
+        "name": "ITEM_NUM",
         "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''linecost'']"
+      },
+      "sink": {
+        "name": "LINECOST",
+        "type": "Float"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''newcost'']"
+      },
+      "sink": {
+        "name": "NEWCOST",
+        "type": "Float"
       }
     },
     {
@@ -21,19 +93,46 @@
     },
     {
       "source": {
-        "path": "$[''storeloc'']"
+        "path": "$[''siteid'']"
       },
       "sink": {
-        "name": "STORE_LOCATION",
+        "name": "SITE_ID",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''binnum'']"
+        "path": "$[''storeloc'']"
       },
       "sink": {
-        "name": "BIN_NUMBER",
+        "name": "STORELOC",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''transdate'']"
+      },
+      "sink": {
+        "name": "TRANSDATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''transtype'']"
+      },
+      "sink": {
+        "name": "TRANSTYPE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''transtype_description'']"
+      },
+      "sink": {
+        "name": "TRANSTYPE_DESCRIPTION",
         "type": "String"
       }
     },
@@ -43,7 +142,7 @@
       },
       "sink": {
         "name": "W_BATCH_ID",
-        "type": "String"
+        "type": "Int64"
       }
     },
     {

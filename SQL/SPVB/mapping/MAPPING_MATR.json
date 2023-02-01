@@ -84,6 +84,15 @@
     },
     {
       "source": {
+        "path": "$[''shipmentnum'']"
+      },
+      "sink": {
+        "name": "SHIPMENT_NUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
         "path": "$[''spvb_sappo'']"
       },
       "sink": {

@@ -84,10 +84,10 @@
     },
     {
       "source": {
-        "path": "$[''linecost2'']"
+        "path": "$[''linecost'']"
       },
       "sink": {
-        "name": "LINECOST2",
+        "name": "LINECOST",
         "type": "Float"
       }
     },
@@ -179,6 +179,15 @@
       },
       "sink": {
         "name": "TRANSDATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''actualdate'']"
+      },
+      "sink": {
+        "name": "ACTUALDATE",
         "type": "String"
       }
     },

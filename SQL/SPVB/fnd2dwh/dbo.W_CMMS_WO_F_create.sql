@@ -21,6 +21,7 @@ CREATE TABLE [dbo].[W_CMMS_WO_F]
     [ASSET_NUM] [nvarchar](30) NULL,
     [STATUS] [nvarchar](10) NULL,
     [SUPERVISOR] [nvarchar](100) NULL,
+    [PARENT] [nvarchar](30) NULL,
 
     [DATE_CREATION] [DATETIMEOFFSET] NULL,
     [DATE_TARGET_START] [DATETIMEOFFSET] NULL,

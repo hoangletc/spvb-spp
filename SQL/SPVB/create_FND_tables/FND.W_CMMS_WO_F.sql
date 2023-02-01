@@ -4,25 +4,26 @@ SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [FND].[W_CMMS_WO_F]
 (
-	[TARGET_START_DATE] [nvarchar](1000) NULL,
-	[REPORT_DATE] [nvarchar](1000) NULL,
-	[WO_STATUS_CHANGE_DATE] [nvarchar](1000) NULL,
-	[DESCRIPTION] [nvarchar](1000) NULL,
-	[OVER_HAUL] [nvarchar](1000) NULL,
-	[WORK_TYPE] [nvarchar](1000) NULL,
-	[CHANGE_DATE] [nvarchar](1000) NULL,
-	[REPORTED_BY] [nvarchar](1000) NULL,
-	[WORK_ORDER_NUMBER] [nvarchar](1000) NULL,
-	[SCHED_FINISH] [nvarchar](1000) NULL,
-	[ASSET_NUMBER] [nvarchar](1000) NULL,
-	[SCHED_START] [nvarchar](1000) NULL,
-	[SITE_ID] [nvarchar](1000) NULL,
-	[LOCATION] [nvarchar](1000) NULL,
-	[ACT_FINISH] [nvarchar](1000) NULL,
-	[SUPERVISOR] [nvarchar](1000) NULL,
-	[STATUS] [nvarchar](1000) NULL,
-	[W_BATCH_ID] [nvarchar](1000) NULL,
-	[W_INSERT_DT] [nvarchar](1000) NULL
+	[TARGCOMPDATE] [nvarchar](60) NULL,
+	[PMNUM] [nvarchar](60) NULL,
+	[ASSETNUM] [nvarchar](60) NULL,
+	[WONUM] [nvarchar](60) NULL,
+	[SCHEDFINISH] [nvarchar](60) NULL,
+	[SUPERVISOR] [nvarchar](60) NULL,
+	[TARGSTARTDATE] [nvarchar](60) NULL,
+	[REPORTDATE] [nvarchar](60) NULL,
+	[SPVB_OVERHAUL] [nvarchar](60) NULL,
+	[WORKTYPE] [nvarchar](60) NULL,
+	[SCHEDSTART] [nvarchar](60) NULL,
+	[LOCATION] [nvarchar](60) NULL,
+	[JPNUM] [nvarchar](60) NULL,
+	[STATUS] [nvarchar](60) NULL,
+	[DESCRIPTION] [nvarchar](200) NULL,
+	[SITEID] [nvarchar](60) NULL,
+	[ISTASK] [nvarchar](60) NULL,
+	[PARENT] [nvarchar](60) NULL,
+	[W_BATCH_ID] BIGINT NULL,
+	[W_INSERT_DT] [nvarchar](100) NULL
 )
 WITH
 (

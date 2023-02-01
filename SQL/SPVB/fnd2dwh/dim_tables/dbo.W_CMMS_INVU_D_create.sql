@@ -1,0 +1,40 @@
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[W_CMMS_INVU_D]
+(
+    [INVU_WID] INT NOT NULL IDENTITY(1, 1),
+
+    [DESCRIPTION] [nvarchar](200) NULL,
+	[CURRENCY_CODE] [nvarchar](200) NULL,
+	[INVUSE_NUM] [nvarchar](200) NULL,
+	[INV_OWNER] [nvarchar](200) NULL,
+	[INVU_ID] [bigint] NULL,
+	[FROM_STORELOC] [nvarchar](200) NULL,
+	[STATUS_DESCRIPTION] [nvarchar](200) NULL,
+	[CHANGEDATE] [nvarchar](200) NULL,
+	[USETYPE_DESCRIPTION] [nvarchar](200) NULL,
+	[EXCHANGEDATE] [nvarchar](200) NULL,
+	[RECEIPTS_DESCRIPTION] [nvarchar](200) NULL,
+	[RECEIPTS] [nvarchar](200) NULL,
+	[SPVB_INTERNAL] [nvarchar](200) NULL,
+	[USETYPE] [nvarchar](200) NULL,
+	[STATUS] [nvarchar](200) NULL,
+	[ITEM_NUM] [nvarchar](200) NULL,
+	[ASSET_NUM] [nvarchar](200) NULL,
+	[MATU_ID] [bigint] NULL,
+
+    [W_DELETE_FLG] VARCHAR(1) NULL,
+    [W_DATASOURCE_NUM_ID] INT NULL,
+    [W_INTEGRATION_ID] [nvarchar](300) NULL,
+    [W_INSERT_DT] [datetime] NULL,
+    [W_UPDATE_DT] [datetime] NULL,
+    [W_BATCH_ID] [bigint] NULL
+)
+WITH
+(
+	DISTRIBUTION = ROUND_ROBIN,
+	HEAP
+)
+GO

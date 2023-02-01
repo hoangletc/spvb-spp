@@ -1,0 +1,54 @@
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[W_CMMS_INVUL_D]
+(
+    [INVUL_WID] INT NOT NULL IDENTITY(1, 1),
+
+	[INVUSELINE_ID] [bigint] NULL,
+	[UNITCOST] [real] NULL,
+	[SPVB_EXTREASONCODE] [nvarchar](200) NULL,
+	[SPVB_EXTREASONCODE_DESCRIPTION] [nvarchar](200) NULL,
+	[SPVB_MUSTRETURN] [nvarchar](200) NULL,
+	[SPVB_RETURNFROMISSUE] [nvarchar](200) NULL,
+	[SPVB_MUSTRETURN_ORG] [nvarchar](200) NULL,
+	[RETURNED_QTY] [real] NULL,
+	[REMARK] [nvarchar](200) NULL,
+	[LINE_TYPE] [nvarchar](200) NULL,
+	[DESCRIPTION] [nvarchar](200) NULL,
+	[TO_SITEID] [nvarchar](200) NULL,
+	[INVUSE_NUM] [nvarchar](200) NULL,
+	[ACTUALDATE] [nvarchar](50) NULL,
+	[RECEIVED_QTY] [real] NULL,
+	[ASSET_NUM] [nvarchar](200) NULL,
+	[COSTCENTER] [nvarchar](200) NULL,
+	[FROM_STORELOC] [nvarchar](200) NULL,
+	[REFWO] [nvarchar](200) NULL,
+	[LINECOST] [real] NULL,
+	[QUANTITY] [real] NULL,
+	[COSTCENTER_DESCRIPTION] [nvarchar](200) NULL,
+	[INVUSELINE_NUM] [bigint] NULL,
+	[ITEM_NUM] [nvarchar](200) NULL,
+	[ITEMSETID] [nvarchar](200) NULL,
+	[LOCATION] [nvarchar](200) NULL,
+	[SPVB_SAPPO] [nvarchar](200) NULL,
+	[USE_TYPE] [nvarchar](200) NULL,
+	[ENTER_BY] [nvarchar](200) NULL,
+	[SPVB_WONUMREF] [nvarchar](200) NULL,
+	[SPVB_REASON] [nvarchar](200) NULL,
+	[MATU_ID] [bigint] NULL,
+
+    [W_DELETE_FLG] VARCHAR(1) NULL,
+    [W_DATASOURCE_NUM_ID] INT NULL,
+    [W_INTEGRATION_ID] [nvarchar](300) NULL,
+    [W_INSERT_DT] [datetime] NULL,
+    [W_UPDATE_DT] [datetime] NULL,
+    [W_BATCH_ID] [bigint] NULL
+)
+WITH
+(
+	DISTRIBUTION = ROUND_ROBIN,
+	HEAP
+)
+GO

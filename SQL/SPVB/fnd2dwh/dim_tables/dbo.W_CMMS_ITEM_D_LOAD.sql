@@ -83,7 +83,7 @@ BEGIN
         PRINT '1. Check existence and remove of temp table'
 
         IF OBJECT_ID(N'tempdb..#W_CMMS_ITEM_D_tmp') IS NOT NULL 
-        BEGIN
+            BEGIN
         PRINT N'DELETE temporary table #W_CMMS_ITEM_D_tmp'
         DROP Table #W_CMMS_ITEM_D_tmp
     END;
@@ -93,32 +93,35 @@ BEGIN
         PRINT '2. Select everything into temp table'
 
 		SELECT
-			, CONVERT(nvarchar(50), ROTATING)
-			, CONVERT(nvarchar(50), SPVB_PLANT)
-			, CONVERT(nvarchar(50), SPVB_OEM)
-			, CONVERT(nvarchar(50), SPVB_OEMPARTNO)
-			, CONVERT(nvarchar(50), SPVB_VENDOR)
-			, CONVERT(nvarchar(50), SPVB_MACHINE)
-			, CONVERT(nvarchar(50), SPVB_PRODUCTLINE)
-			, CONVERT(nvarchar(50), SPVB_PARTNO)
-            , CONVERT(nvarchar(50), SPVB_MUSTRETURN)
-            , CONVERT(nvarchar(50), STATUS_DESCRIPTION)
-            , CONVERT(nvarchar(50), CONDITION_ENABLED)
-            , CONVERT(nvarchar(50), [DESCRIPTION])
-            , CONVERT(nvarchar(50), ORDER_UNIT)
-            , CONVERT(nvarchar(50), ISSUE_UNIT)
-            , CONVERT(nvarchar(50), IS_KIT)
-            , CONVERT(nvarchar(50), ITEM_NUM)
-            , CONVERT(nvarchar(50), ITEM_TYPE)
-            , CONVERT(nvarchar(50), [STATUS])
+            CONVERT(nvarchar(200), [DESCRIPTION])                  AS [DESCRIPTION]
+            , CONVERT(nvarchar(50), ISKIT)                          AS ISKIT
+            , CONVERT(nvarchar(50), ISSUE_UNIT)                     AS ISSUE_UNIT
+            , CONVERT(nvarchar(50), ITEM_NUM)                       AS ITEM_NUM
+            , CONVERT(nvarchar(50), ITEM_TYPE)                      AS ITEM_TYPE
+            , CONVERT(nvarchar(50), LOT_TYPE)                       AS LOT_TYPE
+            , CONVERT(nvarchar(50), LOT_TYPE_DESCRIPTION)           AS LOT_TYPE_DESCRIPTION
+            , CONVERT(nvarchar(50), ORDER_UNIT)                     AS ORDER_UNIT
+            , CONVERT(nvarchar(50), SPP_CLASSIFICATION)             AS SPP_CLASSIFICATION
+            , CONVERT(nvarchar(50), SPP_CLASSIFICATION_DESCRIPTION) AS SPP_CLASSIFICATION_DESCRIPTION
+            , CONVERT(nvarchar(50), SPVB_ITEM_MUSTNO)               AS SPVB_ITEM_MUSTNO
+            , CONVERT(nvarchar(50), SPVB_MAX)                       AS SPVB_MAX
+            , CONVERT(nvarchar(50), SPVB_MIN)                       AS SPVB_MIN
+            , CONVERT(nvarchar(50), SPVB_MUSTRETURN)                AS SPVB_MUSTRETURN
+            , CONVERT(nvarchar(50), SPVB_PLANT)                     AS SPVB_PLANT
+            , CONVERT(nvarchar(50), [STATUS])                       AS [STATUS]
+            , CONVERT(nvarchar(50), STATUS_DESCRIPTION)             AS STATUS_DESCRIPTION
+            , ITEM_ID                                               AS ITEM_ID
 
-			, CONVERT(nvarchar(100), CONCAT_WS('~', SPVB_PLAN, ITEM_NUM, SPVB_VENDOR, SPVB_PRODUCTLINE, SPVB_PARTNO)) AS W_INTEGRATION_ID
-			, 'N' AS W_DELETE_FLG
-			, 1 AS W_DATASOURCE_NUM_ID
-			, GETDATE() AS W_INSERT_DT
-			, GETDATE() AS W_UPDATE_DT
-			, NULL W_BATCH_ID
-            , 'N' AS W_UPDATE_FLG
+			, CONVERT(
+                nvarchar(100), 
+                CONCAT_WS('~', ITEM_ID, ITEM_NUM, ISSUE_UNIT, SPP_CLASSIFICATION)
+                )                                                   AS W_INTEGRATION_ID
+			, 'N'                                                   AS W_DELETE_FLG
+			, 1                                                     AS W_DATASOURCE_NUM_ID
+			, GETDATE()                                             AS W_INSERT_DT
+			, GETDATE()                                             AS W_UPDATE_DT
+			, NULL                                                  AS W_BATCH_ID
+            , 'N'                                                   AS W_UPDATE_FLG
     INTO #W_CMMS_ITEM_D_tmp
     FROM [FND].[W_CMMS_ITEM_D] F
 
@@ -139,24 +142,24 @@ BEGIN
 
 		UPDATE [dbo].[W_CMMS_ITEM_D]
 		SET 
-			, ROTATING = src.ROTATING
-			, SPVB_PLANT = src.SPVB_PLANT
-			, SPVB_OEM = src.SPVB_OEM
-			, SPVB_OEMPARTNO = src.SPVB_OEMPARTNO
-			, SPVB_VENDOR = src.SPVB_VENDOR
-			, SPVB_MACHINE = src.SPVB_MACHINE
-			, SPVB_PRODUCTLINE = src.SPVB_PRODUCTLINE
-			, SPVB_PARTNO = src.SPVB_PARTNO
-			, SPVB_MUSTRETURN = src.SPVB_MUSTRETURN
-			, STATUS_DESCRIPTION = src.STATUS_DESCRIPTION
-			, CONDITION_ENABLED = src.CONDITION_ENABLED
-			, [DESCRIPTION] = src.[DESCRIPTION]
-			, ORDER_UNIT = src.ORDER_UNIT
-			, ISSUE_UNIT = src.ISSUE_UNIT
-			, IS_KIT = src.IS_KIT
-			, ITEM_NUM = src.ITEM_NUM
-			, ITEM_TYPE = src.ITEM_TYPE
-			, [STATUS] = src.[STATUS]
+			[DESCRIPTION] = src.DESCRIPTION
+            , ISKIT = src.ISKIT
+            , ISSUE_UNIT = src.ISSUE_UNIT
+            , ITEM_NUM = src.ITEM_NUM
+            , ITEM_TYPE = src.ITEM_TYPE
+            , LOT_TYPE = src.LOT_TYPE
+            , LOT_TYPE_DESCRIPTION = src.LOT_TYPE_DESCRIPTION
+            , ORDER_UNIT = src.ORDER_UNIT
+            , SPP_CLASSIFICATION = src.SPP_CLASSIFICATION
+            , SPP_CLASSIFICATION_DESCRIPTION = src.SPP_CLASSIFICATION_DESCRIPTION
+            , SPVB_ITEM_MUSTNO = src.SPVB_ITEM_MUSTNO
+            , SPVB_MAX = src.SPVB_MAX
+            , SPVB_MIN = src.SPVB_MIN
+            , SPVB_MUSTRETURN = src.SPVB_MUSTRETURN
+            , SPVB_PLANT = src.SPVB_PLANT
+            , [STATUS] = src.STATUS
+            , STATUS_DESCRIPTION = src.STATUS_DESCRIPTION
+            , ITEM_ID = src.ITEM_ID
 
 			, W_DELETE_FLG = src.W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID = src.W_DATASOURCE_NUM_ID
@@ -173,55 +176,51 @@ BEGIN
 
         INSERT INTO [dbo].[W_CMMS_ITEM_D]
         (
-            ASSET_WID
+        [DESCRIPTION]
+        , ISKIT
+        , ISSUE_UNIT
+        , ITEM_NUM
+        , ITEM_TYPE
+        , LOT_TYPE
+        , LOT_TYPE_DESCRIPTION
+        , ORDER_UNIT
+        , SPP_CLASSIFICATION
+        , SPP_CLASSIFICATION_DESCRIPTION
+        , SPVB_ITEM_MUSTNO
+        , SPVB_MAX
+        , SPVB_MIN
+        , SPVB_MUSTRETURN
+        , SPVB_PLANT
+        , [STATUS]
+        , STATUS_DESCRIPTION
+        , ITEM_ID
 
-            , ROTATING
-            , SPVB_PLANT
-            , SPVB_OEM
-            , SPVB_OEMPARTNO
-            , SPVB_VENDOR
-            , SPVB_MACHINE
-            , SPVB_PRODUCTLINE
-            , SPVB_PARTNO
-            , SPVB_MUSTRETURN
-            , STATUS_DESCRIPTION
-            , CONDITION_ENABLED
-            , [DESCRIPTION]
-            , ORDER_UNIT
-            , ISSUE_UNIT
-            , IS_KIT
-            , ITEM_NUM
-            , ITEM_TYPE
-            , [STATUS]
-
-            , W_DELETE_FLG
-            , W_DATASOURCE_NUM_ID
-            , W_INSERT_DT
-            , W_UPDATE_DT
-            , W_BATCH_ID
-            , W_INTEGRATION_ID
+        , W_DELETE_FLG
+        , W_DATASOURCE_NUM_ID
+        , W_INSERT_DT
+        , W_UPDATE_DT
+        , W_BATCH_ID
+        , W_INTEGRATION_ID
         )
     SELECT
-            ASSET_WID
-
-            , ROTATING
-            , SPVB_PLANT
-            , SPVB_OEM
-            , SPVB_OEMPARTNO
-            , SPVB_VENDOR
-            , SPVB_MACHINE
-            , SPVB_PRODUCTLINE
-            , SPVB_PARTNO
-            , SPVB_MUSTRETURN
-            , STATUS_DESCRIPTION
-            , CONDITION_ENABLED
-            , [DESCRIPTION]
-            , ORDER_UNIT
+        [DESCRIPTION]
+            , ISKIT
             , ISSUE_UNIT
-            , IS_KIT
             , ITEM_NUM
             , ITEM_TYPE
+            , LOT_TYPE
+            , LOT_TYPE_DESCRIPTION
+            , ORDER_UNIT
+            , SPP_CLASSIFICATION
+            , SPP_CLASSIFICATION_DESCRIPTION
+            , SPVB_ITEM_MUSTNO
+            , SPVB_MAX
+            , SPVB_MIN
+            , SPVB_MUSTRETURN
+            , SPVB_PLANT
             , [STATUS]
+            , STATUS_DESCRIPTION
+            , ITEM_ID
 
             , W_DELETE_FLG
             , W_DATASOURCE_NUM_ID
@@ -230,7 +229,7 @@ BEGIN
             , W_BATCH_ID
             , W_INTEGRATION_ID
     FROM #W_CMMS_ITEM_D_tmp
-    where W_UPDATE_FLG = 'N'
+    WHERE W_UPDATE_FLG = 'N'
 
 		
 
@@ -252,23 +251,23 @@ BEGIN
         'Y',
         DATEADD(HH, 7, GETDATE())
     FROM (
-            SELECT *
+                SELECT *
         FROM W_CMMS_ITEM_D
-        ) M
+            ) M
     WHERE 1=1
         AND W_BATCH_ID = @p_batch_id
         AND W_DELETE_FLG = 'N'
 
-		SET @src_rownum = ( SELECT COUNT(1)
+            SET @src_rownum = ( SELECT COUNT(1)
     FROM #W_CMMS_ITEM_D_tmp );
-		SET @tgt_rownum = ( 
-            SELECT
+            SET @tgt_rownum = ( 
+                SELECT
         COUNT(DISTINCT W_INTEGRATION_ID)
     FROM W_CMMS_ITEM_D
     WHERE 1=1
         AND W_DELETE_FLG = 'N'
         AND W_BATCH_ID = @p_batch_id
-        );
+            );
 
 	END TRY
 

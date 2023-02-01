@@ -39,15 +39,6 @@
     },
     {
       "source": {
-        "path": "$[''wostatus'']"
-      },
-      "sink": {
-        "name": "WOSTATUS",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
         "path": "$[''schedfinish'']"
       },
       "sink": {
@@ -160,6 +151,15 @@
       },
       "sink": {
         "name": "ISTASK",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''parent'']"
+      },
+      "sink": {
+        "name": "PARENT",
         "type": "String"
       }
     },
