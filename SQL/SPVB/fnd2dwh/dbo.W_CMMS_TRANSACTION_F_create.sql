@@ -12,6 +12,7 @@ CREATE TABLE [dbo].[W_CMMS_TRANSACTION_F]
     [INVUL_WID] INT NULL,
     [ITEM_WID] INT NULL,
     [WO_WID] INT NULL,
+    [DATE_WID] INT NULL,
 
     [USAGE] [nvarchar](50) NULL,
     [WAREHOUSE] [nvarchar](100) NULL,

@@ -62,25 +62,56 @@ def parser_location(d: dict, schemas: dict = None) -> dict:
 
 
 def parser_work_order(d: dict, schemas: dict = None) -> dict:
+    WO_STATUS_ORDER = ['WSCH', 'PLANNING', 'APPR', 'INPRG', 'FINISHED', 'COMPLETED', 'COMP', 'CLOSE']
+
     wo, wo_status = d, d.get('wostatus', None)
 
     # Parse
     if wo_status:
-        wo_status_tmp = {}
-        for w in wo_status:
+        wo_s_tmp_before_sched = {x: None for x in WO_STATUS_ORDER}
+        wo_s_tmp_after_sched = {x: None for x in WO_STATUS_ORDER}
+        flag_resched = False
+
+        for i, w in enumerate(wo_status):
             w = parser_default(
                 w,
                 "work_order_status",
                 schemas['work_order_status']
             )['work_order_status']
 
-            if w['status'] not in wo_status_tmp or \
-                    wo_status_tmp[w['status']]['changedate'] < w['changedate']:
-                wo_status_tmp[w['status']] = w
+            if i != 0 and w['status'] == 'WSCH':
+                flag_resched = True
 
-        wo_status = list(wo_status_tmp.values())
+            if not flag_resched:
+                wo_s_tmp = wo_s_tmp_before_sched
+            else:
+                wo_s_tmp = wo_s_tmp_after_sched
+
+            if wo_s_tmp['WSCH'] is not None and \
+                    wo_s_tmp['WSCH']['changedate'] > w['changedate']:
+                continue
+            if wo_s_tmp[w['status']] is None or \
+                    wo_s_tmp[w['status']]['changedate'] < w['changedate']:
+                wo_s_tmp[w['status']] = w
+
+        # Correct status of dict before_sched and after_sched
+        for x in wo_s_tmp_before_sched.values():
+            if x is None:
+                continue
+
+            x['status'] = f"{x['status']}_BEFORE"
+        for x in wo_s_tmp_after_sched.values():
+            if x is None:
+                continue
+
+            x['status'] = f"{x['status']}_AFTER"
+
+        # Finalize WOStatus as single list
+        wo_status = [x for x in wo_s_tmp_before_sched.values() if x is not None] + \
+            [x for x in wo_s_tmp_after_sched.values() if x is not None]
 
     wo = parser_default(wo, "work_order", schemas['work_order'])['work_order']
+    wo['is_sched'] = flag_resched
     wo = [wo]
 
     return {'work_order': wo, 'work_order_status': wo_status}
@@ -110,7 +141,7 @@ def parser_matu(d: dict, schemas: dict = None) -> dict:
             parser_default(invul, "inventory_use_line",
                            schemas['inventory_use_line']
                            )['inventory_use_line']
-            for invul in inv_use
+            for invul in inv_use_line
         ]
 
     matu = parser_default(
@@ -254,6 +285,9 @@ def parser_json(data: List[dict], res_name: str,
 
             # Append parsed result(s)
             for k, v in parsed_result.items():
+                if v is None:
+                    continue
+
                 if not isinstance(v, list):
                     v = [v]
 
@@ -270,7 +304,7 @@ if __name__ == '__main__':
     # folder lưu kết quả xử lí
     path_out_root = Path("D:\TC Data\SPP API JSONs\edited")
     # folder chứa file JSON
-    path_in = Path(r"D:\TC Data\SPP API JSONs\SPP\material_use_trans")
+    path_in = Path(r"D:\TC Data\SPP API JSONs\SPP\work_order")
     # đường dẫn tới
     path_schema = r"D:\TC Data\spvb-spp\scripts\schemmas.json"
 
@@ -285,7 +319,7 @@ if __name__ == '__main__':
     # Start looping
     for path in tqdm(path_in.glob("*")):
         dir_name, file_name = path.parents[0].name, path.name
-        if not ".json" in file_name:
+        if ".json" not in file_name:
             file_name = f"{file_name}.json"
 
         with open(path, encoding='utf-8') as fp:

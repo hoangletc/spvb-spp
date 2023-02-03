@@ -165,6 +165,15 @@
     },
     {
       "source": {
+        "path": "$[''is_sched'']"
+      },
+      "sink": {
+        "name": "IS_SCHED",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
         "path": "$[''W_BATCH_ID'']"
       },
       "sink": {

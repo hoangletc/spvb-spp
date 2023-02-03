@@ -21,7 +21,8 @@ CREATE TABLE [FND].[W_CMMS_WO_F]
 	[DESCRIPTION] [nvarchar](200) NULL,
 	[SITEID] [nvarchar](60) NULL,
 	[ISTASK] [nvarchar](60) NULL,
-	[PARENT] [nvarchar](60) NULL,
+	[PARENT] [nvarchar](50) NULL,
+	[IS_SCHED] [nvarchar](5) NULL,
 	[W_BATCH_ID] BIGINT NULL,
 	[W_INSERT_DT] [nvarchar](100) NULL
 )
