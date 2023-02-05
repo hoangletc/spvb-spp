@@ -1,7 +1,9 @@
 import json
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List
 
+from loguru import logger
 from tqdm import tqdm
 
 
@@ -259,12 +261,56 @@ def parser_inventory(d: dict, schemas: dict = None) -> dict:
     return {'inventory': inv, 'inventory_cost': inv_cost}
 
 
+def parser_matr(d: dict, schemas: dict = None) -> dict:
+    def _parse_time(dt_s: str):
+        dt = None
+        try:
+            dt = datetime.strptime(dt_s, "%Y-%m-%dT%H:%M:%S%z")
+        except ValueError:
+            try:
+                dt = datetime.strptime(dt_s, "%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                logger.error(f"Cannot parse to datetime this: {dt_s}")
+
+        return dt
+
+    matr = d
+
+    matr = parser_default(matr, "material_receipt_trans",
+                          schemas['material_receipt_trans'])[
+        'material_receipt_trans']
+
+    # Convert actualdate to from datetime with timezone to datetime
+    # and add small amount to second for differentiating purpose
+    dt = _parse_time(matr['actualdate'])
+    if dt is not None:
+        # Convert matr_id to small amount to be added
+        num_digits = len(str(matr['matrectransid']))
+        added = float(matr['matrectransid']) / (10**(num_digits + 1))
+        dt = dt + timedelta(seconds=added)
+        dt_s = dt.strftime("%Y-%m-%d %H:%M:%S.%f")
+
+        # Assign back to MATR
+        matr['actualdate'] = dt_s
+
+    # Convert transdate to datetime
+    dt = _parse_time(matr['transdate'])
+    if dt is not None:
+        dt_s = dt.strftime("%Y-%m-%d %H:%M:%S.%f")
+
+        matr['transdate'] = dt_s
+
+    matr = [matr]
+    return {'material_receipt_trans': matr}
+
+
 PARSER_MAPPING = {
     'asset': parser_asset,
     'location': parser_location,
     'work_order': parser_work_order,
     'material_use_trans': parser_matu,
-    "inventory": parser_inventory
+    "inventory": parser_inventory,
+    "material_receipt_trans": parser_matr
 }
 
 
@@ -304,7 +350,7 @@ if __name__ == '__main__':
     # folder lưu kết quả xử lí
     path_out_root = Path("D:\TC Data\SPP API JSONs\edited")
     # folder chứa file JSON
-    path_in = Path(r"D:\TC Data\SPP API JSONs\SPP\work_order")
+    path_in = Path(r"D:\TC Data\SPP API JSONs\SPP\material_receipt_trans")
     # đường dẫn tới
     path_schema = r"D:\TC Data\spvb-spp\scripts\schemmas.json"
 
