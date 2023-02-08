@@ -95,7 +95,10 @@ BEGIN
 		SELECT
 			ISNULL(PLANT.PLANT_WID, 0)                          AS PLANT_WID
 			, ISNULL(AST.LOCATION_WID, 0)                       AS LOC_WID
-			, FORMAT(CONVERT(DATE, SCHEDSTART), 'yyyymmdd')     AS DATE_WID
+			, FORMAT(
+				CONVERT(DATETIME2, SCHEDSTART), 
+				'yyyyMMdd'
+			) 													AS DATE_WID
 			, ISNULL(AST.ASSET_WID, 0)                          AS ASSET_WID
 
 			, CONVERT(NVARCHAR(30), WONUM)                      AS WORK_ORDERS

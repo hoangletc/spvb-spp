@@ -1,13 +1,11 @@
-
-
-
+-- drop table [dbo].[W_AGING_LEFTOVER]
 -- CREATE TABLE [dbo].[W_AGING_LEFTOVER](
 --     ITEM_NUM        INT          NOT NULL
 --     , LAST_ID       INT          DEFAULT NULL
---     , LAST_ACT_DATE DATETIME2[6] DEFAULT NULL
+--     , LAST_ACT_DATE DATETIME2(6) DEFAULT NULL
 --     , LEFTOVER      INT          DEFAULT 0
 -- )
--- drop table [dbo].[W_AGING_LEFTOVER]
+
 
 -------------------------------------------------------------------------------------------------
 -- BEGIN V1 -------------------------------------------------------------------------------------
@@ -94,17 +92,6 @@
 -------------------------------------------------------------------------------------------------
 -- END V1 ---------------------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------
-
--- TRUNCATE TABLE [dbo].[W_AGING_LEFTOVER];
--- INSERT INTO [dbo].[W_AGING_LEFTOVER](
---     ITEM_NUM
-
--- ) SELECT DISTINCT ITEM_NUM FROM [dbo].[W_CMMS_MATR_F];
--- UPDATE AG SET
---     AG.AGING = NULL
---     , AG.AGING_GRP = NULL
--- FROM [dbo].[W_CMMS_AGING_F] AG 
-
 IF (OBJECT_ID('[dbo].[AGING_V2]') IS NOT NULL)
 BEGIN
     DROP PROCEDURE [dbo].[AGING_V2]
@@ -116,11 +103,13 @@ CREATE PROCEDURE [dbo].[AGING_V2]
     , @year INT
 AS
 BEGIN
-    -- DECLARE @month SMALLINT = 6;
-    -- DECLARE @year INT = 2020;
     DECLARE @minDT DATETIME2(6) = '2010-01-01 00:00:00.000000';
-    DECLARE @lastDateInMonth DATETIME2(6) = EOMONTH(
-        CONVERT(varchar(4), @year) + '-' + CONVERT(varchar(2), @month) + '-01'
+    DECLARE @lastDateInMonth DATETIME2(6) = DATEADD(
+        DAY, 
+        1, 
+        EOMONTH(
+            CONVERT(varchar(4), @year) + '-' + CONVERT(varchar(2), @month) + '-01'
+        )
     )
 
 
@@ -145,15 +134,14 @@ BEGIN
         DROP Table #TMP_AGING_LASTDATE
     END;
 
+    IF OBJECT_ID(N'tempdb..#TMP_LAST_ROW_DELTA') IS NOT NULL 
+    BEGIN
+        PRINT N'DELETE temporary table #TMP_LAST_ROW_DELTA'
+        DROP Table #TMP_LAST_ROW_DELTA
+    END;
 
-    -- IF OBJECT_ID(N'tempdb..#TMP_AGING') IS NOT NULL 
-    -- BEGIN
-    --     PRINT N'DELETE temporary table #TMP_AGING'
-    --     DROP Table #TMP_AGING
-    -- END;
 
-
-    -- Start
+    -- Create and update tmp tables
     PRINT '--> 2';
 
     SELECT
@@ -165,44 +153,70 @@ BEGIN
         AND MONTH(ACTUALDATE) = @month
         AND YEAR(ACTUALDATE) = @year
     GROUP BY ITEM_NUM;
+    
+    -- [?] Tại sao lại tồn tại bảng #TMP_LAST_ROW_DELTA ?
+    -- Khi tính accum sum cho từng dòng bắt đầu từ last date của leftover,
+    -- câu query sẽ tính dựa vào bảng MATR, mà con số QUANTITY của MATR
+    -- là số gốc của transaction đó chứ không phải số còn lại sau khi tính aging
+    -- nên bảng TMP_LAST_ROW_DELTA sẽ lưu lại phần cần trừ của last date trong leftover
+    SELECT 
+        DISTINCT M.ITEM_NUM     AS ITEM_NUM
+        , 0                     AS DELTA
+    INTO #TMP_LAST_ROW_DELTA
+    FROM dbo.W_CMMS_MATR_F M;
+
+    WITH TMP_LEFTOVER AS (
+        SELECT
+            LO.ITEM_NUM                     AS ITEM_NUM
+            , M.QUANTITY - LO.LEFTOVER      AS DELTA
+        FROM [dbo].[W_AGING_LEFTOVER] LO
+            JOIN [dbo].[W_CMMS_MATR_F] M ON 1=1
+                AND LO.LAST_ID = M.MATR_ID
+    )
+        UPDATE D SET 
+            D.DELTA = ISNULL(TMP_LEFTOVER.DELTA, 0)
+        FROM #TMP_LAST_ROW_DELTA AS D
+            LEFT JOIN TMP_LEFTOVER ON 1=1
+                AND TMP_LEFTOVER.ITEM_NUM = D.ITEM_NUM;
+
+
+    -- Calculate accum sum table
+    PRINT '--> 3';
 
     WITH TMP_ACCUM_SUM AS (
         SELECT
             M1.MATR_ID
-            , sum(M2.QUANTITY)          AS TOTAL_QTY
+            , sum(M2.QUANTITY)                  AS TOTAL_QTY
         FROM dbo.W_CMMS_MATR_F M1
             LEFT JOIN [dbo].[W_AGING_LEFTOVER] LO ON 1=1
                 AND LO.ITEM_NUM = M1.ITEM_NUM
             LEFT JOIN dbo.W_CMMS_MATR_F M2 ON 1=1
-                AND M2.ACTUALDATE <= M1.ACTUALDATE
-                AND M2.ACTUALDATE >= ISNULL(LO.LAST_ACT_DATE, @minDT)
-                AND M2.ITEM_NUM = M1.ITEM_NUM
-            
+                AND M2.ACTUALDATE BETWEEN ISNULL(LO.LAST_ACT_DATE, @minDT) AND M1.ACTUALDATE
+                AND M2.ITEM_NUM = M1.ITEM_NUM    
         WHERE 1=1
-            AND MONTH(M1.ACTUALDATE) = @month
-            AND YEAR(M1.ACTUALDATE) = @year
+            AND M1.ACTUALDATE BETWEEN ISNULL(LO.LAST_ACT_DATE, @minDT) and @lastDateInMonth
         GROUP BY M1.MATR_ID
     )
         SELECT 
             M.MATR_ID
             , M.ITEM_NUM
-            , MONTH(M.ACTUALDATE)       AS [MONTH]
-            , YEAR(M.ACTUALDATE)        AS [YEAR]
-            , M.ACTUALDATE              AS ACTUAL_DATE
-            , TMP_ACCUM_SUM.TOTAL_QTY   AS TOTAL_QTY
+            , MONTH(M.ACTUALDATE)                   AS [MONTH]
+            , YEAR(M.ACTUALDATE)                    AS [YEAR]
+            , M.ACTUALDATE                          AS ACTUAL_DATE
+            , TMP_ACCUM_SUM.TOTAL_QTY - D.DELTA AS TOTAL_QTY
         INTO #TMP_W_CMMS_AGING_ACCUM
         FROM dbo.W_CMMS_MATR_F M
             LEFT JOIN TMP_ACCUM_SUM ON 1=1
                 AND TMP_ACCUM_SUM.MATR_ID = M.MATR_ID
             LEFT JOIN #TMP_TOTAL_USAGE_MONTH USAGE ON 1=1
                 AND USAGE.ITEM_NUM = M.ITEM_NUM
-            LEFT JOIN [dbo].[W_AGING_LEFTOVER] LO ON 1=1
-                AND LO.ITEM_NUM = M.ITEM_NUM
+            LEFT JOIN #TMP_LAST_ROW_DELTA D ON 1=1
+                AND D.ITEM_NUM = M.ITEM_NUM
         WHERE 1=1
             AND MONTH(M.ACTUALDATE) = @month
             AND YEAR(M.ACTUALDATE) = @year
-            AND TMP_ACCUM_SUM.TOTAL_QTY + LO.LEFTOVER + USAGE.TOTAL_QTY >= 0
-        ORDER BY [YEAR], [MONTH];
+            AND TMP_ACCUM_SUM.TOTAL_QTY - D.DELTA + USAGE.TOTAL_QTY >= 0
+        ORDER BY ACTUAL_DATE;
 
 
     -- Store last day
@@ -230,53 +244,44 @@ BEGIN
     FROM [dbo].[W_AGING_LEFTOVER] AS LO
         INNER JOIN #TMP_W_CMMS_AGING_ACCUM AS ACC ON 1=1
             AND ACC.ITEM_NUM = LO.ITEM_NUM
+            AND ACC.TOTAL_QTY = (
+                SELECT MIN(A.TOTAL_QTY) 
+                FROM #TMP_W_CMMS_AGING_ACCUM AS A
+                WHERE 1=1 AND A.ITEM_NUM = ACC.ITEM_NUM
+            )
         INNER JOIN #TMP_TOTAL_USAGE_MONTH AS USAGE ON 1=1
             AND USAGE.ITEM_NUM = LO.ITEM_NUM;
-
-    SELECT * FROM #TMP_AGING_LASTDATE;
-    SELECT * FROM [dbo].[W_AGING_LEFTOVER];
 
 
     -- Update table AGING
     PRINT '--> 5';
 
-
-    -- SELECT
-    --     AG.MATR_ID
-    --     , AG.ITEM_NUM
-    --     , DATEDIFF(DAY, AG.ACTUAL_DATE, 
-    --                 @lastDateInMonth)       AS AGING
-    --     , AG.ACTUAL_DATE
-    --     , LO.LAST_ACT_DATE
-    --     , LD.LAST_ACT_DATE
-    -- FROM [dbo].[W_CMMS_AGING_F] AG
-    --     INNER JOIN [dbo].[W_AGING_LEFTOVER] AS LO ON 1=1
-    --         AND LO.ITEM_NUM = AG.ITEM_NUM
-    --     INNER JOIN #TMP_AGING_LASTDATE LD ON 1=1
-    --         AND LD.ITEM_NUM = AG.ITEM_NUM
-    -- WHERE 1=1
-    --     AND AG.ACTUAL_DATE BETWEEN LD.LAST_ACT_DATE AND LO.LAST_ACT_DATE;
-
-
-
     WITH TMP_AGING AS (
         SELECT
-            AG.MATR_ID
+            AG.MATR_ID                          AS MATR_ID
             , AG.ITEM_NUM
             , DATEDIFF(DAY, AG.ACTUAL_DATE, 
                         @lastDateInMonth)       AS AGING
+            , CASE WHEN AG.ACTUAL_DATE < LO.LAST_ACT_DATE
+                THEN 0
+                WHEN AG.ACTUAL_DATE = LO.LAST_ACT_DATE
+                    THEN LO.LEFTOVER
+                ELSE M.QUANTITY
+            END                                 AS UPDATE_QTY
         FROM [dbo].[W_CMMS_AGING_F] AG
-            INNER JOIN [dbo].[W_AGING_LEFTOVER] AS LO ON 1=1
+            JOIN [dbo].[W_AGING_LEFTOVER] AS LO ON 1=1
                 AND LO.ITEM_NUM = AG.ITEM_NUM
-            INNER JOIN #TMP_AGING_LASTDATE LD ON 1=1
-                AND LD.ITEM_NUM = AG.ITEM_NUM
+            JOIN [dbo].[W_CMMS_MATR_F] AS M ON 1=1
+                AND M.MATR_ID = AG.MATR_ID
+            JOIN #TMP_AGING_LASTDATE AS TMP_AG ON 1=1
+                AND TMP_AG.ITEM_NUM = AG.ITEM_NUM
         WHERE 1=1
-            AND AG.ACTUAL_DATE BETWEEN LD.LAST_ACT_DATE AND LO.LAST_ACT_DATE
-
+            AND AG.ACTUAL_DATE BETWEEN TMP_AG.LAST_ACT_DATE AND @lastDateInMonth
     )
         UPDATE AG SET
-            AG.AGING = TMP_AG.AGING
+            AG.LEFTOVER_QTY = TMP_AG.UPDATE_QTY
             , AG.AGING_GRP = CASE 
+                WHEN TMP_AG.UPDATE_QTY = 0 THEN NULL
                 WHEN TMP_AG.AGING <= 365 THEN '<= 1 YEAR'
                 WHEN TMP_AG.AGING BETWEEN 365     AND 365 * 2 THEN '> 1 YEAR'
                 WHEN TMP_AG.AGING BETWEEN 365 * 2 AND 365 * 3 THEN '> 2 YEAR'
@@ -291,19 +296,15 @@ BEGIN
 END;
 
 
-SELECT * FROM [dbo].[W_CMMS_AGING_F]
-ORDER BY ACTUAL_DATE;
-SELECT * FROM [dbo].[W_AGING_LEFTOVER]
--- SELECT * FROM #TMP_W_CMMS_AGING_ACCUM
-
-
-DECLARE @month SMALLINT = 5;
+DECLARE @month SMALLINT = 8;
 DECLARE @year INT = 2020;
-
-WHILE (@month <= 12)
+WHILE (@month <= 8)
 BEGIN
-    EXEC [dbo].[AGING_V2] 
-    @month=@month, @year=@year;
-
+    EXEC [dbo].[AGING_V2] @month=@month, @year=@year;
     SET @month = @month + 1
 END;
+
+
+
+SELECT * FROM [dbo].[W_CMMS_AGING_F] ORDER BY ACTUAL_DATE;
+SELECT * FROM [dbo].[W_AGING_LEFTOVER]
