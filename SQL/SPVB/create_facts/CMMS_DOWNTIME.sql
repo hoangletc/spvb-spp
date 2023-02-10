@@ -1,5 +1,5 @@
 SELECT TOP 100
-    FORMAT(CONVERT(DATE, CHANGEDATE), 'yyyymmdd')   AS DATE_WID
+    FORMAT(CONVERT(DATE, CHANGEDATE), 'yyyyMMdd')   AS DATE_WID
     , ISNULL(PLANT.PLANT_WID, 0)                    AS PLANT_WID
     , ISNULL(LOC.LOC_WID, 0)                        AS LOCATION_WID
     , ISNULL(AST.ASSET_WID, 0)                      AS ASSET_WID
