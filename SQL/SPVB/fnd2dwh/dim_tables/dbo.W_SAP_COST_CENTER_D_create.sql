@@ -6,15 +6,13 @@ CREATE TABLE [dbo].[W_SAP_COST_CENTER_D]
 (
     [COST_CENTER_WID] INT IDENTITY(1, 1),
 
-    [MANDT] [nvarchar](100) NULL,
-    [KOKRS] [nvarchar](100) NULL,
-    [KOSTL] [nvarchar](100) NULL,
-    [DATBI] [nvarchar](100) NULL,
-    [DATAB] [nvarchar](100) NULL,
-    [BKZKP] [nvarchar](100) NULL,
-    [PKZKP] [nvarchar](100) NULL,
-    [BUKRS] [nvarchar](100) NULL,
-    [KTEXT] [nvarchar](100) NULL,
+    [CLIENT]            [nvarchar](100) NULL,
+    [CO_AREA]           [nvarchar](100) NULL,
+    [COST_CENTER]       [nvarchar](100) NULL,
+    [PAYMENT_CARD]      [nvarchar](100) NULL,
+    [EFFECTIVE_DATE]    [nvarchar](100) NULL,
+    [COMPANY_CODE]      [nvarchar](100) NULL,
+    [COST_CENTER_DESC]  [nvarchar](100) NULL,
 
     [W_DELETE_FLG] VARCHAR(1) NULL,
     [W_DATASOURCE_NUM_ID] INT NULL,

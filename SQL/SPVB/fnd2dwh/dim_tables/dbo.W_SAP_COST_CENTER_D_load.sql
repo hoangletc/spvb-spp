@@ -3,13 +3,13 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-IF (OBJECT_ID('[dbo].[SAP_proc_load_w_sap_cost_center_d]') is not null)
+IF (OBJECT_ID('[dbo].[SAP_proc_load_w_spp_cost_center_d]') is not null)
 BEGIN
-    DROP PROCEDURE [dbo].[SAP_proc_load_w_sap_cost_center_d]
+    DROP PROCEDURE [dbo].[SAP_proc_load_w_spp_cost_center_d]
 END;
 GO
 
-CREATE PROC [dbo].[SAP_proc_load_w_sap_cost_center_d]
+CREATE PROC [dbo].[SAP_proc_load_w_spp_cost_center_d]
     @p_batch_id [bigint]
 AS 
 BEGIN
@@ -93,15 +93,13 @@ BEGIN
         PRINT '2. Select everything into temp table'
 
 		SELECT
-            CONVERT(nvarchar(100), COST_CENTER.MANDT)       AS MANDT
-            , CONVERT(nvarchar(100), COST_CENTER.KOKRS)     AS KOKRS
-            , CONVERT(nvarchar(100), COST_CENTER.KOSTL)     AS KOSTL
-            , CONVERT(nvarchar(100), COST_CENTER.DATBI)     AS DATBI
-            , CONVERT(nvarchar(100), DATAB)                 AS DATAB
-            , CONVERT(nvarchar(100), BKZKP)                 AS BKZKP
-            , CONVERT(nvarchar(100), PKZKP)                 AS PKZKP
-            , CONVERT(nvarchar(100), BUKRS)                 AS BUKRS
-            , CONVERT(nvarchar(100), CSKT.KTEXT)            AS KTEXT
+            CONVERT(nvarchar(100), COST_CENTER.MANDT)   AS CLIENT
+            , CONVERT(nvarchar(100), COST_CENTER.KOKRS) AS CO_AREA
+            , CONVERT(nvarchar(100), COST_CENTER.KOSTL) AS COST_CENTER
+            , CONVERT(nvarchar(100), COST_CENTER.DATBI) AS PAYMENT_CARD
+            , CONVERT(nvarchar(100), DATAB)             AS EFFECTIVE_DATE
+            , CONVERT(nvarchar(100), BUKRS)             AS COMPANY_CODE
+            , CONVERT(nvarchar(100), CSKT.KTEXT)        AS COST_CENTER_DESC
             
 			, CONVERT(
                 [varbinary](100), 
@@ -112,13 +110,13 @@ BEGIN
                     COST_CENTER.KOSTL,
                     COST_CENTER.DATBI
                 )
-            )                                               AS W_INTEGRATION_ID
-			, 'N'                                           AS W_DELETE_FLG
-			, 1                                             AS W_DATASOURCE_NUM_ID
-			, GETDATE()                                     AS W_INSERT_DT
-			, GETDATE()                                     AS W_UPDATE_DT
-			, @p_batch_id                                   AS W_BATCH_ID
-            , 'N'                                           AS W_UPDATE_FLG
+            )                                           AS W_INTEGRATION_ID
+			, 'N'                                       AS W_DELETE_FLG
+			, 1                                         AS W_DATASOURCE_NUM_ID
+			, GETDATE()                                 AS W_INSERT_DT
+			, GETDATE()                                 AS W_UPDATE_DT
+			, @p_batch_id                               AS W_BATCH_ID
+            , 'N'                                       AS W_UPDATE_FLG
         INTO #W_SAP_COST_CENTER_D_tmp
         FROM [FND].[W_SAP_CSKS_D] COST_CENTER
             LEFT JOIN [FND].[W_SAP_CSKT_D] CSKT ON 1=1
@@ -146,15 +144,13 @@ BEGIN
 
 		UPDATE  [dbo].[W_SAP_COST_CENTER_D]
 		SET 
-           MANDT = src.MANDT
-            , KOKRS = src.KOKRS
-            , KOSTL = src.KOSTL
-            , DATBI = src.DATBI
-            , DATAB = src.DATAB
-            , BKZKP = src.BKZKP
-            , PKZKP = src.PKZKP
-            , BUKRS = src.BUKRS
-            , KTEXT = src.KTEXT
+           CLIENT = src.CLIENT
+            , CO_AREA = src.CO_AREA
+            , COST_CENTER = src.COST_CENTER
+            , PAYMENT_CARD = src.PAYMENT_CARD
+            , EFFECTIVE_DATE = src.EFFECTIVE_DATE
+            , COMPANY_CODE = src.COMPANY_CODE
+            , COST_CENTER_DESC = src.COST_CENTER_DESC
 
 			, W_DELETE_FLG = src.W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID = src.W_DATASOURCE_NUM_ID
@@ -171,15 +167,13 @@ BEGIN
         PRINT '4. Insert non-existed records to main table from temp table'
 
         INSERT INTO [dbo].[W_SAP_COST_CENTER_D](
-             MANDT
-            , KOKRS
-            , KOSTL
-            , DATBI
-            , DATAB
-            , BKZKP
-            , PKZKP
-            , BUKRS
-            , KTEXT
+             CLIENT
+            , CO_AREA
+            , COST_CENTER
+            , PAYMENT_CARD
+            , EFFECTIVE_DATE
+            , COMPANY_CODE
+            , COST_CENTER_DESC
 
             , W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID
@@ -189,15 +183,13 @@ BEGIN
 			, W_INTEGRATION_ID
         )
         SELECT
-            MANDT
-            , KOKRS
-            , KOSTL
-            , DATBI
-            , DATAB
-            , BKZKP
-            , PKZKP
-            , BUKRS
-            , KTEXT
+            CLIENT
+            , CO_AREA
+            , COST_CENTER
+            , PAYMENT_CARD
+            , EFFECTIVE_DATE
+            , COMPANY_CODE
+            , COST_CENTER_DESC
 
             , W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID
@@ -207,7 +199,6 @@ BEGIN
 			, W_INTEGRATION_ID
         FROM #W_SAP_COST_CENTER_D_tmp
         where W_UPDATE_FLG = 'N'
-
 		
 
 		/*delete & re-insert data refresh*/

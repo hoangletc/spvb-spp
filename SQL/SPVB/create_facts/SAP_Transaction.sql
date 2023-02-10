@@ -23,7 +23,7 @@ DECLARE @p_batch_id VARCHAR(8) = FORMAT(GETDATE(), 'yyyyMMdd')
         ACDOCA.BUDAT                                    AS DATE_WID
         , ISNULL(PRODUCT.PRODUCT_WID, 0)                AS PRODUCT_WID
         , ISNULL(M_X.PLANT_WID, 0)                      AS PLANT_WID
-        , ISNULL(COST_CENTER.COST_CENTER_WID, 0)         AS COST_CENTER_WID	
+        , ISNULL(COST_CENTER.COST_CENTER_WID, 0)        AS COST_CENTER_WID	
         , 0 											AS ASSET_WID
 
         , CONVERT(NVARCHAR(20), ACDOCA.WERKS)           AS PLANT_CODE
