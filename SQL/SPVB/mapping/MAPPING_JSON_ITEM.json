@@ -163,6 +163,25 @@
         "type": "Int64"
       }
     },
+
+    {
+      "source": {
+        "path": "$[''spvb_productline'']"
+      },
+      "sink": {
+        "name": "SPVB_PRODUCTLINE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_machine'']"
+      },
+      "sink": {
+        "name": "SPVB_MACHINE",
+        "type": "String"
+      }
+    },
     {
       "source": {
         "path": "$[''W_BATCH_ID'']"

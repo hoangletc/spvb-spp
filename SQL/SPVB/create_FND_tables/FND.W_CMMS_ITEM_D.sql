@@ -4,7 +4,7 @@ SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [FND].[W_CMMS_ITEM_D]
 (
-	[DESCRIPTION] [nvarchar](100) NULL,
+	[DESCRIPTION] [nvarchar](1000) NULL,
 	[ISKIT] [nvarchar](100) NULL,
 	[ISSUE_UNIT] [nvarchar](100) NULL,
 	[ITEM_NUM] [nvarchar](100) NULL,
@@ -22,8 +22,11 @@ CREATE TABLE [FND].[W_CMMS_ITEM_D]
 	[STATUS] [nvarchar](100) NULL,
 	[STATUS_DESCRIPTION] [nvarchar](100) NULL,
 	[ITEM_ID] [bigint] NULL,
+	[SPVB_PRODUCTLINE] [nvarchar](300) NULL,
+	[SPVB_MACHINE] [nvarchar](300) NULL,
+
 	[W_BATCH_ID] BIGINT NULL,
-	[W_INSERT_DT] DATETIME NULL
+	[W_INSERT_DT] DATETIME2 NULL
 )
 WITH
 (
@@ -31,3 +34,5 @@ WITH
 	HEAP
 )
 GO
+
+-- drop table [FND].[W_CMMS_ITEM_D]

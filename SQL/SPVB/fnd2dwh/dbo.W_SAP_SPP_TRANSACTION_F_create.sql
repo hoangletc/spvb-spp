@@ -10,6 +10,7 @@ CREATE TABLE [dbo].[W_SAP_SPP_TRANSACTION_F]
 	, COST_CENTER_WID           	INT 				NULL
 	, ASSET_WID						INT 				NULL
 
+	, [ORIGINAL_POSTING_DATE]		DATE				NULL
 	, [PLANT_CODE] 					[nvarchar](50) 		NULL
 	, [VALUATION_TYPE] 				[nvarchar](50) 		NULL
 	, [MATERIAL_NUMBER]				[nvarchar](50) 		NULL
@@ -45,6 +46,10 @@ CREATE TABLE [dbo].[W_SAP_SPP_TRANSACTION_F]
 	, [UPLOADING_POINT] 			[nvarchar](100) 	NULL
 	, [PURCHASE_DOCUMENT] 			[nvarchar](20) 		NULL
 	, [PURCHASE_LINE_ITEM] 			[nvarchar](20) 		NULL
+	, [FLG_RESERVING] 				[nvarchar](20) 		NULL
+	, [FLG_RESERVED] 				[nvarchar](20) 		NULL
+	, [FISCAL_YEAR_RESERVED] 		[nvarchar](20) 		NULL
+	, [REVERTED_DOCUMENT] 			[nvarchar](50) 		NULL
 
     , W_DELETE_FLG             		[varchar](1) 		NULL
 	, W_DATASOURCE_NUM_ID       	[int] 				NULL

@@ -6,7 +6,7 @@ CREATE TABLE [dbo].[W_CMMS_ITEM_D]
 (
     [ITEM_WID] INT NOT NULL IDENTITY(1, 1),
 
-	[DESCRIPTION] [nvarchar](100) NULL,
+	[DESCRIPTION] [nvarchar](1000) NULL,
 	[ISKIT] [nvarchar](100) NULL,
 	[ISSUE_UNIT] [nvarchar](100) NULL,
 	[ITEM_NUM] [nvarchar](100) NULL,
@@ -24,6 +24,8 @@ CREATE TABLE [dbo].[W_CMMS_ITEM_D]
 	[STATUS] [nvarchar](100) NULL,
 	[STATUS_DESCRIPTION] [nvarchar](100) NULL,
 	[ITEM_ID] [bigint] NULL,
+	[SPVB_PRODUCTLINE] [nvarchar](300) NULL,
+	[SPVB_MACHINE] [nvarchar](300) NULL,
 
     [W_DELETE_FLG] VARCHAR(1) NULL,
     [W_DATASOURCE_NUM_ID] INT NULL,

@@ -2,49 +2,54 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-CREATE TABLE [dbo].[W_SAP_BALANCE_F]
+CREATE TABLE [dbo].[W_SAP_SPP_BALANCE_F]
 (
-	ASSET_WID                   	INT NOT NULL IDENTITY(1, 1)
-	, DATE_WID                  	INT NULL
-	, PRODUCT_WID               	INT NULL
-	, PLANT_WID                 	INT NULL
-	, COST_CENTER_WID           	INT NULL
+	PLANT_WID						INT 			NULL
+	, DATE_WID						VARCHAR(8)		NULL
 
-	, [PLANT_CODE] 					[nvarchar](50) NULL
-	, [VALUATION_TYPE] 				[nvarchar](50) NULL
-	, [MATERIAL_NUMBER]				[nvarchar](50) NULL
-	, [CLIENT_CODE] 				[nvarchar](50) NULL
-	, [LEDGER_CODE] 				[nvarchar](50) NULL
-	, [STORAGE_LOCATION] 			[nvarchar](50) NULL
-	, [COMPANY_CODE] 				[nvarchar](50) NULL
-	, [VALUATION_AREA] 				[nvarchar](50) NULL
-	, [VALUATION_CLASS] 			[nvarchar](50) NULL
-	, [MATERIAL_TYPE] 				[nvarchar](50) NULL
-	, [MATERIAL_GROUP] 				[nvarchar](50) NULL
-	, [PURCHASING_GROUP] 			[nvarchar](50) NULL
-	, [BASE_UNIT_OF_MEASURE] 		[nvarchar](50) NULL
-	, [PRICE_CONTROL] 				[nvarchar](50) NULL
-	, [DOCUMENT_DATE] 				[nvarchar](50) NULL
-	, [DOCUMENT_NUMBER] 			[nvarchar](50) NULL
-	, [LINE_ITEM] 					[nvarchar](50) NULL
-	, [UNIT] 						[nvarchar](50) NULL
-	, [BASE_UNIT] 					[nvarchar](50) NULL
-	, [CURRENCY] 					[nvarchar](50) NULL
-	, [ACCOUNT_NUMBER] 				[nvarchar](50) NULL
-	, [DEBIT_INDICATOR] 			[nvarchar](50) NULL
+	, [PERIOD] 						DATE 			NULL
+	, [QUANTITY] 					DECIMAL(38, 20) NULL
+	, [AMOUNT] 						DECIMAL(38, 20)	NULL
+	
 
-	, [COST_CENTER] 				[nvarchar](20) NULL
-	, [COST_CENTER_DESC] 			[nvarchar](100) NULL
+	, [PLANT] 						NVARCHAR(10) 	NULL
+	, [MATERIAL_NUMBER] 			NVARCHAR(50) 	NULL
+	, [TYPE] 						NVARCHAR(50) 	NULL
+	
 
-	, [QUANTITY] 					INT NULL
-	, [LOCAL_AMOUNT] 				[decimal](38, 18) NULL
+	, [PLANT_CODE] 					NVARCHAR(10) 	NULL
 
-    , W_DELETE_FLG             		[varchar](1) NULL
-	, W_DATASOURCE_NUM_ID       	[int] NULL
-	, W_INSERT_DT               	[DATETIME] NULL
-	, W_UPDATE_DT               	[DATETIME] NULL
-	, W_BATCH_ID                	[nvarchar](50) NULL
-	, W_INTEGRATION_ID          	[nvarchar](200) NULL
+	, [STORAGE_LOCATION] 			NVARCHAR(50) 	NULL
+	, [COMPANY_CODE] 				NVARCHAR(50) 	NULL
+	, [VALUATION_AREA] 				NVARCHAR(50) 	NULL
+	, [VALUATION_CLASS] 			NVARCHAR(50) 	NULL
+	, [MATERIAL_TYPE] 				NVARCHAR(50) 	NULL
+	, [MATERIAL_GROUP] 				NVARCHAR(50) 	NULL
+	, [PURCHASING_GROUP] 			NVARCHAR(50) 	NULL
+	, [BASE_UNIT_OF_MEASURE] 		NVARCHAR(50) 	NULL
+	, [CURRENCY] 					NVARCHAR(50) 	NULL
+	, [PRICE_CONTROL] 				NVARCHAR(50) 	NULL
+
+	, [< 4 MONTHS]					DECIMAL(38, 20)	NULL
+	, [4 - 12 MONTHS]				DECIMAL(38, 20)	NULL
+	, [1 - 2 YEARS]					DECIMAL(38, 20)	NULL
+	, [2 - 3 YEARS]					DECIMAL(38, 20)	NULL
+	, [3 - 4 YEARS]					DECIMAL(38, 20)	NULL
+	, [4 - 5 YEARS]					DECIMAL(38, 20)	NULL
+
+	, [MAX] 						DECIMAL(38, 20)	NULL
+	, [MIN] 						DECIMAL(38, 20)	NULL
+	, [OVER_MAX]					DECIMAL(38, 20)	NULL
+	, [UNDER_MIN]					DECIMAL(38, 20)	NULL
+	, [SLOW_MOVING]					DECIMAL(38, 20)	NULL
+
+
+    , W_DELETE_FLG             		VARCHAR(1) 		NULL
+	, W_DATASOURCE_NUM_ID       	INT 			NULL
+	, W_INSERT_DT               	DATETIME2 		NULL
+	, W_UPDATE_DT               	DATETIME2 		NULL
+	, W_BATCH_ID                	NVARCHAR(50) 	NULL
+	, W_INTEGRATION_ID          	NVARCHAR(200) 	NULL
 )
 WITH
 (
@@ -52,5 +57,3 @@ WITH
 	HEAP
 )
 GO
-
-SELECT TOP 10 * FROM [dbo].[W_SAP_BALANCE_F]

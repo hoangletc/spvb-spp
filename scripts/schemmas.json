@@ -83,7 +83,9 @@
     "spvb_plant",
     "status",
     "status_description",
-    "itemid"
+    "itemid",
+    "spvb_machine",
+    "spvb_productline"
   ],
 
   "material_receipt_trans": [
