@@ -154,6 +154,19 @@ BEGIN
 				DROP Table #TMP_REMAINING
 			END;
 
+			IF OBJECT_ID(N'tempdb..#TMP_BALANCE_FINAL') IS NOT NULL 
+			BEGIN
+				PRINT N'DELETE temporary table #TMP_BALANCE_FINAL'
+				DROP Table #TMP_BALANCE_FINAL
+			END;
+
+
+			IF OBJECT_ID(N'tempdb..#TMP_MVM_TYPE') IS NOT NULL 
+			BEGIN
+				PRINT N'DELETE temporary table #TMP_MVM_TYPE'
+				DROP Table #TMP_MVM_TYPE
+			END;
+
 			IF OBJECT_ID(N'tempdb..#W_SAP_SPP_BALANCE_F_tmp') IS NOT NULL 
 			BEGIN
 				PRINT N'DELETE temporary table #W_SAP_SPP_BALANCE_F_tmp'
@@ -165,28 +178,33 @@ BEGIN
 
 			SELECT 
 				PLANT_CODE 
-				, MATERIAL_NUMBER                                               AS MAT_NUM 
+				, MATERIAL_NUMBER                                               AS MAT_NUM
+				, STORAGE_LOCATION                                              AS STO_LOC
 				, SUM(QUANTITY)                                                 AS ISS_QTY
 				, SUM(LOCAL_AMOUNT)                                             AS ISS_AMOUNT
 			INTO #TMP_1_ISS
 			FROM [dbo].[W_SAP_SPP_TRANSACTION_F]
 			WHERE 1=1
-				AND CONVERT(VARCHAR, DATE_WID) <= @dateLastMonth
 				-- AND MOVEMENT_TYPE IN ('201', '202', '551', '311', '122')
 				AND QUANTITY < 0
-			GROUP BY PLANT_CODE, MATERIAL_NUMBER;
+
+				-- AND MATERIAL_NUMBER = @mat_num
+				-- AND PLANT_CODE = @plant_code
+				-- AND STORAGE_LOCATION = @sloc
+				AND CONVERT(VARCHAR, DATE_WID) <= @dateLastMonth
+			GROUP BY PLANT_CODE, MATERIAL_NUMBER, STORAGE_LOCATION;
 
 
 			SELECT 
 				PLANT_CODE
 				, MATERIAL_NUMBER                                               AS MAT_NUM
+				, STORAGE_LOCATION                                              AS STO_LOC
 				, CONVERT(DATE, CONVERT(VARCHAR, DATE_WID))                     AS GR_DATE 
 				, SUM(QUANTITY)                                                 AS REC_QTY
 				, SUM(LOCAL_AMOUNT)                                             AS REC_AMNT
 			INTO #TMP_1_REC
 			FROM [dbo].[W_SAP_SPP_TRANSACTION_F]
 			WHERE 1=1
-				AND CONVERT(VARCHAR, DATE_WID) <= @dateLastMonth
 				-- AND (
 				--     MOVEMENT_TYPE NOT IN ('201', '202', '551', '311', '122')
 				--     OR MOVEMENT_TYPE IS NULL
@@ -195,116 +213,161 @@ BEGIN
 
 				-- AND MATERIAL_NUMBER = @mat_num
 				-- AND PLANT_CODE = @plant_code
-			GROUP BY DATE_WID, PLANT_CODE, MATERIAL_NUMBER;
+				-- AND STORAGE_LOCATION = @sloc
+				AND CONVERT(DATE, CONVERT(VARCHAR, DATE_WID)) <= @dateLastMonth
+			GROUP BY DATE_WID, PLANT_CODE, MATERIAL_NUMBER, STORAGE_LOCATION;
+
+			SELECT DISTINCT F.MOVEMENT_TYPE
+				INTO #TMP_MVM_TYPE
+				FROM [dbo].[W_SAP_SPP_TRANSACTION_F] F, #TMP_1_REC R
+				WHERE 1=1
+					AND F.PLANT_CODE = R.PLANT_CODE
+					AND F.MATERIAL_NUMBER = R.MAT_NUM
+					AND F.STORAGE_LOCATION = R.STO_LOC
+			;
 
 
-			SELECT 
-				R.*
-				, I.ISS_QTY
-				, I.ISS_AMOUNT
-				, SUM(R.REC_QTY) OVER (
-					PARTITION BY R.PLANT_CODE, R.MAT_NUM 
-					ORDER BY GR_DATE
-				)                                                               AS ACCUM_QTY_REC_ONLY
-				, SUM(R.REC_AMNT) OVER (
-					PARTITION BY R.PLANT_CODE, R.MAT_NUM 
-					ORDER BY GR_DATE
-				)                                                               AS ACCUM_AMNT_REC_ONLY
+			WITH TMP_ACCUM AS (
+				SELECT
+					R.PLANT_CODE
+					, R.MAT_NUM
+					, R.STO_LOC
+					, R.GR_DATE
+					, SUM(R.REC_QTY) OVER (
+						PARTITION BY R.PLANT_CODE, R.MAT_NUM, R.STO_LOC
+					)     AS TOT_QTY 
+					, SUM(R.REC_AMNT) OVER (
+						PARTITION BY R.PLANT_CODE, R.MAT_NUM, R.STO_LOC
+					)    AS TOT_AMNT
+					, SUM(R.REC_QTY) OVER (
+						PARTITION BY R.PLANT_CODE, R.MAT_NUM, R.STO_LOC
+						ORDER BY GR_DATE
+					)     AS ACCUM_QTY_REC_ONLY
+					, SUM(R.REC_AMNT) OVER (
+						PARTITION BY R.PLANT_CODE, R.MAT_NUM, R.STO_LOC
+						ORDER BY GR_DATE
+					)     AS ACCUM_AMNT_REC_ONLY
+				FROM #TMP_1_REC R    
+			)
+				SELECT 
+					R.*
+					, I.ISS_QTY
+					, I.ISS_AMOUNT
+					, A.ACCUM_QTY_REC_ONLY
+					, A.ACCUM_AMNT_REC_ONLY
+					, ISNULL(ISS_QTY, 0) + A.TOT_QTY                                AS RMN_QTY
+					, ISNULL(ISS_AMOUNT, 0) + A.TOT_AMNT                            AS RMN_AMNT
 
-				, CASE WHEN SUM(R.REC_QTY) OVER 
-					(PARTITION BY R.PLANT_CODE, R.MAT_NUM 
-					ORDER BY GR_DATE) + I.ISS_QTY <= 0 THEN 0 
-					ELSE 1 
-				END                                                             AS FLG_LEFTOVER_QTY
-				, CASE WHEN SUM(R.REC_AMNT) OVER 
-					(PARTITION BY R.PLANT_CODE, R.MAT_NUM 
-					ORDER BY GR_DATE) + I.ISS_AMOUNT <= 0 THEN 0 
-					ELSE 1 
-				END                                                             AS FLG_LEFTOVER_AMNT
-			INTO #TMP_ACCUM_CUR_MONTH
-			FROM #TMP_1_REC R
-				LEFT JOIN #TMP_1_ISS I ON 1=1
-					AND R.PLANT_CODE = I.PLANT_CODE 
-					AND R.MAT_NUM = I.MAT_NUM;
+					, CASE WHEN ACCUM_QTY_REC_ONLY + I.ISS_QTY <= 0 THEN 0 ELSE 1 
+					END                                                             AS FLG_LEFTOVER_QTY
+					, CASE WHEN ACCUM_AMNT_REC_ONLY + I.ISS_AMOUNT <= 0 THEN 0 ELSE 1 
+					END                                                             AS FLG_LEFTOVER_AMNT
+				INTO #TMP_ACCUM_CUR_MONTH
+				FROM #TMP_1_REC R
+					LEFT JOIN #TMP_1_ISS I ON 1=1
+						AND R.PLANT_CODE = I.PLANT_CODE 
+						AND R.MAT_NUM = I.MAT_NUM
+						AND R.STO_LOC = I.STO_LOC
+					LEFT JOIN TMP_ACCUM A ON 1=1
+						AND A.[PLANT_CODE] = R.PLANT_CODE
+						AND A.MAT_NUM = R.MAT_NUM
+						AND A.STO_LOC = R.STO_LOC
+						AND A.GR_DATE = R.GR_DATE
+			;
 
 
 
 			WITH TMP_BALANCE AS (
-			SELECT
-				PLANT_CODE
-				, MAT_NUM
-				, GR_DATE
-				, CASE WHEN FLG_LEFTOVER_QTY = 0 THEN NULL 
-					WHEN GR_DATE = MIN(GR_DATE) OVER (
-						PARTITION BY PLANT_CODE, MAT_NUM, FLG_LEFTOVER_QTY
-					) THEN ISNULL(ISS_QTY, 0) + ACCUM_QTY_REC_ONLY
-					ELSE REC_QTY
-				END                                                             AS REMAINING_QTY
-				, CASE WHEN GR_DATE = MAX(GR_DATE) OVER (
-						PARTITION BY PLANT_CODE, MAT_NUM
-					) THEN ISNULL(ISS_AMOUNT, 0) + ACCUM_AMNT_REC_ONLY
-					ELSE 0
-				END                                                             AS REMAINING_AMNT
-				FROM #TMP_ACCUM_CUR_MONTH
-			)
 				SELECT
 					PLANT_CODE
 					, MAT_NUM
+					, STO_LOC
 					, GR_DATE
-					, REMAINING_AMNT
-					, REMAINING_QTY
-					, CASE WHEN REMAINING_QTY > 0 
-						THEN DATEDIFF(M, GR_DATE, CONVERT(DATE, @dateLastMonth)) 
-						ELSE NULL 
-					END                                                           AS AGING_MONTH
-				INTO #TMP_1_AGING
-				FROM TMP_BALANCE;   
+					, CASE WHEN FLG_LEFTOVER_QTY = 0 THEN 
+							( CASE WHEN RMN_QTY < 0 AND GR_DATE = MAX(GR_DATE) OVER (
+									PARTITION BY PLANT_CODE, MAT_NUM, STO_LOC
+								) THEN ACCUM_QTY_REC_ONLY + ISNULL(ISS_QTY, 0)
+								ELSE NULL END
+							) 
+						WHEN GR_DATE = MIN(GR_DATE) OVER (
+							PARTITION BY PLANT_CODE, MAT_NUM, STO_LOC, FLG_LEFTOVER_QTY
+						) THEN ACCUM_QTY_REC_ONLY + ISNULL(ISS_QTY, 0)
+						ELSE REC_QTY
+					END                                                             AS REMAINING_QTY
+					, CASE WHEN GR_DATE = MAX(GR_DATE) OVER (
+							PARTITION BY PLANT_CODE, MAT_NUM, STO_LOC
+						) THEN ACCUM_AMNT_REC_ONLY + ISNULL(ISS_AMOUNT, 0)
+						ELSE 0
+					END                                                             AS REMAINING_AMNT
+					FROM #TMP_ACCUM_CUR_MONTH
+				)
+					SELECT
+						PLANT_CODE
+						, MAT_NUM
+						, STO_LOC
+						, GR_DATE
+						, REMAINING_AMNT
+						, REMAINING_QTY
+						, CASE WHEN REMAINING_QTY > 0 
+							THEN DATEDIFF(M, GR_DATE, CONVERT(DATE, @dateLastMonth)) 
+							ELSE NULL 
+						END                                                           AS AGING_MONTH
+					INTO #TMP_1_AGING
+					FROM TMP_BALANCE
+				;   
+
+				INSERT INTO #TMP_1_AGING
+				SELECT
+					T.PLANT_CODE
+					, T.MATERIAL_NUMBER                                                 AS MAT_NUM
+					, T.STORAGE_LOCATION                                                AS STO_LOC
+					, CONVERT(DATE, CONVERT(VARCHAR, DATE_WID))                         AS GR_DATE
+					, LOCAL_AMOUNT                                                      AS REMAINING_AMNT
+					, QUANTITY                                                          AS REMAINING_QTY
+					, -1                                                                AS AGING_MONTH
+				FROM [dbo].[W_SAP_SPP_TRANSACTION_F] T
+				WHERE 1=1
+					and CONVERT(VARCHAR, DATE_WID) <= @dateLastMonth
+					AND NOT EXISTS (
+						SELECT MAT_NUM, PLANT_CODE, STO_LOC FROM #TMP_1_AGING A
+						WHERE 1=1
+							AND T.MATERIAL_NUMBER = A.MAT_NUM
+							AND T.PLANT_CODE = A.PLANT_CODE
+							AND T.STORAGE_LOCATION = A.STO_LOC
+					)
+			;  
 
 
 			SELECT
 				PLANT_CODE
 				, MAT_NUM
+				, STO_LOC
 
 				, SUM(REMAINING_AMNT)   AS RMN_AMNT
 				, SUM(REMAINING_QTY)    AS RMN_QTY
 			INTO #TMP_REMAINING
 			FROM #TMP_1_AGING
-			GROUP BY PLANT_CODE, MAT_NUM;
+			GROUP BY PLANT_CODE, MAT_NUM, STO_LOC;
 
 			SELECT
-				CASE WHEN ACC.AGING_MONTH < 4 THEN '< 4 MONTHS'
+				CASE WHEN ACC.AGING_MONTH BETWEEN 0 AND 4 THEN '< 4 MONTHS'
 					WHEN ACC.AGING_MONTH BETWEEN 4 AND 12 THEN '4 - 12 MONTHS'
 					WHEN ACC.AGING_MONTH BETWEEN 12 AND 24 THEN '1 - 2 YEARS'
 					WHEN ACC.AGING_MONTH BETWEEN 24 AND 36 THEN '2 - 3 YEARS'
 					WHEN ACC.AGING_MONTH BETWEEN 36 AND 48 THEN '3 - 4 YEARS'
 					WHEN ACC.AGING_MONTH BETWEEN 48 AND 60 THEN '4 - 5 YEARS'
-					ELSE '> 5 YEARS'
+					WHEN ACC.AGING_MONTH > 60 THEN '> 5 YEARS'
+					ELSE 'AGE_NULL'
 				END                                                             AS AGING_GROUP
 				, ACC.PLANT_CODE
 				, ACC.MAT_NUM
 				, ACC.GR_DATE
+				, ACC.STO_LOC
 				, ACC.REMAINING_QTY
 				, ACC.REMAINING_AMNT
-				, TRANS.PURCHASING_GROUP
-				, TRANS.STORAGE_LOCATION
-				, TRANS.COMPANY_CODE
-				, TRANS.VALUATION_AREA
-				, TRANS.VALUATION_CLASS
-				, TRANS.MATERIAL_TYPE
-				, TRANS.MATERIAL_GROUP
-				, TRANS.BASE_UNIT_OF_MEASURE
-				, TRANS.CURRENCY
-				, TRANS.PRICE_CONTROL
 			INTO #TMP_TRANS_AGING
 			FROM #TMP_1_AGING ACC
-				LEFT JOIN [dbo].[W_SAP_SPP_TRANSACTION_F] TRANS ON 1=1
-					AND TRANS.DATE_WID = CONVERT(INT, FORMAT(ACC.GR_DATE, 'yyyyMMdd'))
-					AND TRANS.PLANT_CODE = ACC.PLANT_CODE
-					AND TRANS.MATERIAL_NUMBER = ACC.MAT_NUM
-					AND (
-						TRANS.MOVEMENT_TYPE NOT IN ('201', '202', '901', '902') 
-						OR TRANS.MOVEMENT_TYPE IS NULL
-					);
+			;
 
 
 			PRINT '--> 2. Pivot';
@@ -312,6 +375,7 @@ BEGIN
 			SELECT
 				TMP.MAT_NUM
 				, TMP.PLANT_CODE
+				, TMP.STO_LOC
 				, [< 4 MONTHS]
 				, [4 - 12 MONTHS]
 				, [1 - 2 YEARS]
@@ -319,9 +383,11 @@ BEGIN
 				, [3 - 4 YEARS]
 				, [4 - 5 YEARS]
 				, [> 5 YEARS]
+				, [AGE_NULL]
+				, CONCAT_WS('-', TMP.MAT_NUM, TMP.PLANT_CODE, TMP.STO_LOC) AS [KEY]
 			INTO #TMP_PIVOT
 			FROM (
-				SELECT MAT_NUM, PLANT_CODE, AGING_GROUP
+				SELECT MAT_NUM, PLANT_CODE, AGING_GROUP, STO_LOC
 				FROM #TMP_TRANS_AGING
 			) AS SB
 			PIVOT (
@@ -334,6 +400,7 @@ BEGIN
 					, [3 - 4 YEARS]
 					, [4 - 5 YEARS]
 					, [> 5 YEARS]
+					, [AGE_NULL]
 				)
 			) AS TMP;
 
@@ -345,6 +412,7 @@ BEGIN
 				SELECT
 					PLANT_CODE
 					, MAT_NUM
+					, STO_LOC
 					, [< 4 MONTHS]
 					, [4 - 12 MONTHS]
 					, [1 - 2 YEARS]
@@ -352,28 +420,33 @@ BEGIN
 					, [3 - 4 YEARS]
 					, [4 - 5 YEARS]
 					, [> 5 YEARS]
+					, [AGE_NULL]
 					, [4 - 12 MONTHS] + [1 - 2 YEARS]
 					+ [2 - 3 YEARS] + [3 - 4 YEARS] + [4 - 5 YEARS]     AS TOTAL_LEFTOVER
 					, [3 - 4 YEARS] + [4 - 5 YEARS]                     AS SLOW_MOVING
+					, [KEY]
 				FROM #TMP_PIVOT
 			),
-			TMP_AG AS (
-				SELECT *
-				, ROW_NUMBER() OVER (PARTITION BY T.PLANT_CODE, T.MAT_NUM ORDER BY GR_DATE DESC) AS RN
-				FROM #TMP_TRANS_AGING T
+			TMP_R AS (
+				SELECT
+					SUM(REMAINING_AMNT) AS TOT_AMNT
+					, SUM(REMAINING_QTY) AS TOT_QTY
+					, CONCAT_WS('-', MAT_NUM, PLANT_CODE, STO_LOC) AS [KEY]
+				FROM #TMP_TRANS_AGING
+				GROUP BY MAT_NUM, PLANT_CODE, STO_LOC
 			)
 				SELECT
 					CONVERT(VARCHAR, FORMAT(@dateLastMonth, 'yyyyMMdd'))          AS DATE_WID
 					, PL.PLANT_WID                                      AS PLANT_WID
 					, IT.ITEM_WID                                       AS MATERIAL_WID
 
-					, @dateLastMonth                                    AS [PERIOD]
+					, @dateLastMonth                                              AS [PERIOD]
 					, TMP_B.PLANT_CODE
 					, PL.PLANT_NAME_2									AS PLANT
-					, TMP_B.MAT_NUM										AS MATERIAL_NUMBER
-					, R.RMN_QTY                                         AS QUANTITY
-					, R.RMN_AMNT                                        AS AMOUNT
-					, NULL												AS [TYPE]
+					, TMP_B.MAT_NUM											AS MATERIAL_NUMBER
+					, TMP_R.TOT_QTY                                         AS QUANTITY
+					, TMP_R.TOT_AMNT                                        AS AMOUNT
+					, NULL													AS [TYPE]
 					, [< 4 MONTHS]
 					, [4 - 12 MONTHS]
 					, [1 - 2 YEARS]
@@ -381,16 +454,17 @@ BEGIN
 					, [3 - 4 YEARS]
 					, [4 - 5 YEARS]
 					, [> 5 YEARS]
-					, TMP_AG.PURCHASING_GROUP
-					, TMP_AG.STORAGE_LOCATION
-					, TMP_AG.COMPANY_CODE
-					, TMP_AG.VALUATION_AREA
-					, TMP_AG.VALUATION_CLASS
-					, TMP_AG.MATERIAL_TYPE
-					, TMP_AG.MATERIAL_GROUP
-					, TMP_AG.BASE_UNIT_OF_MEASURE
-					, TMP_AG.CURRENCY
-					, TMP_AG.PRICE_CONTROL
+					, [AGE_NULL]
+					, TMP_B.STO_LOC											AS STORAGE_LOCATION
+					, T.COMPANY_CODE
+					, T.VALUATION_AREA
+					, T.VALUATION_CLASS
+					, T.MATERIAL_TYPE
+					, T.MATERIAL_GROUP
+					, T.BASE_UNIT_OF_MEASURE
+					, T.CURRENCY
+					, T.PRICE_CONTROL
+					, T.PURCHASING_GROUP
 					, MM.MAX                                            AS MAX
 					, MM.MIN                                            AS MIN
 					, CASE WHEN TOTAL_LEFTOVER > MM.MAX
@@ -407,7 +481,7 @@ BEGIN
 						, CONVERT(VARCHAR, FORMAT(@dateLastMonth, 'yyyyMMdd'))
 						, TMP_B.MAT_NUM
 						, TMP_B.PLANT_CODE
-						, TMP_AG.STORAGE_LOCATION
+						, T.STORAGE_LOCATION
 					)                                                   AS W_INTEGRATION_ID
 					, 'N'                                               AS W_DELETE_FLG
 					, 1                                                 AS W_DATASOURCE_NUM_ID
@@ -418,20 +492,35 @@ BEGIN
 					INTO #W_SAP_SPP_BALANCE_F_tmp
 					FROM TMP_B
 						LEFT JOIN [dbo].[W_CMMS_ITEM_D] IT ON 1=1
-                			AND TMP_B.MAT_NUM = IT.ITEM_NUM
-						LEFT JOIN TMP_AG ON 1=1
-							AND TMP_AG.PLANT_CODE = TMP_B.PLANT_CODE
-							AND TMP_AG.MAT_NUM = TMP_B.MAT_NUM     
-							AND TMP_AG.RN = 1           
-						LEFT JOIN #TMP_REMAINING R ON 1=1
-							AND TMP_B.PLANT_CODE = R.PLANT_CODE
-							AND TMP_B.MAT_NUM = R.MAT_NUM
+							AND TMP_B.MAT_NUM = IT.ITEM_NUM
+					
+						LEFT JOIN TMP_R ON 1=1
+							AND TMP_R.[KEY] = TMP_B.[KEY]
 						LEFT JOIN [FND].[W_CMMS_MINMAX_D] MM ON 1=1
 							AND MM.ITEM_NUM = TMP_B.MAT_NUM
 							AND MM.PLANT = TMP_B.PLANT_CODE
 						LEFT JOIN [dbo].[W_SAP_PLANT_EXTENDED_D] PL ON 1=1
 							AND PL.PLANT = TMP_B.PLANT_CODE
-							AND PL.STO_LOC = TMP_AG.STORAGE_LOCATION;
+							AND PL.STO_LOC = TMP_B.STO_LOC
+						OUTER APPLY ( 
+							SELECT top 1
+								PLANT_CODE, MATERIAL_NUMBER, STORAGE_LOCATION, QUANTITY, LOCAL_AMOUNT,
+								PURCHASING_GROUP, COMPANY_CODE, VALUATION_AREA, VALUATION_CLASS, MATERIAL_TYPE,
+								MATERIAL_GROUP, BASE_UNIT_OF_MEASURE, CURRENCY, PRICE_CONTROL
+							FROM [dbo].[W_SAP_SPP_TRANSACTION_F] TRANS
+							WHERE 1=1
+									AND CONVERT(DATE, CONVERT(VARCHAR, TRANS.DATE_WID)) <= @dateLastMonth
+									AND TRANS.PLANT_CODE = TMP_B.PLANT_CODE
+									AND TRANS.MATERIAL_NUMBER = TMP_B.MAT_NUM
+									AND TRANS.STORAGE_LOCATION = TMP_B.STO_LOC
+									AND TRANS.MOVEMENT_TYPE IN (SELECT MOVEMENT_TYPE FROM #TMP_MVM_TYPE)
+									-- AND (
+									--     TRANS.MOVEMENT_TYPE NOT IN ('201', '202', '901', '902') 
+									--     OR TRANS.MOVEMENT_TYPE IS NULL
+									-- )
+							ORDER BY DATE_WID DESC
+						) T
+			;
 
 
 			-- 3. Update main table using W_INTEGRATION_ID
@@ -468,6 +557,7 @@ BEGIN
 				, [3 - 4 YEARS] = src.[3 - 4 YEARS]
 				, [4 - 5 YEARS] = src.[4 - 5 YEARS]
 				, [> 5 YEARS] = src.[> 5 YEARS]
+				, [AGE_NULL] = src.[AGE_NULL]
 				, PLANT_CODE = src.PLANT_CODE
 				, STORAGE_LOCATION = src.STORAGE_LOCATION
 				, COMPANY_CODE = src.COMPANY_CODE
@@ -516,6 +606,7 @@ BEGIN
 				, [3 - 4 YEARS]
 				, [4 - 5 YEARS]
 				, [> 5 YEARS]
+				, [AGE_NULL]
 				, PLANT_CODE
 				, STORAGE_LOCATION
 				, COMPANY_CODE
@@ -558,6 +649,7 @@ BEGIN
 				, [3 - 4 YEARS]
 				, [4 - 5 YEARS]
 				, [> 5 YEARS]
+				, [AGE_NULL]
 				, PLANT_CODE
 				, STORAGE_LOCATION
 				, COMPANY_CODE

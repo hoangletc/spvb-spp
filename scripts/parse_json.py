@@ -3,7 +3,6 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List
 
-from loguru import logger
 from tqdm import tqdm
 
 
@@ -176,8 +175,14 @@ def parser_matu(d: dict, schemas: dict = None) -> dict:
 def parser_asset(d: dict, schemas: dict = None) -> dict:
     asset, asset_status = d, d.get('assetstatus', None)
 
+    if asset_status == {}:
+        asset_status = None
+
     # Parse
     if asset_status:
+        if isinstance(asset_status, dict):
+            asset_status = [asset_status]
+
         asset_status = [
             parser_default(x, "asset_status", schemas['asset_status'])[
                 'asset_status']
@@ -187,29 +192,34 @@ def parser_asset(d: dict, schemas: dict = None) -> dict:
 
     # Supplement info for 'asset'
     if 'assetancestor' in asset:
-        if len(asset['assetancestor']) == 1:
+        if isinstance(asset['assetancestor'], list):
+            assetancestor = asset['assetancestor']
+        else:
+            assetancestor = [asset['assetancestor']]
+
+        if len(assetancestor) == 1:
             # Asset là 'line'
             asset_tmp['asset_hierachical_type'] = "line"
-        elif len(asset['assetancestor']) == 2:
+        elif len(assetancestor) == 2:
             # Asset là 'machine'
             asset_tmp['asset_hierachical_type'] = "machine"
 
             # Get parent asset
             parent = None
-            for x in asset['assetancestor']:
+            for x in assetancestor:
                 if x['hierarchylevels'] == 1:
                     parent = x
                     break
             assert parent is not None, "asset['assetancestor'] không có parent asset (hierarchylevels = 1)"
 
             asset_tmp['parent'] = parent['ancestor']
-        elif len(asset['assetancestor']) == 3:
+        elif len(assetancestor) == 3:
             # Asset là 'component'
             asset_tmp['asset_hierachical_type'] = "component"
 
             # Get parent asset
             parent = None
-            for x in asset['assetancestor']:
+            for x in assetancestor:
                 if x['hierarchylevels'] == 1:
                     parent = x
                     break
@@ -219,7 +229,7 @@ def parser_asset(d: dict, schemas: dict = None) -> dict:
 
             # Get grandparent asset
             grandparent = None
-            for x in asset['assetancestor']:
+            for x in assetancestor:
                 if x['hierarchylevels'] == 2:
                     grandparent = x
                     break
@@ -270,7 +280,7 @@ def parser_matr(d: dict, schemas: dict = None) -> dict:
             try:
                 dt = datetime.strptime(dt_s, "%Y-%m-%d %H:%M:%S")
             except ValueError:
-                logger.error(f"Cannot parse to datetime this: {dt_s}")
+                print(f"Err: Cannot parse to datetime this: {dt_s}")
 
         return dt
 
@@ -321,7 +331,7 @@ def parser_json(data: List[dict], res_name: str,
     if default_key in data:
         data = data[default_key]
 
-        for d in data:
+        for d in tqdm(data):
             # Apply tailored parser or default parser
             if res_name in PARSER_MAPPING:
                 parsed_result: dict = PARSER_MAPPING[res_name](d, schemas)
@@ -350,7 +360,7 @@ if __name__ == '__main__':
     # folder lưu kết quả xử lí
     path_out_root = Path("D:\TC Data\SPP API JSONs\edited")
     # folder chứa file JSON
-    path_in = Path(r"D:\TC Data\SPP API JSONs\SPP\material_receipt_trans")
+    path_in = Path(r"D:\TC Data\SPP API JSONs\SPP\services")
     # đường dẫn tới
     path_schema = r"D:\TC Data\spvb-spp\scripts\schemmas.json"
 
@@ -363,7 +373,7 @@ if __name__ == '__main__':
         schemas = {k: set(v) for k, v in schemas.items()}
 
     # Start looping
-    for path in tqdm(path_in.glob("*")):
+    for path in path_in.glob("*"):
         dir_name, file_name = path.parents[0].name, path.name
         if ".json" not in file_name:
             file_name = f"{file_name}.json"
