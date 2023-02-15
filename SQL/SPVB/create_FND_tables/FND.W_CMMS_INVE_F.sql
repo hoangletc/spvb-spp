@@ -4,14 +4,14 @@ SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [FND].[W_CMMS_INVE_F]
 (
-	[ITEM_NUMBER] [nvarchar](max) NULL,
+	[ITEM_NUMBER] [nvarchar](10) NULL,
 	[MAX_LEVEL] [bigint] NULL,
-	[LAST_ISSUE_DATE] [nvarchar](max) NULL,
+	[LAST_ISSUE_DATE] DATETIME2 NULL,
 	[SITE_ID] [bigint] NULL,
-	[LOCATION] [nvarchar](max) NULL,
+	[LOCATION] [nvarchar](100) NULL,
 	[AVG_COST] [bigint] NULL,
-	[W_BATCH_ID] [nvarchar](max) NULL,
-	[W_INSERT_DT] [nvarchar](max) NULL
+	[W_BATCH_ID] bigint NULL,
+	[W_INSERT_DT] DATETIME2 NULL
 )
 WITH
 (

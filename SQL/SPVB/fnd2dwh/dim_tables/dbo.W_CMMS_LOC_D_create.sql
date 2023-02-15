@@ -7,7 +7,7 @@ CREATE TABLE [dbo].[W_CMMS_LOC_D]
     [LOC_WID] INT IDENTITY(1, 1),
 
     [SPVB_WHC_GROUP] [nvarchar](50) NULL,
-    [DESCRIPTION] [nvarchar](50) NULL,
+    [DESCRIPTION] [nvarchar](300) NULL,
     [TYPE] [nvarchar](50) NULL,
     [LOCATIONS_ID] [bigint] NULL,
     [SITE] [nvarchar](5) NULL,
