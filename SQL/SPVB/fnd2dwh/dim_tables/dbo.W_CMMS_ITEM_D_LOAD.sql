@@ -83,10 +83,10 @@ BEGIN
         PRINT '1. Check existence and remove of temp table'
 
         IF OBJECT_ID(N'tempdb..#W_CMMS_ITEM_D_tmp') IS NOT NULL 
-            BEGIN
-        PRINT N'DELETE temporary table #W_CMMS_ITEM_D_tmp'
-        DROP Table #W_CMMS_ITEM_D_tmp
-    END;
+        BEGIN
+            PRINT N'DELETE temporary table #W_CMMS_ITEM_D_tmp'
+            DROP Table #W_CMMS_ITEM_D_tmp
+        END;
 
 
 		-- 2. Select everything into temp table
@@ -102,7 +102,12 @@ BEGIN
             , CONVERT(nvarchar(100), LOT_TYPE_DESCRIPTION)           AS LOT_TYPE_DESCRIPTION
             , CONVERT(nvarchar(100), ORDER_UNIT)                     AS ORDER_UNIT
             , CONVERT(nvarchar(100), SPP_CLASSIFICATION)             AS SPP_CLASSIFICATION
-            , CONVERT(nvarchar(100), SPP_CLASSIFICATION_DESCRIPTION) AS SPP_CLASSIFICATION_DESCRIPTION
+            , CONVERT(
+                nvarchar(100),
+                CASE WHEN SPP_CLASSIFICATION_DESCRIPTION = ''
+                THEN 'Others'
+                ELSE SPP_CLASSIFICATION_DESCRIPTION END
+            )                                                        AS SPP_CLASSIFICATION_DESCRIPTION
             , CONVERT(nvarchar(100), SPVB_ITEM_MUSTNO)               AS SPVB_ITEM_MUSTNO
             , CONVERT(nvarchar(100), SPVB_MAX)                       AS SPVB_MAX
             , CONVERT(nvarchar(100), SPVB_MIN)                       AS SPVB_MIN

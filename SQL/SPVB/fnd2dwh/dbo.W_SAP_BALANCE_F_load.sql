@@ -2,18 +2,7 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-
-IF (OBJECT_ID('[dbo].[SAP_proc_load_w_spp_balance_f]') is not null)
-BEGIN
-    DROP PROCEDURE [dbo].[SAP_proc_load_w_spp_balance_f]
-END;
-GO
-
-CREATE PROC [dbo].[SAP_proc_load_w_spp_balance_f]
-    @p_batch_id [bigint],
-	@dateFrom   DATE,
-	@dateTo		DATE
-AS 
+CREATE PROC [dbo].[SAP_proc_load_w_spp_balance_f] @p_batch_id [bigint],@From [DATE],@To [DATE] AS 
 BEGIN
     DECLARE	@tgt_TableName nvarchar(200) = N'dbo.W_SAP_SPP_BALANCE_F',
 			@sql nvarchar(max),
@@ -48,18 +37,10 @@ BEGIN
 			@p_g_job_status_aborted varchar(100),
 			@p_job_status varchar(100) = 'SUCCESS',
 			@today DATE = GETDATE(),
-			@dateLastMonth DATE;
+			@Lastdayofmonth DATE;
 
-    set @v_job_id= (
-        select top 1
-            JOB_ID
-        from [dbo].[SAP_ETL_JOB]
-        where 1=1 and ACTIVE_FLG='Y' and TGT_TABLE = @tgt_TableName
-    )
-    set @v_jobinstance_id = convert(
-        bigint, 
-        convert(varchar, @v_batch_id) + convert(varchar, @v_job_id)
-    )
+    set @v_job_id= (select top 1 JOB_ID from [dbo].[SAP_ETL_JOB] where 1=1 and ACTIVE_FLG='Y' and TGT_TABLE = @tgt_TableName)
+    set @v_jobinstance_id = convert(bigint, convert(varchar, @v_batch_id) + convert(varchar, @v_job_id))
     set @v_src_tablename = (
         select top 1
             SRC_TABLE
@@ -82,19 +63,40 @@ BEGIN
 		@p_return_msg 		= @p_return_msg OUTPUT
 
 	-- Modify @dateFrom, @dateTo
-	IF MONTH(@dateFrom) <> MONTH(@today)
-    SET @dateFrom = DATEADD(d, 1, EOMONTH(DATEADD(m, -1, @dateFrom)));
-	IF (@dateTo >= @today)
-		SET @dateTo = DATEADD(D, -1, @today);
-	IF MONTH(@dateTo) <> MONTH(@today)
-		SET @dateTo = EOMONTH(@dateTo);
+	IF @From is null 
+		begin 
+			set @From = DATEADD(d, 1, EOMONTH(DATEADD(m, -1, dateadd(hh, 7, getdate()))))
+		end
+	else 
+		begin
+			set @From = DATEADD(d, 1, EOMONTH(DATEADD(m, -1,@From)))
+		end ;
+	IF  @To is null
+		begin 
+			set @To = EOMONTH(dateadd(hh, 7, getdate()))
+		end
+	else 
+		begin 
+			set @To = EOMONTH(@To)
+		end;
+
+	--IF MONTH(@dateFrom) <> MONTH(@today)
+ --   SET @dateFrom = DATEADD(d, 1, EOMONTH(DATEADD(m, -1, @dateFrom)));
+	--IF (@dateTo >= @today)
+	--	SET @dateTo = DATEADD(D, -1, @today);
+	--IF MONTH(@dateTo) <> MONTH(@today)
+	--	SET @dateTo = EOMONTH(@dateTo);
 
 	BEGIN TRY
-		WHILE (@dateFrom <= @dateTo)
+		WHILE (@From <= @To)
 		BEGIN
-			SET @dateLastMonth = CASE WHEN EOMONTH(@dateFrom) > @dateTo 
-				THEN @dateTo ELSE EOMONTH(@dateFrom) END;
+			SET @Lastdayofmonth = EOMONTH(@From);
 
+			--DECLARE @Lastdayofmonth DATE
+			--SET @Lastdayofmonth = '20220531'
+			--PRINT @Lastdayofmonth
+			delete [dbo].[W_SAP_SPP_BALANCE_F] where date_wid = convert(bigint, convert(varchar, @Lastdayofmonth,112))
+		;
 
 			-- 1. Check existence and remove of temp table
 			PRINT '1. Check existence and remove of temp table'
@@ -106,292 +108,269 @@ BEGIN
 			END;
 
 
-			-- 2. Select everything into temp table
-			PRINT '2. Select everything into temp table'
-	
-			PRINT '--> 0. Remove tmp tables'
-
-			IF OBJECT_ID(N'tempdb..#TMP_TRANS_AGING') IS NOT NULL 
-			BEGIN
-				PRINT N'DELETE temporary table #TMP_TRANS_AGING'
-				DROP Table #TMP_TRANS_AGING
-			END;
-
-			IF OBJECT_ID(N'tempdb..#TMP_PIVOT') IS NOT NULL 
-			BEGIN
-				PRINT N'DELETE temporary table #TMP_PIVOT'
-				DROP Table #TMP_PIVOT
-			END;
-
-			IF OBJECT_ID(N'tempdb..#TMP_1_ISS') IS NOT NULL 
-			BEGIN
-				PRINT N'DELETE temporary table #TMP_1_ISS'
-				DROP Table #TMP_1_ISS
-			END;
-
-			IF OBJECT_ID(N'tempdb..#TMP_1_REC') IS NOT NULL 
-			BEGIN
-				PRINT N'DELETE temporary table #TMP_1_REC'
-				DROP Table #TMP_1_REC
-			END;
-
-			IF OBJECT_ID(N'tempdb..#TMP_ACCUM_CUR_MONTH') IS NOT NULL 
-			BEGIN
-				PRINT N'DELETE temporary table #TMP_ACCUM_CUR_MONTH'
-				DROP Table #TMP_ACCUM_CUR_MONTH
-			END;
-
-			IF OBJECT_ID(N'tempdb..#TMP_1_AGING') IS NOT NULL 
-			BEGIN
-				PRINT N'DELETE temporary table #TMP_1_AGING'
-				DROP Table #TMP_1_AGING
-			END;
-
-
-			IF OBJECT_ID(N'tempdb..#TMP_REMAINING') IS NOT NULL 
-			BEGIN
-				PRINT N'DELETE temporary table #TMP_REMAINING'
-				DROP Table #TMP_REMAINING
-			END;
-
-			IF OBJECT_ID(N'tempdb..#TMP_BALANCE_FINAL') IS NOT NULL 
-			BEGIN
-				PRINT N'DELETE temporary table #TMP_BALANCE_FINAL'
-				DROP Table #TMP_BALANCE_FINAL
-			END;
-
-
-			IF OBJECT_ID(N'tempdb..#TMP_MVM_TYPE') IS NOT NULL 
-			BEGIN
-				PRINT N'DELETE temporary table #TMP_MVM_TYPE'
-				DROP Table #TMP_MVM_TYPE
-			END;
-
-			IF OBJECT_ID(N'tempdb..#W_SAP_SPP_BALANCE_F_tmp') IS NOT NULL 
-			BEGIN
-				PRINT N'DELETE temporary table #W_SAP_SPP_BALANCE_F_tmp'
-				DROP Table #W_SAP_SPP_BALANCE_F_tmp
-			END;
-
-
 			PRINT '--> 1. Select all receipt transactions grouped by plant, mat_num up to current month';
-
+----------------------------------------------------------------------------------------------------			
+			IF OBJECT_ID(N'tempdb..#trans') IS NOT NULL 
+			BEGIN
+				PRINT N'DELETE temporary table #trans'
+				DROP Table #trans
+			END;
+			WITH MDOC AS (
+				SELECT  MBLNR, ZEILE, MATNR from [FND].[W_SAP_MATDOC_F_TEMP]
+				WHERE BWART IN ('101', '102')
+				AND MATNR LIKE '00000000006%'
+				AND BUDAT <= @Lastdayofmonth
+				GROUP BY MBLNR, ZEILE, MATNR
+			),
+			BDOC AS (
+				SELECT MATERIAL_DOCUMENT, MATERIAL_LINE, MATERIAL_NUMBER
+				FROM [dbo].[W_SAP_SPP_TRANSACTION_F]
+				WHERE DATE_WID <= convert(bigint, convert(varchar,@Lastdayofmonth,112)) --- @dateLastMonth
+				AND ACCOUNT_NUMBER = '0000120050'
+				GROUP BY MATERIAL_DOCUMENT, MATERIAL_LINE, MATERIAL_NUMBER
+			), 
+			d as (			
+				SELECT  D.MBLNR, D.ZEILE, D.MATNR
+				FROM MDOC D 
+				LEFT JOIN BDOC F ON D.MBLNR = F.MATERIAL_DOCUMENT AND CONCAT('00', D.ZEILE) = F.MATERIAL_LINE AND F.MATERIAL_NUMBER = RIGHT(D.MATNR,8)
+				WHERE F.MATERIAL_LINE IS NULL
+			), R AS 
+			( 
+				SELECT MBLNR, ZEILE, MATNR, BUDAT--, COUNT(1) 
+				FROM [FND].[W_SAP_MATDOC_F_TEMP] 
+				where CANCELLED = 'X' 
+				AND MATNR LIKE '00000000006%'
+				AND BUDAT <= @Lastdayofmonth
+				GROUP BY MBLNR, ZEILE, MATNR, BUDAT			
+			)		
 			SELECT 
-				PLANT_CODE 
-				, MATERIAL_NUMBER                                               AS MAT_NUM
-				, STORAGE_LOCATION                                              AS STO_LOC
-				, SUM(QUANTITY)                                                 AS ISS_QTY
-				, SUM(LOCAL_AMOUNT)                                             AS ISS_AMOUNT
-			INTO #TMP_1_ISS
-			FROM [dbo].[W_SAP_SPP_TRANSACTION_F]
-			WHERE 1=1
-				-- AND MOVEMENT_TYPE IN ('201', '202', '551', '311', '122')
-				AND QUANTITY < 0
-
-				-- AND MATERIAL_NUMBER = @mat_num
-				-- AND PLANT_CODE = @plant_code
-				-- AND STORAGE_LOCATION = @sloc
-				AND CONVERT(VARCHAR, DATE_WID) <= @dateLastMonth
-			GROUP BY PLANT_CODE, MATERIAL_NUMBER, STORAGE_LOCATION;
-
-
+				  F.BUDAT AS POSTING_DATE
+				, F.WERKS AS PLANT_CODE
+				, F.LGORT AS STORAGE_LOCATION
+				, F.BWTAR AS VALUATION_TYPE
+				, F.VPRSV AS PRICE_CONTROL
+				, REPLACE(LTRIM(REPLACE(F.MATNR, '0', ' ')), ' ', '0') AS MATERIAL_NUMBER
+				, F.STOCK_QTY AS QUANTITY 
+				, F.MBLNR AS MATERIAL_DOCUMENT
+				, CONCAT('00', F.ZEILE) AS MATERIAL_LINE
+				, F.bwart as MOVEMENT_TYPE
+				, CASE WHEN F.SMBLN = '' THEN NULL ELSE F.SMBLN END AS [Orginal_document]
+				, CASE WHEN F.SMBLP = '0000' THEN NULL ELSE F.SMBLP END AS ORIGINAL_LINE_ITEM
+				, R.BUDAT AS ORG_POSTING_DATE
+				, F.EBELN AS PURCHASE_DOCUMENT
+				, F.EBELP AS PURCHASE_LINE_ITEM
+			into #trans
+			FROM [FND].[W_SAP_MATDOC_F_TEMP] F
+			LEFT JOIN R ON R.MBLNR = F.SMBLN AND R.ZEILE = F.SMBLP AND F.BWART = '312'
+			WHERE 
+			F.BWART IN ('311', '312') 
+			AND F.MATNR LIKE '00000000006%'
+			--AND ACCOUNT_NUMBER = '0000120050'
+			AND F.BUDAT <= @Lastdayofmonth	 --@dateLastMonth	
+			UNION ALL
+			SELECT
+			   CONVERT(DATE, CONVERT(VARCHAR, F.DATE_WID)) AS POSTING_DATE
+			 , F.PLANT_CODE
+			 , F.STORAGE_LOCATION
+			 , F.VALUATION_TYPE
+			 , F.PRICE_CONTROL
+			 , F.MATERIAL_NUMBER 
+			 , F.QUANTITY  
+			 , F.MATERIAL_DOCUMENT
+			,  F.MATERIAL_LINE
+			,  F.MOVEMENT_TYPE
+			, F.ORIGINAL_DOCUMENT	
+			, F.ORIGINAL_LINE_ITEM
+			, R.BUDAT
+			, PURCHASE_DOCUMENT
+			, PURCHASE_LINE_ITEM
+			FROM [dbo].[W_SAP_SPP_TRANSACTION_F] F
+			left join R ON R.MBLNR = F.ORIGINAL_DOCUMENT AND R.ZEILE = F.ORIGINAL_LINE_ITEM
+			WHERE 
+			--F.MATERIAL_NUMBER = '61444083'
+			--AND 
+				F.QUANTITY <> 0 
+			AND ACCOUNT_NUMBER = '0000120050'
+			AND F.date_wid <= convert(bigint, convert(varchar, @Lastdayofmonth,112)) 
+			AND F.MOVEMENT_TYPE NOT IN ('311', '312')
+			union all
 			SELECT 
-				PLANT_CODE
-				, MATERIAL_NUMBER                                               AS MAT_NUM
-				, STORAGE_LOCATION                                              AS STO_LOC
-				, CONVERT(DATE, CONVERT(VARCHAR, DATE_WID))                     AS GR_DATE 
-				, SUM(QUANTITY)                                                 AS REC_QTY
-				, SUM(LOCAL_AMOUNT)                                             AS REC_AMNT
-			INTO #TMP_1_REC
-			FROM [dbo].[W_SAP_SPP_TRANSACTION_F]
-			WHERE 1=1
-				-- AND (
-				--     MOVEMENT_TYPE NOT IN ('201', '202', '551', '311', '122')
-				--     OR MOVEMENT_TYPE IS NULL
-				-- )
-				AND QUANTITY >=0
+				  F.BUDAT AS POSTING_DATE
+				, F.WERKS AS PLANT_CODE
+				, F.LGORT AS STORAGE_LOCATION
+				, F.BWTAR AS VALUATION_TYPE
+				, F.VPRSV AS PRICE_CONTROL
+				, REPLACE(LTRIM(REPLACE(F.MATNR, '0', ' ')), ' ', '0') AS MATERIAL_NUMBER
+				, F.STOCK_QTY AS QUANTITY 
+				, F.MBLNR AS MATERIAL_DOCUMENT
+				, CONCAT('00', F.ZEILE) AS MATERIAL_LINE
+				, F.bwart as MOVEMENT_TYPE
+				, CASE WHEN F.SMBLN = '' THEN NULL ELSE F.SMBLN END AS [Orginal_document]
+				, CASE WHEN F.SMBLP = '0000' THEN NULL ELSE F.SMBLP END AS ORIGINAL_LINE_ITEM
+				, R.BUDAT AS ORG_POSTING_DATE
+				, F.EBELN AS PURCHASE_DOCUMENT
+				, F.EBELP AS PURCHASE_LINE_ITEM
+			FROM [FND].[W_SAP_MATDOC_F_TEMP] f
+			inner join D ON F.MBLNR = D.MBLNR AND F.ZEILE = D.ZEILE AND F.MATNR = D.MATNR
+			LEFT JOIN R ON R.MBLNR = F.SMBLN AND R.ZEILE = F.SMBLP AND F.BWART = '102'
+			WHERE F.BUDAT <= @Lastdayofmonth 
+---------------------------------------------------------------------------------------------			
+			IF OBJECT_ID(N'tempdb..#Pre_Balance') IS NOT NULL 
+			BEGIN
+				PRINT N'DELETE temporary table #Pre_Balance'
+				DROP Table #Pre_Balance
+			END;
 
-				-- AND MATERIAL_NUMBER = @mat_num
-				-- AND PLANT_CODE = @plant_code
-				-- AND STORAGE_LOCATION = @sloc
-				AND CONVERT(DATE, CONVERT(VARCHAR, DATE_WID)) <= @dateLastMonth
-			GROUP BY DATE_WID, PLANT_CODE, MATERIAL_NUMBER, STORAGE_LOCATION;
+			SELECT PLANT_CODE, STORAGE_LOCATION, VALUATION_TYPE, PRICE_CONTROL, MATERIAL_NUMBER, SUM(QUANTITY) AS QUANTITY
+			into #Pre_Balance
+			FROM #Trans 
+			GROUP BY PLANT_CODE, STORAGE_LOCATION
+			, VALUATION_TYPE
+			, PRICE_CONTROL
+			, MATERIAL_NUMBER
+------------------------------------------------------------------		
+			IF OBJECT_ID(N'tempdb..#Total_Value') IS NOT NULL 
+			BEGIN
+				PRINT N'DELETE temporary table #Total_Value'
+				DROP Table #Total_Value
+			END;
+			
+			SELECT PLANT_CODE, MATERIAL_NUMBER, SUM(LOCAL_AMOUNT) AS SPP_VALUE
+			into #Total_Value
+			FROM [dbo].[W_SAP_SPP_TRANSACTION_F] F
+			WHERE PRICE_CONTROL = 'V' AND ACCOUNT_NUMBER = '0000120050'
+			AND DATE_WID <= convert(bigint, convert(varchar,@Lastdayofmonth,112))
+			GROUP BY PLANT_CODE, MATERIAL_NUMBER
+			HAVING SUM(LOCAL_AMOUNT) <> 0
 
-			SELECT DISTINCT F.MOVEMENT_TYPE
-				INTO #TMP_MVM_TYPE
-				FROM [dbo].[W_SAP_SPP_TRANSACTION_F] F, #TMP_1_REC R
-				WHERE 1=1
-					AND F.PLANT_CODE = R.PLANT_CODE
-					AND F.MATERIAL_NUMBER = R.MAT_NUM
-					AND F.STORAGE_LOCATION = R.STO_LOC
-			;
+---------------------------------------------------------------
+			IF OBJECT_ID(N'tempdb..#Balance') IS NOT NULL 
+			BEGIN
+				PRINT N'DELETE temporary table #Balance'
+				DROP Table #Balance
+			END;
 
+		SELECT  
+				convert(bigint, convert(varchar, @Lastdayofmonth,112)) AS DATE_WID --@dateLastMonth
+			, ISNULL(P.PRODUCT_WID,0) AS MATERIAL_WID
+			, ISNULL(PL.PLANT_WID, 0) AS PLANT_WID
+			, B.PLANT_CODE
+			, PRICE_CONTROL
+			, B.VALUATION_TYPE
+			, STORAGE_LOCATION
+			, B.MATERIAL_NUMBER
+			, B.QUANTITY
+			, CASE 
+				WHEN  B.STORAGE_LOCATION IN ('SP02', 'SP03') THEN 0
+				WHEN SUM(CASE WHEN B.STORAGE_LOCATION IN ('SP02', 'SP03') THEN 0 ELSE B.QUANTITY END) OVER (PARTITION BY B.PLANT_CODE, B.MATERIAL_NUMBER) = 0 THEN 0
+				ELSE
+				TV.SPP_VALUE/SUM(CASE WHEN B.STORAGE_LOCATION IN ('SP02', 'SP03') THEN 0 ELSE B.QUANTITY END) OVER (PARTITION BY B.PLANT_CODE, B.MATERIAL_NUMBER)*B.QUANTITY 
+				END 
+				AS SPP_VALUE
+		into #Balance
+		FROM #Pre_Balance B
+		LEFT JOIN [dbo].[W_PRODUCT_D] P ON P.PRODUCT_CODE = B.MATERIAL_NUMBER AND P.W_DATASOURCE_NUM_ID = 1
+		LEFT JOIN [dbo].[W_SAP_PLANT_EXTENDED_D] PL ON PL.PLANT = B.PLANT_CODE AND PL.STo_LOC = CASE WHEN B.STORAGE_LOCATION = 'OV01' AND QUANTITY < 0 THEN 'SP01' ELSE B.STORAGE_LOCATION END
+		LEFT JOIN #Total_Value TV ON TV.PLANT_CODE = B.PLANT_CODE AND TV.MATERIAL_NUMBER = B.MATERIAL_NUMBER
+		WHERE QUANTITY <> 0
 
-			WITH TMP_ACCUM AS (
-				SELECT
-					R.PLANT_CODE
-					, R.MAT_NUM
-					, R.STO_LOC
-					, R.GR_DATE
-					, SUM(R.REC_QTY) OVER (
-						PARTITION BY R.PLANT_CODE, R.MAT_NUM, R.STO_LOC
-					)     AS TOT_QTY 
-					, SUM(R.REC_AMNT) OVER (
-						PARTITION BY R.PLANT_CODE, R.MAT_NUM, R.STO_LOC
-					)    AS TOT_AMNT
-					, SUM(R.REC_QTY) OVER (
-						PARTITION BY R.PLANT_CODE, R.MAT_NUM, R.STO_LOC
-						ORDER BY GR_DATE
-					)     AS ACCUM_QTY_REC_ONLY
-					, SUM(R.REC_AMNT) OVER (
-						PARTITION BY R.PLANT_CODE, R.MAT_NUM, R.STO_LOC
-						ORDER BY GR_DATE
-					)     AS ACCUM_AMNT_REC_ONLY
-				FROM #TMP_1_REC R    
+---------------------------------------------------------------------------------------------------------------------------
+--In
+			IF OBJECT_ID(N'tempdb..#In') IS NOT NULL 
+			BEGIN
+				PRINT N'DELETE temporary table #In'
+				DROP Table #In
+			END;
+
+			SELECT CASE WHEN ORG_POSTING_DATE IS NOT NULL THEN CONVERT(DATE,ORG_POSTING_DATE) ELSE POSTING_DATE END AS POSTING_DATE,
+			 PLANT_CODE
+			, STORAGE_LOCATION
+			, MATERIAL_NUMBER
+			, SUM(CASE WHEN (QUANTITY > 0 AND ORG_POSTING_DATE IS NULL) OR (QUANTITY < 0 AND ORG_POSTING_DATE IS NOT NULL) THEN QUANTITY ELSE 0 END) AS [In]
+			INTO #In
+			FROM #Trans 
+			WHERE STORAGE_LOCATION IN ('SP01', 'SP05') 
+			GROUP BY CASE WHEN ORG_POSTING_DATE IS NOT NULL THEN CONVERT(DATE,ORG_POSTING_DATE) ELSE POSTING_DATE END,
+			 PLANT_CODE
+			, STORAGE_LOCATION
+			, MATERIAL_NUMBER
+			HAVING SUM(CASE WHEN (QUANTITY > 0 AND ORG_POSTING_DATE IS NULL) OR (QUANTITY < 0 AND ORG_POSTING_DATE IS NOT NULL) THEN QUANTITY ELSE 0 END) <> 0
+----------------------------------------------------------------------------------------------------
+-- out
+			IF OBJECT_ID(N'tempdb..#Out') IS NOT NULL 
+			BEGIN
+				PRINT N'DELETE temporary table #Out'
+				DROP Table #Out
+			END;
+
+			SELECT
+			 PLANT_CODE
+			, STORAGE_LOCATION
+			, MATERIAL_NUMBER
+			, SUM(CASE WHEN (QUANTITY > 0 AND ORG_POSTING_DATE IS NULL) OR (QUANTITY < 0 AND ORG_POSTING_DATE IS NOT NULL) THEN 0  ELSE QUANTITY END) AS [Out]
+			INTO #Out
+			FROM #Trans 
+			WHERE STORAGE_LOCATION IN ('SP01', 'SP05') 
+			GROUP by 
+			 PLANT_CODE
+			, STORAGE_LOCATION
+			, MATERIAL_NUMBER
+			having SUM(CASE WHEN (QUANTITY > 0 AND ORG_POSTING_DATE IS NULL) OR (QUANTITY < 0 AND ORG_POSTING_DATE IS NOT NULL) THEN 0  ELSE QUANTITY END) <> 0 
+;
+--SELECT * FROM #Out WHERE MATERIAL_NUMBER = '62564099'
+--drop table #Aging
+----------------------------------------------------------------------------------------------------------------------
+			IF OBJECT_ID(N'tempdb..#Aging') IS NOT NULL 
+			BEGIN
+				PRINT N'DELETE temporary table #Aging'
+				DROP Table #Aging
+			END;
+
+			WITH In_Out as 
+			(
+				select  I.* , O.[Out]
+					, SUM(I.[In]) OVER (PARTITION BY I.PLANT_CODE, I.STORAGE_LOCATION, I.MATERIAL_NUMBER ORDER BY I.POSTING_DATE) AS Acc_In
+					, CASE WHEN SUM(I.[In]) OVER (PARTITION BY I.PLANT_CODE, I.STORAGE_LOCATION, I.MATERIAL_NUMBER ORDER BY I.POSTING_DATE) < ABS(O.[Out]) THEN 0 ELSE 1 END FLG
+				from #In I 
+				LEFT JOIN #Out O on I.PLANT_CODE = O.PLANT_CODE AND I.STORAGE_LOCATION = O.STORAGE_LOCATION AND I.MATERIAL_NUMBER = O.MATERIAL_NUMBER
 			)
-				SELECT 
-					R.*
-					, I.ISS_QTY
-					, I.ISS_AMOUNT
-					, A.ACCUM_QTY_REC_ONLY
-					, A.ACCUM_AMNT_REC_ONLY
-					, ISNULL(ISS_QTY, 0) + A.TOT_QTY                                AS RMN_QTY
-					, ISNULL(ISS_AMOUNT, 0) + A.TOT_AMNT                            AS RMN_AMNT
+			select  POSTING_DATE,PLANT_CODE,STORAGE_LOCATION,MATERIAL_NUMBER
+					, CASE 
+						WHEN (MIN(POSTING_DATE) OVER (PARTITION BY PLANT_CODE,STORAGE_LOCATION,MATERIAL_NUMBER, FLG)) = POSTING_DATE THEN Acc_In + isnull([Out],0)
+						ELSE [In]
+					  END REMAINING_QTY
+					, CASE 
+						WHEN DATEDIFF(DD, POSTING_DATE, @Lastdayofmonth)  <= 120 THEN '< 4 MONTHS'
+						WHEN DATEDIFF(DD, POSTING_DATE, @Lastdayofmonth)  <= 365 THEN '4 - 12 MONTHS'
+						WHEN DATEDIFF(dd, POSTING_DATE, @Lastdayofmonth)  <= 365*2 THEN '1 - 2 YEARS'
+						WHEN DATEDIFF(dd, POSTING_DATE, @Lastdayofmonth)  <= 365*3 THEN '2 - 3 YEARS'
+						WHEN DATEDIFF(dd, POSTING_DATE, @Lastdayofmonth)  <= 365*4 THEN '3 - 4 YEARS'
+						WHEN DATEDIFF(dd, POSTING_DATE, @Lastdayofmonth)  <= 365*5 THEN '4 - 5 YEARS'
+						ELSE '> 5 YEARS'
+					  END [AGING_GROUP] 
+			into #Aging
+			from In_Out
+			WHERE FLG = 1 
+----------------------------------------------------------------------------------------------
+	--drop table #Aging
+			IF OBJECT_ID(N'tempdb..#Aging_Pvt') IS NOT NULL 
+			BEGIN
+				PRINT N'DELETE temporary table #Aging_Pvt'
+				DROP Table #Aging_Pvt
+			END;
 
-					, CASE WHEN ACCUM_QTY_REC_ONLY + I.ISS_QTY <= 0 THEN 0 ELSE 1 
-					END                                                             AS FLG_LEFTOVER_QTY
-					, CASE WHEN ACCUM_AMNT_REC_ONLY + I.ISS_AMOUNT <= 0 THEN 0 ELSE 1 
-					END                                                             AS FLG_LEFTOVER_AMNT
-				INTO #TMP_ACCUM_CUR_MONTH
-				FROM #TMP_1_REC R
-					LEFT JOIN #TMP_1_ISS I ON 1=1
-						AND R.PLANT_CODE = I.PLANT_CODE 
-						AND R.MAT_NUM = I.MAT_NUM
-						AND R.STO_LOC = I.STO_LOC
-					LEFT JOIN TMP_ACCUM A ON 1=1
-						AND A.[PLANT_CODE] = R.PLANT_CODE
-						AND A.MAT_NUM = R.MAT_NUM
-						AND A.STO_LOC = R.STO_LOC
-						AND A.GR_DATE = R.GR_DATE
-			;
-
-
-
-			WITH TMP_BALANCE AS (
-				SELECT
-					PLANT_CODE
-					, MAT_NUM
-					, STO_LOC
-					, GR_DATE
-					, CASE WHEN FLG_LEFTOVER_QTY = 0 THEN 
-							( CASE WHEN RMN_QTY < 0 AND GR_DATE = MAX(GR_DATE) OVER (
-									PARTITION BY PLANT_CODE, MAT_NUM, STO_LOC
-								) THEN ACCUM_QTY_REC_ONLY + ISNULL(ISS_QTY, 0)
-								ELSE NULL END
-							) 
-						WHEN GR_DATE = MIN(GR_DATE) OVER (
-							PARTITION BY PLANT_CODE, MAT_NUM, STO_LOC, FLG_LEFTOVER_QTY
-						) THEN ACCUM_QTY_REC_ONLY + ISNULL(ISS_QTY, 0)
-						ELSE REC_QTY
-					END                                                             AS REMAINING_QTY
-					, CASE WHEN GR_DATE = MAX(GR_DATE) OVER (
-							PARTITION BY PLANT_CODE, MAT_NUM, STO_LOC
-						) THEN ACCUM_AMNT_REC_ONLY + ISNULL(ISS_AMOUNT, 0)
-						ELSE 0
-					END                                                             AS REMAINING_AMNT
-					FROM #TMP_ACCUM_CUR_MONTH
-				)
-					SELECT
-						PLANT_CODE
-						, MAT_NUM
-						, STO_LOC
-						, GR_DATE
-						, REMAINING_AMNT
-						, REMAINING_QTY
-						, CASE WHEN REMAINING_QTY > 0 
-							THEN DATEDIFF(M, GR_DATE, CONVERT(DATE, @dateLastMonth)) 
-							ELSE NULL 
-						END                                                           AS AGING_MONTH
-					INTO #TMP_1_AGING
-					FROM TMP_BALANCE
-				;   
-
-				INSERT INTO #TMP_1_AGING
-				SELECT
-					T.PLANT_CODE
-					, T.MATERIAL_NUMBER                                                 AS MAT_NUM
-					, T.STORAGE_LOCATION                                                AS STO_LOC
-					, CONVERT(DATE, CONVERT(VARCHAR, DATE_WID))                         AS GR_DATE
-					, LOCAL_AMOUNT                                                      AS REMAINING_AMNT
-					, QUANTITY                                                          AS REMAINING_QTY
-					, -1                                                                AS AGING_MONTH
-				FROM [dbo].[W_SAP_SPP_TRANSACTION_F] T
-				WHERE 1=1
-					and CONVERT(VARCHAR, DATE_WID) <= @dateLastMonth
-					AND NOT EXISTS (
-						SELECT MAT_NUM, PLANT_CODE, STO_LOC FROM #TMP_1_AGING A
-						WHERE 1=1
-							AND T.MATERIAL_NUMBER = A.MAT_NUM
-							AND T.PLANT_CODE = A.PLANT_CODE
-							AND T.STORAGE_LOCATION = A.STO_LOC
-					)
-			;  
-
-
-			SELECT
-				PLANT_CODE
-				, MAT_NUM
-				, STO_LOC
-
-				, SUM(REMAINING_AMNT)   AS RMN_AMNT
-				, SUM(REMAINING_QTY)    AS RMN_QTY
-			INTO #TMP_REMAINING
-			FROM #TMP_1_AGING
-			GROUP BY PLANT_CODE, MAT_NUM, STO_LOC;
-
-			SELECT
-				CASE WHEN ACC.AGING_MONTH BETWEEN 0 AND 4 THEN '< 4 MONTHS'
-					WHEN ACC.AGING_MONTH BETWEEN 4 AND 12 THEN '4 - 12 MONTHS'
-					WHEN ACC.AGING_MONTH BETWEEN 12 AND 24 THEN '1 - 2 YEARS'
-					WHEN ACC.AGING_MONTH BETWEEN 24 AND 36 THEN '2 - 3 YEARS'
-					WHEN ACC.AGING_MONTH BETWEEN 36 AND 48 THEN '3 - 4 YEARS'
-					WHEN ACC.AGING_MONTH BETWEEN 48 AND 60 THEN '4 - 5 YEARS'
-					WHEN ACC.AGING_MONTH > 60 THEN '> 5 YEARS'
-					ELSE 'AGE_NULL'
-				END                                                             AS AGING_GROUP
-				, ACC.PLANT_CODE
-				, ACC.MAT_NUM
-				, ACC.GR_DATE
-				, ACC.STO_LOC
-				, ACC.REMAINING_QTY
-				, ACC.REMAINING_AMNT
-			INTO #TMP_TRANS_AGING
-			FROM #TMP_1_AGING ACC
-			;
-
-
-			PRINT '--> 2. Pivot';
-
-			SELECT
-				TMP.MAT_NUM
-				, TMP.PLANT_CODE
-				, TMP.STO_LOC
-				, [< 4 MONTHS]
-				, [4 - 12 MONTHS]
-				, [1 - 2 YEARS]
-				, [2 - 3 YEARS]
-				, [3 - 4 YEARS]
-				, [4 - 5 YEARS]
-				, [> 5 YEARS]
-				, [AGE_NULL]
-				, CONCAT_WS('-', TMP.MAT_NUM, TMP.PLANT_CODE, TMP.STO_LOC) AS [KEY]
-			INTO #TMP_PIVOT
-			FROM (
-				SELECT MAT_NUM, PLANT_CODE, AGING_GROUP, STO_LOC
-				FROM #TMP_TRANS_AGING
-			) AS SB
+			select PLANT_CODE,STORAGE_LOCATION,MATERIAL_NUMBER
+				, SUM([< 4 MONTHS]) AS [< 4 MONTHS]
+				, SUM([4 - 12 MONTHS]) [4 - 12 MONTHS]
+				, SUM([1 - 2 YEARS]) [1 - 2 YEARS]
+				, SUM([2 - 3 YEARS]) [2 - 3 YEARS]
+				, SUM([3 - 4 YEARS]) [3 - 4 YEARS]
+				, SUM([4 - 5 YEARS]) [4 - 5 YEARS]
+				, SUM([> 5 YEARS]) [> 5 YEARS]
+			INTO #Aging_Pvt
+			from (SELECT * FROM #Aging WHERE ISNULL(REMAINING_QTY,0) <> 0) F
 			PIVOT (
-				COUNT(AGING_GROUP)
+				SUM(REMAINING_QTY)
 				FOR AGING_GROUP IN (
 					[< 4 MONTHS]
 					, [4 - 12 MONTHS]
@@ -400,205 +379,56 @@ BEGIN
 					, [3 - 4 YEARS]
 					, [4 - 5 YEARS]
 					, [> 5 YEARS]
-					, [AGE_NULL]
-				)
-			) AS TMP;
+				)) P	
+			GROUP BY PLANT_CODE,STORAGE_LOCATION,MATERIAL_NUMBER
 
-
-
-			PRINT '--> 3. Create balance_month table';
-
-			WITH TMP_B AS(
-				SELECT
-					PLANT_CODE
-					, MAT_NUM
-					, STO_LOC
-					, [< 4 MONTHS]
-					, [4 - 12 MONTHS]
-					, [1 - 2 YEARS]
-					, [2 - 3 YEARS]
-					, [3 - 4 YEARS]
-					, [4 - 5 YEARS]
-					, [> 5 YEARS]
-					, [AGE_NULL]
-					, [4 - 12 MONTHS] + [1 - 2 YEARS]
-					+ [2 - 3 YEARS] + [3 - 4 YEARS] + [4 - 5 YEARS]     AS TOTAL_LEFTOVER
-					, [3 - 4 YEARS] + [4 - 5 YEARS]                     AS SLOW_MOVING
-					, [KEY]
-				FROM #TMP_PIVOT
-			),
-			TMP_R AS (
-				SELECT
-					SUM(REMAINING_AMNT) AS TOT_AMNT
-					, SUM(REMAINING_QTY) AS TOT_QTY
-					, CONCAT_WS('-', MAT_NUM, PLANT_CODE, STO_LOC) AS [KEY]
-				FROM #TMP_TRANS_AGING
-				GROUP BY MAT_NUM, PLANT_CODE, STO_LOC
-			)
-				SELECT
-					CONVERT(VARCHAR, FORMAT(@dateLastMonth, 'yyyyMMdd'))          AS DATE_WID
-					, PL.PLANT_WID                                      AS PLANT_WID
-					, IT.ITEM_WID                                       AS MATERIAL_WID
-
-					, @dateLastMonth                                              AS [PERIOD]
-					, TMP_B.PLANT_CODE
-					, PL.PLANT_NAME_2									AS PLANT
-					, TMP_B.MAT_NUM											AS MATERIAL_NUMBER
-					, TMP_R.TOT_QTY                                         AS QUANTITY
-					, TMP_R.TOT_AMNT                                        AS AMOUNT
-					, NULL													AS [TYPE]
-					, [< 4 MONTHS]
-					, [4 - 12 MONTHS]
-					, [1 - 2 YEARS]
-					, [2 - 3 YEARS]
-					, [3 - 4 YEARS]
-					, [4 - 5 YEARS]
-					, [> 5 YEARS]
-					, [AGE_NULL]
-					, TMP_B.STO_LOC											AS STORAGE_LOCATION
-					, T.COMPANY_CODE
-					, T.VALUATION_AREA
-					, T.VALUATION_CLASS
-					, T.MATERIAL_TYPE
-					, T.MATERIAL_GROUP
-					, T.BASE_UNIT_OF_MEASURE
-					, T.CURRENCY
-					, T.PRICE_CONTROL
-					, T.PURCHASING_GROUP
-					, MM.MAX                                            AS MAX
-					, MM.MIN                                            AS MIN
-					, CASE WHEN TOTAL_LEFTOVER > MM.MAX
-						THEN TOTAL_LEFTOVER - MM.MAX
-						ELSE 0
-					END                                                 AS OVER_MAX
-					, CASE WHEN TOTAL_LEFTOVER < MM.MIN
-						THEN MM.MIN - TOTAL_LEFTOVER
-						ELSE 0
-					END                                                 AS UNDER_MIN
-					, SLOW_MOVING
-					, CONCAT_WS(
-						'~' 
-						, CONVERT(VARCHAR, FORMAT(@dateLastMonth, 'yyyyMMdd'))
-						, TMP_B.MAT_NUM
-						, TMP_B.PLANT_CODE
-						, T.STORAGE_LOCATION
-					)                                                   AS W_INTEGRATION_ID
-					, 'N'                                               AS W_DELETE_FLG
-					, 1                                                 AS W_DATASOURCE_NUM_ID
-					, GETDATE()                                         AS W_INSERT_DT
-					, GETDATE()                                         AS W_UPDATE_DT
-					, @p_batch_id                                       AS W_BATCH_ID
-					, 'N'                                               AS W_UPDATE_FLG
-					INTO #W_SAP_SPP_BALANCE_F_tmp
-					FROM TMP_B
-						LEFT JOIN [dbo].[W_CMMS_ITEM_D] IT ON 1=1
-							AND TMP_B.MAT_NUM = IT.ITEM_NUM
-					
-						LEFT JOIN TMP_R ON 1=1
-							AND TMP_R.[KEY] = TMP_B.[KEY]
-						LEFT JOIN [FND].[W_CMMS_MINMAX_D] MM ON 1=1
-							AND MM.ITEM_NUM = TMP_B.MAT_NUM
-							AND MM.PLANT = TMP_B.PLANT_CODE
-						LEFT JOIN [dbo].[W_SAP_PLANT_EXTENDED_D] PL ON 1=1
-							AND PL.PLANT = TMP_B.PLANT_CODE
-							AND PL.STO_LOC = TMP_B.STO_LOC
-						OUTER APPLY ( 
-							SELECT top 1
-								PLANT_CODE, MATERIAL_NUMBER, STORAGE_LOCATION, QUANTITY, LOCAL_AMOUNT,
-								PURCHASING_GROUP, COMPANY_CODE, VALUATION_AREA, VALUATION_CLASS, MATERIAL_TYPE,
-								MATERIAL_GROUP, BASE_UNIT_OF_MEASURE, CURRENCY, PRICE_CONTROL
-							FROM [dbo].[W_SAP_SPP_TRANSACTION_F] TRANS
-							WHERE 1=1
-									AND CONVERT(DATE, CONVERT(VARCHAR, TRANS.DATE_WID)) <= @dateLastMonth
-									AND TRANS.PLANT_CODE = TMP_B.PLANT_CODE
-									AND TRANS.MATERIAL_NUMBER = TMP_B.MAT_NUM
-									AND TRANS.STORAGE_LOCATION = TMP_B.STO_LOC
-									AND TRANS.MOVEMENT_TYPE IN (SELECT MOVEMENT_TYPE FROM #TMP_MVM_TYPE)
-									-- AND (
-									--     TRANS.MOVEMENT_TYPE NOT IN ('201', '202', '901', '902') 
-									--     OR TRANS.MOVEMENT_TYPE IS NULL
-									-- )
-							ORDER BY DATE_WID DESC
-						) T
-			;
-
-
-			-- 3. Update main table using W_INTEGRATION_ID
-			PRINT '3. Update main table using W_INTEGRATION_ID'
-
-			-- 3.1. Mark existing records by flag 'Y'
-			PRINT '3.1. Mark existing records by flag ''Y'''
-
-			UPDATE #W_SAP_SPP_BALANCE_F_tmp
-			SET W_UPDATE_FLG = 'Y'
-			FROM #W_SAP_SPP_BALANCE_F_tmp tg
-			INNER JOIN [dbo].[W_SAP_SPP_BALANCE_F] sc 
-			ON sc.W_INTEGRATION_ID = tg.W_INTEGRATION_ID
-
-			-- 3.2. Start updating
-			PRINT '3.2. Start updating'
-
-			UPDATE  [dbo].[W_SAP_SPP_BALANCE_F]
-			SET 
-				PLANT_WID = src.PLANT_WID
-				, DATE_WID = src.DATE_WID
-				, MATERIAL_WID = src.MATERIAL_WID
-
-				, [PERIOD] = src.PERIOD
-				, QUANTITY = src.QUANTITY
-				, AMOUNT = src.AMOUNT
-				, PLANT = src.PLANT
-				, MATERIAL_NUMBER = src.MATERIAL_NUMBER
-				, [TYPE] = src.TYPE
-				, [< 4 MONTHS] = src.[< 4 MONTHS]
-				, [4 - 12 MONTHS] = src.[4 - 12 MONTHS]
-				, [1 - 2 YEARS] = src.[1 - 2 YEARS]
-				, [2 - 3 YEARS] = src.[2 - 3 YEARS]
-				, [3 - 4 YEARS] = src.[3 - 4 YEARS]
-				, [4 - 5 YEARS] = src.[4 - 5 YEARS]
-				, [> 5 YEARS] = src.[> 5 YEARS]
-				, [AGE_NULL] = src.[AGE_NULL]
-				, PLANT_CODE = src.PLANT_CODE
-				, STORAGE_LOCATION = src.STORAGE_LOCATION
-				, COMPANY_CODE = src.COMPANY_CODE
-				, VALUATION_AREA = src.VALUATION_AREA
-				, VALUATION_CLASS = src.VALUATION_CLASS
-				, MATERIAL_TYPE = src.MATERIAL_TYPE
-				, MATERIAL_GROUP = src.MATERIAL_GROUP
-				, PURCHASING_GROUP = src.PURCHASING_GROUP
-				, BASE_UNIT_OF_MEASURE = src.BASE_UNIT_OF_MEASURE
-				, CURRENCY = src.CURRENCY
-				, PRICE_CONTROL = src.PRICE_CONTROL
-				, MAX = src.MAX
-				, MIN = src.MIN
-				, OVER_MAX = src.OVER_MAX
-				, UNDER_MIN = src.UNDER_MIN
-				, SLOW_MOVING = src.SLOW_MOVING
-
-				, W_DELETE_FLG = src.W_DELETE_FLG
-				, W_DATASOURCE_NUM_ID = src.W_DATASOURCE_NUM_ID
-				, W_INSERT_DT = src.W_INSERT_DT
-				, W_BATCH_ID = src.W_BATCH_ID
-				, W_INTEGRATION_ID = src.W_INTEGRATION_ID
-				, W_UPDATE_DT = @today
-			FROM [dbo].[W_SAP_SPP_BALANCE_F] tgt
-			INNER JOIN #W_SAP_SPP_BALANCE_F_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID
-
+			SELECT 
+				  B.DATE_WID
+				, B.MATERIAL_WID
+				, B.PLANT_WID
+				, B.PLANT_CODE
+				, B.PRICE_CONTROL
+				, B.VALUATION_TYPE
+				, B.STORAGE_LOCATION
+				, B.MATERIAL_NUMBER
+				, B.QUANTITY
+				, B.SPP_VALUE
+				, AP.[< 4 MONTHS]
+				, AP.[4 - 12 MONTHS]
+				, AP.[1 - 2 YEARS]
+				, AP.[2 - 3 YEARS]
+				, AP.[3 - 4 YEARS]
+				, AP.[4 - 5 YEARS]
+				, AP.[> 5 YEARS]
+				, AP.[3 - 4 YEARS] + AP.[4 - 5 YEARS] + AP.[> 5 YEARS] as SLOW_MOVING_QUANTITY
+				, NULL AS SLOW_MOVING_FLG 
+				, CASE WHEN B.QUANTITY = 0 THEN NULL ELSE B.SPP_VALUE/B.QUANTITY END AS UNIT_PRICE
+				, CONCAT( FORMAT(@Lastdayofmonth, 'yyyyMMdd'), '~', B.PLANT_CODE, '~', B.STORAGE_LOCATION, '~', B.MATERIAL_NUMBER)  AS W_INTEGRATION_ID
+				, 'N'   AS W_DELETE_FLG
+				, 1     AS W_DATASOURCE_NUM_ID
+				, DATEADD(HH, 7, GETDATE())  AS W_INSERT_DT
+				, DATEADD(HH, 7, GETDATE())   AS W_UPDATE_DT
+				, @p_batch_id                                       AS W_BATCH_ID
+			INTO #W_SAP_SPP_BALANCE_F_tmp
+			FROM #BALANCE B
+			LEFT JOIN #Aging_Pvt AP ON AP.PLANT_CODE = B.PLANT_CODE AND AP.STORAGE_LOCATION = B.STORAGE_LOCATION AND AP.MATERIAL_NUMBER = B.MATERIAL_NUMBER
+		
 
 			-- 4. Insert non-existed records to main table from temp table
 			PRINT '4. Insert non-existed records to main table from temp table'
 
-			INSERT INTO [dbo].[W_SAP_SPP_BALANCE_F](
-				PLANT_WID
-				, DATE_WID
+			INSERT INTO [dbo].[W_SAP_SPP_BALANCE_F]
+			(				
+				  DATE_WID
 				, MATERIAL_WID
-
-				, [PERIOD]
+				, PLANT_WID
 				, QUANTITY
-				, AMOUNT
-				, PLANT
+				, SPP_VALUE
+				, PLANT_CODE
+				, STORAGE_LOCATION
+				, PRICE_CONTROL
+				, VALUATION_TYPE
 				, MATERIAL_NUMBER
-				, [TYPE]
 				, [< 4 MONTHS]
 				, [4 - 12 MONTHS]
 				, [1 - 2 YEARS]
@@ -606,24 +436,9 @@ BEGIN
 				, [3 - 4 YEARS]
 				, [4 - 5 YEARS]
 				, [> 5 YEARS]
-				, [AGE_NULL]
-				, PLANT_CODE
-				, STORAGE_LOCATION
-				, COMPANY_CODE
-				, VALUATION_AREA
-				, VALUATION_CLASS
-				, MATERIAL_TYPE
-				, MATERIAL_GROUP
-				, PURCHASING_GROUP
-				, BASE_UNIT_OF_MEASURE
-				, CURRENCY
-				, PRICE_CONTROL
-				, MAX
-				, MIN
-				, OVER_MAX
-				, UNDER_MIN
-				, SLOW_MOVING
-
+				, SLOW_MOVING_QUANTITY
+				, SLOW_MOVING_FLG
+				, UNIT_PRICE
 				, W_DELETE_FLG
 				, W_DATASOURCE_NUM_ID
 				, W_INSERT_DT
@@ -632,16 +447,16 @@ BEGIN
 				, W_INTEGRATION_ID
 			)
 			SELECT
-				PLANT_WID
-				, DATE_WID
+				  DATE_WID
 				, MATERIAL_WID
-
-				, [PERIOD]
+				, PLANT_WID
 				, QUANTITY
-				, AMOUNT
-				, PLANT
+				, SPP_VALUE
+				, PLANT_CODE
+				, STORAGE_LOCATION
+				, PRICE_CONTROL
+				, VALUATION_TYPE
 				, MATERIAL_NUMBER
-				, [TYPE]
 				, [< 4 MONTHS]
 				, [4 - 12 MONTHS]
 				, [1 - 2 YEARS]
@@ -649,24 +464,9 @@ BEGIN
 				, [3 - 4 YEARS]
 				, [4 - 5 YEARS]
 				, [> 5 YEARS]
-				, [AGE_NULL]
-				, PLANT_CODE
-				, STORAGE_LOCATION
-				, COMPANY_CODE
-				, VALUATION_AREA
-				, VALUATION_CLASS
-				, MATERIAL_TYPE
-				, MATERIAL_GROUP
-				, PURCHASING_GROUP
-				, BASE_UNIT_OF_MEASURE
-				, CURRENCY
-				, PRICE_CONTROL
-				, MAX
-				, MIN
-				, OVER_MAX
-				, UNDER_MIN
-				, SLOW_MOVING
-
+				, SLOW_MOVING_QUANTITY
+				, SLOW_MOVING_FLG
+				, UNIT_PRICE
 				, W_DELETE_FLG
 				, W_DATASOURCE_NUM_ID
 				, W_INSERT_DT
@@ -674,10 +474,8 @@ BEGIN
 				, W_BATCH_ID
 				, W_INTEGRATION_ID
 			FROM #W_SAP_SPP_BALANCE_F_tmp
-			where W_UPDATE_FLG = 'N'
 
-			
-			SET @dateFrom = DATEADD(M, 1, @dateFrom);
+			SET @From = DATEADD(Mm, 1, @From);
 		END;
 
 		/*delete & re-insert data refresh*/

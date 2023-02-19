@@ -138,3 +138,4 @@ execute*.sql
 .vscode/
 
 tmps/
+tempCodeRunnerFile.py

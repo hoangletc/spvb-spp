@@ -73,7 +73,13 @@ def parser_work_order(d: dict, schemas: dict = None) -> dict:
         wo_s_tmp_after_sched = {x: None for x in WO_STATUS_ORDER}
         flag_resched = False
 
+        if isinstance(wo_status, dict):
+            wo_status = [wo_status]
+
         for i, w in enumerate(wo_status):
+            if w['status'] not in WO_STATUS_ORDER:
+                continue
+
             w = parser_default(
                 w,
                 "work_order_status",
@@ -360,7 +366,7 @@ if __name__ == '__main__':
     # folder lưu kết quả xử lí
     path_out_root = Path("D:\TC Data\SPP API JSONs\edited")
     # folder chứa file JSON
-    path_in = Path(r"D:\TC Data\SPP API JSONs\SPP\services")
+    path_in = Path(r"D:\TC Data\SPP API JSONs\SPP\work_order")
     # đường dẫn tới
     path_schema = r"D:\TC Data\spvb-spp\scripts\schemmas.json"
 
