@@ -22,7 +22,7 @@ CREATE TABLE [dbo].[W_CMMS_WO_F]
     [STATUS] [nvarchar](10) NULL,
     [SUPERVISOR] [nvarchar](100) NULL,
     [PARENT] [nvarchar](30) NULL,
-    [IS_SCHED] [nvarchar](5) NULL,
+    [IS_SCHED] SMALLINT NULL,
 
     [DATE_CREATION] [DATETIMEOFFSET] NULL,
     [DATE_TARGET_START] [DATETIMEOFFSET] NULL,

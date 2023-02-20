@@ -1,3 +1,4 @@
+import calendar
 import json
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -194,6 +195,36 @@ def parser_asset(d: dict, schemas: dict = None) -> dict:
                 'asset_status']
             for x in asset_status
         ]
+
+        # Tách downtime ra 2 phần
+        final_asset_status = []
+        for a_st in asset_status:
+            if a_st['downtime'] == 0:
+                final_asset_status.append(a_st)
+                continue
+
+            dt = datetime.strptime(a_st['changedate'], "%Y-%m-%dT%H:%M:%S%z")
+
+            if (dt + timedelta(hours=a_st['downtime'])).month != dt.month:
+                last_month_date = datetime(year=dt.year, month=dt.month, day=calendar.monthrange(
+                    dt.year, dt.month)[1], hour=23, minute=59, second=59)
+                first_nextmonth_date = datetime + timedelta(seconds=1)
+
+                downtime1 = (last_month_date - dt).hours
+                downtime2 = a_st['downtime'] - downtime1
+
+                a_st['downtime'] = downtime1
+
+                new_ast = a_st.copy()
+                new_ast['downtime'] = downtime2
+                new_ast['changedate'] = first_nextmonth_date.strftime("%Y-%m-%dT%H:%M:%S%z")
+
+                final_asset_status.append(a_st)
+                final_asset_status.append(new_ast)
+
+            else:
+                final_asset_status.append(a_st)
+
     asset_tmp = parser_default(asset, "asset", schemas['asset'])['asset']
 
     # Supplement info for 'asset'

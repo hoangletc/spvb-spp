@@ -1,3 +1,5 @@
+DECLARE @p_batch_id NVARCHAR(8) = '20230220';
+
 SELECT TOP 100
     ISNULL(PLANT.PLANT_WID, 0)                              AS PLANT_WID
     , ISNULL(AST.LOCATION_WID, 0)                           AS LOC_WID
@@ -22,7 +24,7 @@ SELECT TOP 100
     , CONVERT(DATETIMEOFFSET, SCHEDSTART)                   AS DATE_SCHEDULE_START
     , CONVERT(DATETIMEOFFSET, SCHEDFINISH)                  AS DATE_SCHEDULE_FINISH
     , CONVERT(NVARCHAR(10), WO.PARENT)                	    AS PARENT
-    , CONVERT(NVARCHAR(5), WO.IS_SCHED)					    AS IS_SCHED
+    , CASE WHEN WO.IS_SCHED = 'True' THEN 1 ELSE 0 END      AS IS_SCHED
 
     , CONVERT(DATETIMEOFFSET, WO_S_WSCH_B.CHANGEDATE)       AS DATE_WSCH_BFR
     , CONVERT(DATETIMEOFFSET, WO_S_PLN_B.CHANGEDATE)        AS DATE_PLANNING_BFR
@@ -61,15 +63,15 @@ SELECT TOP 100
 
     , CONVERT(
         NVARCHAR(300), 
-        CONCAT_WS('~', WONUM, ASSETNUM, 
-                PMNUM, SUPERVISOR, JPNUM)
+        CONCAT(WONUM, '~', ASSETNUM, '~',
+                PMNUM, '~', SUPERVISOR, '~', JPNUM)
     )                                                       AS W_INTEGRATION_ID
     , 'N'                                                   AS W_DELETE_FLG
     , 'N' 											        AS W_UPDATE_FLG
     , 1                                                     AS W_DATASOURCE_NUM_ID
-    , GETDATE()                                             AS W_INSERT_DT
-    , GETDATE()                                             AS W_UPDATE_DT
-    , NULL                                                  AS W_BATCH_ID
+    , DATEADD(HH, 7, GETDATE())                             AS W_INSERT_DT
+    , DATEADD(HH, 7, GETDATE())                             AS W_UPDATE_DT
+    , @p_batch_id                                           AS W_BATCH_ID
 -- INTO #W_CMMS_WO_F_tmp
 FROM [FND].[W_CMMS_WO_F] WO
     LEFT JOIN [dbo].[W_PLANT_SAP_D] PLANT ON 1=1

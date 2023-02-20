@@ -3,13 +3,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-IF (OBJECT_ID('[dbo].[proc_load_w_cmms_wo_f]') is not null)
-BEGIN
-    DROP PROCEDURE [dbo].[proc_load_w_cmms_wo_f]
-END;
-GO
-
-CREATE PROC [dbo].[proc_load_w_cmms_wo_f]
+CREATE PROC [dbo].[CMMS_proc_load_w_spp_wo_f]
     @p_batch_id [bigint]
 AS 
 BEGIN
@@ -118,10 +112,10 @@ BEGIN
 			, CONVERT(DATETIMEOFFSET, SCHEDFINISH)              AS DATE_TARGET_FINISH
 			, CONVERT(DATETIMEOFFSET, SCHEDSTART)               AS DATE_SCHEDULE_START
 			, CONVERT(DATETIMEOFFSET, SCHEDFINISH)              AS DATE_SCHEDULE_FINISH
-			, NULL AS JOB_DESCRIPTION   -- NOTE: cần join với table JOBPLAN nhưng khôngv có
+			, NULL AS JOB_DESCRIPTION   -- NOTE: cần join với table JOBPLAN nhưng không có
 			, NULL AS SUPERVISOR_NAME   -- NOTE: Cần join với table Person nhưng không có table
 			, CONVERT(NVARCHAR(10), WO.PARENT)                	AS PARENT
-			, CONVERT(NVARCHAR(5), WO.IS_SCHED)					AS IS_SCHED
+			, CASE WHEN WO.IS_SCHED = 'True' THEN 1 ELSE 0 END      AS IS_SCHED
 
 			, CONVERT(DATETIMEOFFSET, WO_S_WSCH_B.CHANGEDATE)       AS DATE_WSCH_BFR
 			, CONVERT(DATETIMEOFFSET, WO_S_PLN_B.CHANGEDATE)        AS DATE_PLANNING_BFR
@@ -157,15 +151,15 @@ BEGIN
 
 			, CONVERT(
 				NVARCHAR(300), 
-				CONCAT_WS('~', WONUM, ASSETNUM, 
-						PMNUM, SUPERVISOR, JPNUM)
-			)                                               AS W_INTEGRATION_ID
-			, 'N'                                           AS W_DELETE_FLG
-			, 'N' 											AS W_UPDATE_FLG
-			, 1                                             AS W_DATASOURCE_NUM_ID
-			, GETDATE()                                     AS W_INSERT_DT
-			, GETDATE()                                     AS W_UPDATE_DT
-			, NULL                                          AS W_BATCH_ID
+				CONCAT(WONUM, '~', ASSETNUM, '~',
+						PMNUM, '~', SUPERVISOR, '~', JPNUM)
+			)                                                       AS W_INTEGRATION_ID
+			, 'N'                                                   AS W_DELETE_FLG
+			, 'N' 											        AS W_UPDATE_FLG
+			, 1                                                     AS W_DATASOURCE_NUM_ID
+			, DATEADD(HH, 7, GETDATE())                             AS W_INSERT_DT
+			, DATEADD(HH, 7, GETDATE())                             AS W_UPDATE_DT
+			, @p_batch_id                                           AS W_BATCH_ID
 		INTO #W_CMMS_WO_F_tmp
 		FROM [FND].[W_CMMS_WO_F] WO
 			LEFT JOIN [dbo].[W_PLANT_SAP_D] PLANT ON 1=1
@@ -278,7 +272,7 @@ BEGIN
 			, W_INSERT_DT = src.W_INSERT_DT
 			, W_BATCH_ID = src.W_BATCH_ID
 			, W_INTEGRATION_ID = src.W_INTEGRATION_ID
-			, W_UPDATE_DT = getdate()
+			, W_UPDATE_DT = DATEADD(HH, 7, GETDATE())
 		FROM [dbo].[W_CMMS_WO_F] tgt
 		INNER JOIN #W_CMMS_WO_F_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID
 

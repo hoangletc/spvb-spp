@@ -1,4 +1,6 @@
-;WITH TMP_ASSET_LINE_INFO AS (
+DECLARE @p_batch_id NVARCHAR(8) = '20230220';
+
+WITH TMP_ASSET_LINE_INFO AS (
     -- NOTE: Nên để phần tìm Line info của mỗi asset vào Python script thay vì phải chạy lại mỗi lần query như vầy
     select
         T1.ASSET_NUM        AS ASSET_NUM
@@ -18,7 +20,8 @@
         , CASE 
             WHEN AST.ASSET_HIERACHICAL_TYPE = 'machine' THEN AST.[PARENT]
             WHEN AST.ASSET_HIERACHICAL_TYPE = 'component' THEN AST.[GRANDPARENT]
-            ELSE AST.[ASSET_NUM] END                        AS LINE_ASSET_NUM
+            ELSE AST.[ASSET_NUM] 
+        END                                                 AS LINE_ASSET_NUM
         , TMP_ASST_L_INF.LINE_ASSET_DESC                    AS LINE_ASSET_DES
         , CONVERT(nvarchar(50), SPVB_COSTCENTER)            AS SPVB_COSTCENTER
         , CONVERT(nvarchar(50), CHANGE_DATE)                AS CHANGE_DATE
@@ -41,15 +44,15 @@
 
         , CONVERT(
             nvarchar(200), 
-            CONCAT_WS('~', ASSET_UID, SPVB_COSTCENTER, 
-                    SPVB_FIXEDASSETNUM, AST.[LOCATION])
+            CONCAT_WS(ASSET_UID, '~', SPVB_COSTCENTER, '~',
+                    SPVB_FIXEDASSETNUM, '~', AST.[LOCATION])
         )                                                   AS W_INTEGRATION_ID
         , 'N'                                               AS W_DELETE_FLG
-        , 1                                                 AS W_DATASOURCE_NUM_ID
-        , GETDATE()                                         AS W_INSERT_DT
-        , GETDATE()                                         AS W_UPDATE_DT
-        , NULL                                              AS W_BATCH_ID
-        , 'N'                                               AS W_UPDATE_FLG
+        , 'N' 											    AS W_UPDATE_FLG
+        , 8                                                 AS W_DATASOURCE_NUM_ID
+        , DATEADD(HH, 7, GETDATE())                         AS W_INSERT_DT
+        , DATEADD(HH, 7, GETDATE())                         AS W_UPDATE_DT
+        , @p_batch_id                                       AS W_BATCH_ID
     -- INTO #W_CMMS_ASSET_D_tmp
     FROM [FND].[W_CMMS_ASSET_D] AST
         LEFT JOIN [dbo].[W_CMMS_LOC_D] LOC_X ON 1=1

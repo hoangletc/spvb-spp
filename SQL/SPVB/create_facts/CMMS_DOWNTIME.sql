@@ -1,3 +1,5 @@
+DECLARE @p_batch_id NVARCHAR(8) = '20230220';
+
 SELECT TOP 100
     FORMAT(CONVERT(DATE, CHANGEDATE), 'yyyyMMdd')   AS DATE_WID
     , ISNULL(PLANT.PLANT_WID, 0)                    AS PLANT_WID
@@ -32,15 +34,15 @@ SELECT TOP 100
     
     , CONVERT(
         NVARCHAR(200), 
-        CONCAT_WS('~', ASSETSTATUSID, AS_ST.[LOCATION], 
-                    DOWNTIME, CODE, AS_ST.ASSETNUM)
+        CONCAT(ASSETSTATUSID, '~', AS_ST.[LOCATION], 
+               '~', DOWNTIME, '~', CODE, '~', AS_ST.ASSETNUM)
     )                                               AS W_INTEGRATION_ID
     , 'N'                                           AS W_DELETE_FLG
-    , 1                                             AS W_DATASOURCE_NUM_ID
-    , GETDATE()                                     AS W_INSERT_DT
-    , GETDATE()                                     AS W_UPDATE_DT
-    , NULL                                          AS W_BATCH_ID
-    , 'N'                                           AS W_UPDATE_FLG
+    , 'N' 											AS W_UPDATE_FLG
+    , 8                                             AS W_DATASOURCE_NUM_ID
+    , DATEADD(HH, 7, GETDATE())                     AS W_INSERT_DT
+    , DATEADD(HH, 7, GETDATE())                     AS W_UPDATE_DT
+    , @p_batch_id                                   AS W_BATCH_ID
 -- INTO #W_CMMS_DOWNTIME_F_tmp
 FROM [FND].[W_CMMS_ASSET_STATUS_F] AS_ST
     LEFT JOIN [dbo].[W_PLANT_SAP_D] PLANT ON 1=1

@@ -3,13 +3,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-IF (OBJECT_ID('[dbo].[proc_load_w_cmms_downtime_f]') is not null)
-BEGIN
-    DROP PROCEDURE [dbo].[proc_load_w_cmms_downtime_f]
-END;
-GO
-
-CREATE PROC [dbo].[proc_load_w_cmms_downtime_f]
+CREATE PROC [dbo].[CMMS_proc_load_w_spp_downtime_f]
     @p_batch_id [bigint]
 AS 
 BEGIN
@@ -129,15 +123,15 @@ BEGIN
 			
 			, CONVERT(
 				NVARCHAR(200), 
-				CONCAT_WS('~', ASSETSTATUSID, AS_ST.[LOCATION], 
-							DOWNTIME, CODE, AS_ST.ASSETNUM)
+				CONCAT(ASSETSTATUSID, '~', AS_ST.[LOCATION], 
+					'~', DOWNTIME, '~', CODE, '~', AS_ST.ASSETNUM)
 			)                                               AS W_INTEGRATION_ID
 			, 'N'                                           AS W_DELETE_FLG
-			, 1                                             AS W_DATASOURCE_NUM_ID
-			, GETDATE()                                     AS W_INSERT_DT
-			, GETDATE()                                     AS W_UPDATE_DT
-			, NULL                                          AS W_BATCH_ID
-			, 'N'                                           AS W_UPDATE_FLG
+			, 'N' 											AS W_UPDATE_FLG
+			, 8                                             AS W_DATASOURCE_NUM_ID
+			, DATEADD(HH, 7, GETDATE())                     AS W_INSERT_DT
+			, DATEADD(HH, 7, GETDATE())                     AS W_UPDATE_DT
+			, @p_batch_id                                   AS W_BATCH_ID
 		INTO #W_CMMS_DOWNTIME_F_tmp
 		FROM [FND].[W_CMMS_ASSET_STATUS_F] AS_ST
 			LEFT JOIN [dbo].[W_PLANT_SAP_D] PLANT ON 1=1
@@ -169,6 +163,7 @@ BEGIN
 				DATE_WID = src.DATE_WID
 				, PLANT_WID = src.PLANT_WID
 				, LOCATION_WID = src.LOCATION_WID
+				, ASSET_WID = src.ASSET_WID
 
 				, LINE_ASSET_NUM = src.LINE_ASSET_NUM
 				, LINE_ASSET_DESCRIPTION = src.LINE_ASSET_DESC
@@ -186,7 +181,7 @@ BEGIN
 				, W_INSERT_DT = src.W_INSERT_DT
 				, W_BATCH_ID = src.W_BATCH_ID
 				, W_INTEGRATION_ID = src.W_INTEGRATION_ID
-				, W_UPDATE_DT = getdate()
+				, W_UPDATE_DT = DATEADD(HH, 7, GETDATE())
 			FROM [dbo].[W_CMMS_DOWNTIME_F] tgt
 			INNER JOIN #W_CMMS_DOWNTIME_F_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID
 
@@ -198,6 +193,7 @@ BEGIN
 				DATE_WID
 				, PLANT_WID
 				, LOCATION_WID
+				, ASSET_WID
 
 				, LINE_ASSET_NUM
 				, LINE_ASSET_DESCRIPTION
@@ -221,6 +217,7 @@ BEGIN
 				DATE_WID
 				, PLANT_WID
 				, LOCATION_WID
+				, ASSET_WID
 
 				, LINE_ASSET_NUM
 				, LINE_ASSET_DESC

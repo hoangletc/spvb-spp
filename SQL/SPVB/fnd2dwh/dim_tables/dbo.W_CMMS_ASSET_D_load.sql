@@ -3,13 +3,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-IF (OBJECT_ID('[dbo].[proc_load_w_cmms_asset_d]') is not null)
-BEGIN
-    DROP PROCEDURE [dbo].[proc_load_w_cmms_asset_d]
-END;
-GO
-
-CREATE PROC [dbo].[proc_load_w_cmms_asset_d]
+CREATE PROC [dbo].[CMMS_proc_load_w_spp_asset_d]
     @p_batch_id [bigint]
 AS
 BEGIN
@@ -112,7 +106,8 @@ BEGIN
                 , CASE 
                     WHEN AST.ASSET_HIERACHICAL_TYPE = 'machine' THEN AST.[PARENT]
                     WHEN AST.ASSET_HIERACHICAL_TYPE = 'component' THEN AST.[GRANDPARENT]
-                    ELSE AST.[ASSET_NUM] END                        AS LINE_ASSET_NUM
+                    ELSE AST.[ASSET_NUM] 
+                END                                                 AS LINE_ASSET_NUM
                 , TMP_ASST_L_INF.LINE_ASSET_DESC                    AS LINE_ASSET_DES
                 , CONVERT(nvarchar(50), SPVB_COSTCENTER)            AS SPVB_COSTCENTER
                 , CONVERT(nvarchar(50), CHANGE_DATE)                AS CHANGE_DATE
@@ -135,15 +130,15 @@ BEGIN
 
                 , CONVERT(
                     nvarchar(200), 
-                    CONCAT_WS('~', ASSET_UID, SPVB_COSTCENTER, 
-                            SPVB_FIXEDASSETNUM, AST.[LOCATION])
+                    CONCAT(ASSET_UID, '~', SPVB_COSTCENTER, '~',
+                            SPVB_FIXEDASSETNUM, '~', AST.[LOCATION])
                 )                                                   AS W_INTEGRATION_ID
                 , 'N'                                               AS W_DELETE_FLG
-                , 1                                                 AS W_DATASOURCE_NUM_ID
-                , GETDATE()                                         AS W_INSERT_DT
-                , GETDATE()                                         AS W_UPDATE_DT
-                , NULL                                              AS W_BATCH_ID
-                , 'N'                                               AS W_UPDATE_FLG
+                , 'N' 											    AS W_UPDATE_FLG
+                , 8                                                 AS W_DATASOURCE_NUM_ID
+                , DATEADD(HH, 7, GETDATE())                         AS W_INSERT_DT
+                , DATEADD(HH, 7, GETDATE())                         AS W_UPDATE_DT
+                , @p_batch_id                                       AS W_BATCH_ID
             INTO #W_CMMS_ASSET_D_tmp
             FROM [FND].[W_CMMS_ASSET_D] AST
                 LEFT JOIN [dbo].[W_CMMS_LOC_D] LOC_X ON 1=1
@@ -176,7 +171,7 @@ BEGIN
             , CHANGE_DATE = src.CHANGE_DATE
             , SPVB_FIXEDASSETNUM = src.SPVB_FIXEDASSETNUM
             , TOTAL_COST = src.TOTAL_COST
-            , STATUS = src.STATUS
+            , [STATUS] = src.STATUS
             , STATUS_DESCRIPTION = src.STATUS_DESCRIPTION
             , TOTAL_DOWNTIME = src.TOTAL_DOWNTIME
             , ASSET_NUM = src.ASSET_NUM
@@ -184,12 +179,12 @@ BEGIN
             , SPVB_COSTCENTER_DESCRIPTION = src.SPVB_COSTCENTER_DESCRIPTION
             , INV_COST = src.INV_COST
             , ISRUNNING = src.ISRUNNING
-            , LOCATION = src.LOCATION
+            , [LOCATION] = src.LOCATION
             , SITE_ID = src.SITE_ID
             , ASSET_HIERACHICAL_TYPE = src.ASSET_HIERACHICAL_TYPE
             , PARENT = src.PARENT
             , GRANDPARENT = src.GRANDPARENT
-            , DESCRIPTION = src.DESCRIPTION
+            , [DESCRIPTION] = src.DESCRIPTION
 
 			, W_DELETE_FLG = src.W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID = src.W_DATASOURCE_NUM_ID
@@ -212,7 +207,7 @@ BEGIN
             , CHANGE_DATE
             , SPVB_FIXEDASSETNUM
             , TOTAL_COST
-            , STATUS
+            , [STATUS]
             , STATUS_DESCRIPTION
             , TOTAL_DOWNTIME
             , ASSET_NUM
@@ -220,12 +215,12 @@ BEGIN
             , SPVB_COSTCENTER_DESCRIPTION
             , INV_COST
             , ISRUNNING
-            , LOCATION
+            , [LOCATION]
             , SITE_ID
             , ASSET_HIERACHICAL_TYPE
             , PARENT
             , GRANDPARENT
-            , DESCRIPTION
+            , [DESCRIPTION]
 
             , W_DELETE_FLG
             , W_DATASOURCE_NUM_ID
@@ -242,7 +237,7 @@ BEGIN
             , CHANGE_DATE
             , SPVB_FIXEDASSETNUM
             , TOTAL_COST
-            , STATUS
+            , [STATUS]
             , STATUS_DESCRIPTION
             , TOTAL_DOWNTIME
             , ASSET_NUM
@@ -250,12 +245,12 @@ BEGIN
             , SPVB_COSTCENTER_DESCRIPTION
             , INV_COST
             , ISRUNNING
-            , LOCATION
+            , [LOCATION]
             , SITE_ID
             , ASSET_HIERACHICAL_TYPE
             , PARENT
             , GRANDPARENT
-            , DESCRIPTION
+            , [DESCRIPTION]
 
             , W_DELETE_FLG
             , W_DATASOURCE_NUM_ID
