@@ -4,9 +4,23 @@ SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [FND].[W_CMMS_LOC_D]
 (
+	[SPVB_WHC_GROUP] [nvarchar](100) NULL,
 	[DESCRIPTION] [nvarchar](1000) NULL,
-	[LOCATION] [nvarchar](1000) NULL,
-	[W_BATCH_ID] [nvarchar](1000) NULL,
-	[W_INSERT_DT] [nvarchar](1000) NULL
+	[TYPE] [nvarchar](100) NULL,
+	[LOCATIONS_ID] [bigint] NULL,
+	[SITE] [nvarchar](100) NULL,
+	[TYPE_DESCRIPTION] [nvarchar](1000) NULL,
+	[STATUS_DESCRIPTION] [nvarchar](1000) NULL,
+	[LOCATION] [nvarchar](100) NULL,
+	[STATUS] [nvarchar](100) NULL,
+	[FILE_NAME] [nvarchar](100) NULL,
+	
+	[W_BATCH_ID] bigint NULL,
+	[W_INSERT_DT] DATETIME2 NULL
+)
+WITH
+(
+	DISTRIBUTION = ROUND_ROBIN,
+	HEAP
 )
 GO

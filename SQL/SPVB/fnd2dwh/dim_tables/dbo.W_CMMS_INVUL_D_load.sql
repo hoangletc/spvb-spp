@@ -3,13 +3,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-IF (OBJECT_ID('[dbo].[proc_load_w_cmms_invul_d]') is not null)
-BEGIN
-    DROP PROCEDURE [dbo].[proc_load_w_cmms_invul_d]
-END;
-GO
-
-CREATE PROC [dbo].[proc_load_w_cmms_invul_d]
+CREATE PROC [dbo].[CMMS_proc_load_w_spp_invul_d]
     @p_batch_id [bigint]
 AS
 BEGIN
@@ -95,47 +89,51 @@ BEGIN
         SELECT
             INVUSELINE_ID AS INVUSELINE_ID
             , UNITCOST AS UNITCOST
-            , CONVERT(nvarchar(50), SPVB_EXTREASONCODE)     AS SPVB_EXTREASONCODE
-            , CONVERT(nvarchar(50), SPVB_EXTREASONCODE_DESCRIPTION) AS SPVB_EXTREASONCODE_DESCRIPTION
-            , CONVERT(nvarchar(50), SPVB_MUSTRETURN)        AS SPVB_MUSTRETURN
-            , CONVERT(nvarchar(50), SPVB_RETURNFROMISSUE)   AS SPVB_RETURNFROMISSUE
-            , CONVERT(nvarchar(50), SPVB_MUSTRETURN_ORG)    AS SPVB_MUSTRETURN_ORG
-            , RETURNED_QTY                                  AS RETURNED_QTY
-            , CONVERT(nvarchar(50), REMARK)                 AS REMARK
-            , CONVERT(nvarchar(50), LINE_TYPE)              AS LINE_TYPE
-            , CONVERT(nvarchar(50), [DESCRIPTION])          AS [DESCRIPTION]
-            , CONVERT(nvarchar(50), TO_SITEID)              AS TO_SITEID
-            , CONVERT(nvarchar(50), INVUSE_NUM)             AS INVUSE_NUM
-            , CONVERT(nvarchar(50), ACTUALDATE)             AS ACTUALDATE
-            , RECEIVED_QTY                                  AS RECEIVED_QTY
-            , CONVERT(nvarchar(50), ASSET_NUM)              AS ASSET_NUM
-            , CONVERT(nvarchar(50), COSTCENTER)             AS COSTCENTER
-            , CONVERT(nvarchar(50), FROM_STORELOC)          AS FROM_STORELOC
-            , CONVERT(nvarchar(50), REFWO)                  AS REFWO
-            , LINECOST                                      AS LINECOST
-            , QUANTITY                                      AS QUANTITY
-            , CONVERT(nvarchar(50), COSTCENTER_DESCRIPTION) AS COSTCENTER_DESCRIPTION
-            , INVUSELINE_NUM                                AS INVUSELINE_NUM
-            , CONVERT(nvarchar(50), ITEM_NUM)               AS ITEM_NUM
-            , CONVERT(nvarchar(50), ITEMSETID)              AS ITEMSETID
-            , CONVERT(nvarchar(50), [LOCATION])             AS [LOCATION]
-            , CONVERT(nvarchar(50), SPVB_SAPPO)             AS SPVB_SAPPO
-            , CONVERT(nvarchar(50), USE_TYPE)               AS USE_TYPE
-            , CONVERT(nvarchar(50), ENTER_BY)               AS ENTER_BY
-            , CONVERT(nvarchar(50), SPVB_WONUMREF)          AS SPVB_WONUMREF
-            , CONVERT(nvarchar(50), SPVB_REASON)            AS SPVB_REASON
-            , MATU_ID                                       AS MATU_ID
+            , CONVERT(nvarchar(200), SPVB_EXTREASONCODE)        AS SPVB_EXTREASONCODE
+            , CONVERT(
+                nvarchar(200), 
+                SPVB_EXTREASONCODE_DESCRIPTION
+            )                                                   AS SPVB_EXTREASONCODE_DESCRIPTION
+            , CONVERT(nvarchar(200), SPVB_MUSTRETURN)           AS SPVB_MUSTRETURN
+            , CONVERT(nvarchar(200), SPVB_RETURNFROMISSUE)      AS SPVB_RETURNFROMISSUE
+            , CONVERT(nvarchar(200), SPVB_MUSTRETURN_ORG)       AS SPVB_MUSTRETURN_ORG
+            , RETURNED_QTY                                      AS RETURNED_QTY
+            , CONVERT(nvarchar(200), REMARK)                    AS REMARK
+            , CONVERT(nvarchar(200), LINE_TYPE)                 AS LINE_TYPE
+            , CONVERT(nvarchar(200), [DESCRIPTION])             AS [DESCRIPTION]
+            , CONVERT(nvarchar(200), TO_SITEID)                 AS TO_SITEID
+            , CONVERT(nvarchar(200), INVUSE_NUM)                AS INVUSE_NUM
+            , CONVERT(DATETIME2, ACTUALDATE)                    AS ACTUALDATE
+            , RECEIVED_QTY                                      AS RECEIVED_QTY
+            , CONVERT(nvarchar(200), ASSET_NUM)                 AS ASSET_NUM
+            , CONVERT(nvarchar(200), COSTCENTER)                AS COSTCENTER
+            , CONVERT(nvarchar(200), FROM_STORELOC)             AS FROM_STORELOC
+            , CONVERT(nvarchar(200), REFWO)                     AS REFWO
+            , LINECOST                                          AS LINECOST
+            , QUANTITY                                          AS QUANTITY
+            , CONVERT(nvarchar(200), COSTCENTER_DESCRIPTION)    AS COSTCENTER_DESCRIPTION
+            , INVUSELINE_NUM                                    AS INVUSELINE_NUM
+            , CONVERT(nvarchar(200), ITEM_NUM)                  AS ITEM_NUM
+            , CONVERT(nvarchar(200), ITEMSETID)                 AS ITEMSETID
+            , CONVERT(nvarchar(200), [LOCATION])                AS [LOCATION]
+            , CONVERT(nvarchar(200), SPVB_SAPPO)                AS SPVB_SAPPO
+            , CONVERT(nvarchar(200), USE_TYPE)                  AS USE_TYPE
+            , CONVERT(nvarchar(200), ENTER_BY)                  AS ENTER_BY
+            , CONVERT(nvarchar(200), SPVB_WONUMREF)             AS SPVB_WONUMREF
+            , CONVERT(nvarchar(200), SPVB_REASON)               AS SPVB_REASON
+            , MATU_ID                                           AS MATU_ID
 
             , CONVERT(
                 nvarchar(200), 
-                CONCAT_WS('~', INVUSELINE_ID, MATU_ID, ASSET_NUM, ITEM_NUM)
-            )                                               AS W_INTEGRATION_ID
-            , 'N'                                           AS W_DELETE_FLG
-            , 1                                             AS W_DATASOURCE_NUM_ID
-            , GETDATE()                                     AS W_INSERT_DT
-            , GETDATE()                                     AS W_UPDATE_DT
-            , W_BATCH_ID                                    AS W_BATCH_ID
-            , 'N'                                           AS W_UPDATE_FLG
+                CONCAT(INVUSELINE_ID, '~', MATU_ID, 
+                        '~', ASSET_NUM, '~', ITEM_NUM)
+            )                                                   AS W_INTEGRATION_ID
+            , 'N'                                               AS W_DELETE_FLG
+            , 'N' 											    AS W_UPDATE_FLG
+            , 8                                                 AS W_DATASOURCE_NUM_ID
+            , DATEADD(HH, 7, GETDATE())                         AS W_INSERT_DT
+            , DATEADD(HH, 7, GETDATE())                         AS W_UPDATE_DT
+            , @p_batch_id                                       AS W_BATCH_ID
         INTO #W_CMMS_INVUL_D_tmp
         FROM [FND].[W_CMMS_INVUL_D] AST
 
@@ -195,7 +193,7 @@ BEGIN
 			, W_INSERT_DT = src.W_INSERT_DT
 			, W_BATCH_ID = src.W_BATCH_ID
 			, W_INTEGRATION_ID = src.W_INTEGRATION_ID
-			, W_UPDATE_DT = getdate()
+			, W_UPDATE_DT = DATEADD(HH, 7, GETDATE())
         FROM [dbo].[W_CMMS_INVUL_D] tgt
         INNER JOIN #W_CMMS_INVUL_D_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID
 

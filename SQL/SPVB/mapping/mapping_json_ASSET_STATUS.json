@@ -129,11 +129,20 @@
     },
     {
       "source": {
+        "path": "$[''FILE_NAME'']"
+      },
+      "sink": {
+        "name": "FILE_NAME",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
         "path": "$[''W_BATCH_ID'']"
       },
       "sink": {
         "name": "W_BATCH_ID",
-        "type": "String"
+        "type": "Int64"
       }
     },
     {
@@ -146,6 +155,6 @@
       }
     }
   ],
-  "collectionReference": "$[DATA][DETAIL]",
+  "collectionReference": "",
   "mapComplexValuesToString": true
 }

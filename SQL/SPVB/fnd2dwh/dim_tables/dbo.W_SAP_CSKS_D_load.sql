@@ -296,7 +296,7 @@ BEGIN
 			, W_INSERT_DT = src.W_INSERT_DT
 			, W_BATCH_ID = src.W_BATCH_ID
 			, W_INTEGRATION_ID = src.W_INTEGRATION_ID
-			, W_UPDATE_DT = getdate()
+			, W_UPDATE_DT = DATEADD(HH, 7, GETDATE())
 
         FROM [dbo].[W_SAP_CSKS_D] tgt
         INNER JOIN #W_SAP_CSKS_D_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID

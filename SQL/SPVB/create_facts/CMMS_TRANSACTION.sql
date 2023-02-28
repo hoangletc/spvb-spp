@@ -1,13 +1,12 @@
-;WITH
-TMP_WO_X AS (
+;WITH TMP_WO_X AS (
     SELECT
         WO.*
-        , CASE WHEN WO.IS_SCHED = 'False'
+        , CASE WHEN WO.IS_SCHED = 0
             THEN WO.DATE_FINISHED_BFR
             ELSE WO.DATE_FINISHED_AFT
         END                                     AS ACTUAL_FINISH
         , WO_STA.CHANGEDATE                     AS LAST_STATUS_DATE
-    FROM [dbo].[W_CMMS_WO_F] AS WO
+    FROM [FND].[W_CMMS_WO_F] AS WO
         LEFT JOIN [FND].[W_CMMS_WO_STATUS_D] WO_STA ON 1=1
             AND WO_STA.PARENT = WO.WORK_ORDERS
             AND WO_STA.STATUS = WO.[STATUS]
@@ -73,25 +72,21 @@ TMP_WO_X AS (
 
     FROM FND.W_CMMS_MATU_F MATU
         LEFT JOIN [dbo].[W_CMMS_INVU_D] INVU ON 1=1
-            AND INVU.MATU_ID = MATU.MATU_ID
-            AND INVU.ASSET_NUM = MATU.ASSET_NUM
-            AND INVU.ITEM_NUM = MATU.ITEM_NUM
+            AND INVU.INVU_ID = MATU.INVUSE_ID
         LEFT JOIN [dbo].[W_CMMS_LOC_D] LOC ON 1=1
             AND LOC.[LOCATION] = MATU.STORELOC
         LEFT JOIN [dbo].[W_CMMS_ITEM_D] IT ON 1=1
             AND IT.ITEM_NUM = MATU.ITEM_NUM
         LEFT JOIN [dbo].[W_CMMS_INVUL_D] INVUL ON 1=1
-            AND INVU.MATU_ID = MATU.MATU_ID
-            AND INVU.ASSET_NUM = MATU.ASSET_NUM
-            AND INVU.ITEM_NUM = MATU.ITEM_NUM
+            AND INVUL.INVUSELINE_ID = MATU.INVUSELINE_ID
         LEFT JOIN [dbo].[W_CMMS_ASSET_D] AST ON 1=1
             AND AST.ASSET_NUM = MATU.ASSET_NUM
         LEFT JOIN [TMP_WO_X] ON 1=1
             AND TMP_WO_X.WORK_ORDERS = MATU.REFWO
+            AND TMP_WO_X.ASSET_NUM = MATU.ASSET_NUM
 
     UNION ALL
 
-    
     SELECT
         LOC.LOC_WID                             AS LOC_WID
         , AST.ASSET_WID                         AS ASSET_WID
@@ -162,17 +157,16 @@ TMP_WO_X AS (
 
     FROM FND.W_CMMS_MATR_F MATR
     LEFT JOIN [dbo].[W_CMMS_INVU_D] INVU ON 1=1
-            AND INVU.ASSET_NUM = MATR.ASSET_NUM
-            AND INVU.ITEM_NUM = MATR.ITEM_NUM
+            AND INVU.INVU_ID = MATR.INVU_ID
         LEFT JOIN [dbo].[W_CMMS_ITEM_D] IT ON 1=1
             AND IT.ITEM_NUM = MATR.ITEM_NUM
         LEFT JOIN [dbo].[W_CMMS_INVUL_D] INVUL ON 1=1
-            AND INVUL.ASSET_NUM = MATR.ASSET_NUM
-            AND INVUL.ITEM_NUM = MATR.ITEM_NUM
+            AND INVUL.INVUSELINE_NUM = MATR.INVUSELINEID
         LEFT JOIN [dbo].[W_CMMS_ASSET_D] AST ON 1=1
             AND AST.ASSET_NUM = MATR.ASSET_NUM
         LEFT JOIN [TMP_WO_X] ON 1=1
             AND TMP_WO_X.WORK_ORDERS = MATR.REFWO
+            AND TMP_WO_X.ASSETNUM = MATR.ASSETNUM
         LEFT JOIN [dbo].[W_CMMS_LOC_D] LOC ON 1=1
             AND LOC.[LOCATION] = MATR.TO_STORELOC
 
@@ -182,7 +176,8 @@ TMP_WO_X AS (
         LOC.LOC_WID                             AS LOC_WID
         , NULL                                  AS ASSET_WID
         , NULL                                  AS INVU_WID
-        , INVUL.INVUL_WID                       AS INVUL_WID
+        -- , INVUL.INVUL_WID                       AS INVUL_WID
+        , NULL                                  AS INVUL_WID
         , IT.ITEM_WID                           AS ITEM_WID
         , NULL                                  AS WO_WID
         , FORMAT(
@@ -202,10 +197,11 @@ TMP_WO_X AS (
         , NULL                                  AS TRANSACTION_UOM
         , INVT.BIN_NUM                          AS BINNUM
         , NULL                                  AS OVERHAUL
-        , CASE WHEN INVUL.SPVB_MUSTRETURN_ORG = 1
-            THEN 'Y'
-            ELSE 'N'
-        END                                     AS MUST_RETURN_ORIGINAL
+        -- , CASE WHEN INVUL.SPVB_MUSTRETURN_ORG = 1
+        --     THEN 'Y'
+        --     ELSE 'N'
+        -- END                                     AS MUST_RETURN_ORIGINAL
+        , NULL                                  AS MUST_RETURN_ORIGINAL
         , NULL                                  AS MUST_RETURN_USER_INPUT
         , NULL                                  AS MUST_RETURN_REMARK
         , 0                                     AS PRICE
@@ -231,8 +227,8 @@ TMP_WO_X AS (
             AND LOC.[LOCATION] = INVT.STORELOC
         LEFT JOIN [dbo].[W_CMMS_ITEM_D] IT ON 1=1
             AND IT.ITEM_NUM = INVT.ITEM_NUM
-        LEFT JOIN [dbo].[W_CMMS_INVUL_D] INVUL ON 1=1
-            AND INVUL.ITEM_NUM = INVT.ITEM_NUM
+        -- LEFT JOIN [dbo].[W_CMMS_INVUL_D] INVUL ON 1=1
+        --     AND INVUL.INVUSELINE_ID = INVT.
 
     UNION ALL
 
@@ -290,5 +286,6 @@ TMP_WO_X AS (
     FROM [FND].[W_CMMS_SERV_F] SERV
         LEFT JOIN [TMP_WO_X] ON 1=1
             AND TMP_WO_X.WORK_ORDERS = SERV.REFWO
+            AND TMP_WO_X.ASSETNUM = SERV.ASSET_NUM
         LEFT JOIN [dbo].[W_CMMS_ASSET_D] AST ON 1=1
             AND AST.ASSET_NUM = SERV.ASSET_NUM

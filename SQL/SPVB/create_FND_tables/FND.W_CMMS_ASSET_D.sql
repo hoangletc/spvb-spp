@@ -4,19 +4,30 @@ SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [FND].[W_CMMS_ASSET_D]
 (
-	[STATUS_DES] [nvarchar](max) NULL,
-	[ASSET_NUM] [nvarchar](max) NULL,
-	[DESCRIPTION] [nvarchar](max) NULL,
-	[STATUS] [nvarchar](max) NULL,
-	[ASSET_STATUS_CHANGEDATE] [nvarchar](max) NULL,
-	[ASSET_STATUS_SPVB_CA] [nvarchar](max) NULL,
-	[ASSET_STATUS_SPVB_T] [nvarchar](max) NULL,
-	[ASSET_STATUS_SPVB_C] [nvarchar](max) NULL,
-	[ASSET_STATUS_IS_RUNNING] [nvarchar](max) NULL,
-	[ASSET_STATUS_SPVB_i] [nvarchar](max) NULL,
-	[ASSET_STATUS_SPVB_l] [nvarchar](max) NULL,
-	[W_BATCH_ID] [nvarchar](max) NULL,
-	[W_INSERT_DT] [nvarchar](max) NULL
+	[ASSET_UID] [nvarchar](30) NULL,
+	[SPVB_COSTCENTER] [nvarchar](30) NULL,
+	[CHANGE_DATE] [nvarchar](30) NULL,
+	[SPVB_FIXEDASSETNUM] [nvarchar](30) NULL,
+	[TOTAL_COST] [real] NULL,
+	[STATUS] [nvarchar](30) NULL,
+	[STATUS_DESCRIPTION] [nvarchar](30) NULL,
+	[TOTAL_DOWNTIME] [real] NULL,
+	[ASSET_NUM] [nvarchar](30) NULL,
+	[ASSET_TYPE] [nvarchar](30) NULL,
+	[SPVB_COSTCENTER_DESCRIPTION] [nvarchar](500) NULL,
+	[INV_COST] [real] NULL,
+	[ISRUNNING] [nvarchar](30) NULL,
+	[LOCATION] [nvarchar](30) NULL,
+	[SITE_ID] [nvarchar](30) NULL,
+	[ASSET_HIERACHICAL_TYPE] [nvarchar](30) NULL,
+	[LINE_ASSET_NUM] [nvarchar](30) NULL,
+	[MACHINE_ASSET_NUM] [nvarchar](30) NULL,
+	[COMPONENT_ASSET_NUM] [nvarchar](30) NULL,
+	[DESCRIPTION] [nvarchar](1000) NULL,
+
+    [FILE_NAME] [nvarchar](100) NULL,
+	[W_BATCH_ID] [bigint] NULL,
+	[W_INSERT_DT] DATETIME2 NULL
 )
 WITH
 (

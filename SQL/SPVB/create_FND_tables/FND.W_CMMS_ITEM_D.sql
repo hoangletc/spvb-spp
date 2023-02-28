@@ -24,6 +24,7 @@ CREATE TABLE [FND].[W_CMMS_ITEM_D]
 	[ITEM_ID] [bigint] NULL,
 	[SPVB_PRODUCTLINE] [nvarchar](300) NULL,
 	[SPVB_MACHINE] [nvarchar](300) NULL,
+	[FILE_NAME] [nvarchar](200),
 
 	[W_BATCH_ID] BIGINT NULL,
 	[W_INSERT_DT] DATETIME2 NULL
@@ -34,5 +35,3 @@ WITH
 	HEAP
 )
 GO
-
--- drop table [FND].[W_CMMS_ITEM_D]

@@ -3,19 +3,19 @@
   "mappings": [
     {
       "source": {
-        "path": "$[''targcompdate'']"
+        "path": "$[''actfinish'']"
       },
       "sink": {
-        "name": "TARGCOMPDATE",
+        "name": "ACTFINISH",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''pmnum'']"
+        "path": "$[''actstart'']"
       },
       "sink": {
-        "name": "PMNUM",
+        "name": "ACTSTART",
         "type": "String"
       }
     },
@@ -30,105 +30,6 @@
     },
     {
       "source": {
-        "path": "$[''wonum'']"
-      },
-      "sink": {
-        "name": "WONUM",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''schedfinish'']"
-      },
-      "sink": {
-        "name": "SCHEDFINISH",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''supervisor'']"
-      },
-      "sink": {
-        "name": "SUPERVISOR",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''targstartdate'']"
-      },
-      "sink": {
-        "name": "TARGSTARTDATE",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''reportdate'']"
-      },
-      "sink": {
-        "name": "REPORTDATE",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''spvb_overhaul'']"
-      },
-      "sink": {
-        "name": "SPVB_OVERHAUL",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''worktype'']"
-      },
-      "sink": {
-        "name": "WORKTYPE",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''schedstart'']"
-      },
-      "sink": {
-        "name": "SCHEDSTART",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''location'']"
-      },
-      "sink": {
-        "name": "LOCATION",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''jpnum'']"
-      },
-      "sink": {
-        "name": "JPNUM",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''status'']"
-      },
-      "sink": {
-        "name": "STATUS",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
         "path": "$[''description'']"
       },
       "sink": {
@@ -138,10 +39,19 @@
     },
     {
       "source": {
-        "path": "$[''siteid'']"
+        "path": "$[''glaccount'']"
       },
       "sink": {
-        "name": "SITEID",
+        "name": "GLACCOUNT",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''haschildren'']"
+      },
+      "sink": {
+        "name": "HASCHILDREN",
         "type": "String"
       }
     },
@@ -156,6 +66,150 @@
     },
     {
       "source": {
+        "path": "$[''jpnum'']"
+      },
+      "sink": {
+        "name": "JPNUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''location'']"
+      },
+      "sink": {
+        "name": "LOCATION",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''pmduedate'']"
+      },
+      "sink": {
+        "name": "PMDUEDATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''pmnum'']"
+      },
+      "sink": {
+        "name": "PMNUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''reportdate'']"
+      },
+      "sink": {
+        "name": "REPORTDATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''schedfinish'']"
+      },
+      "sink": {
+        "name": "SCHEDFINISH",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''wschedstart'']"
+      },
+      "sink": {
+        "name": "WSCHEDSTART",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_overhaul'']"
+      },
+      "sink": {
+        "name": "SPVB_OVERHAUL",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''spvb_task_status'']"
+      },
+      "sink": {
+        "name": "SPVB_TASK_STATUS",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''status'']"
+      },
+      "sink": {
+        "name": "STATUS",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''supervisor'']"
+      },
+      "sink": {
+        "name": "SUPERVISOR",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''targcompdate'']"
+      },
+      "sink": {
+        "name": "TARGCOMPDATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''targstartdate'']"
+      },
+      "sink": {
+        "name": "TARGSTARTDATE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''wonum'']"
+      },
+      "sink": {
+        "name": "WONUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''wopriority'']"
+      },
+      "sink": {
+        "name": "WOPRIORITY",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''worktype'']"
+      },
+      "sink": {
+        "name": "WORKTYPE",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
         "path": "$[''parent'']"
       },
       "sink": {
@@ -165,10 +219,19 @@
     },
     {
       "source": {
-        "path": "$[''is_sched'']"
+        "path": "$[''suppervisorname'']"
       },
       "sink": {
-        "name": "IS_SCHED",
+        "name": "SUPPERVISORNAME",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''FILE_NAME'']"
+      },
+      "sink": {
+        "name": "FILE_NAME",
         "type": "String"
       }
     },
@@ -178,7 +241,7 @@
       },
       "sink": {
         "name": "W_BATCH_ID",
-        "type": "String"
+        "type": "Int64"
       }
     },
     {
@@ -191,6 +254,6 @@
       }
     }
   ],
-  "collectionReference": "$[DATA][DETAIL]",
+  "collectionReference": "",
   "mapComplexValuesToString": true
 }

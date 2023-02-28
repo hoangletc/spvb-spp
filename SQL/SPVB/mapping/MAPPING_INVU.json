@@ -160,7 +160,16 @@
       },
       "sink": {
         "name": "MATU_ID",
-        "type": "Int64"
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''FILE_NAME'']"
+      },
+      "sink": {
+        "name": "FILE_NAME",
+        "type": "String"
       }
     },
     {
@@ -182,6 +191,6 @@
       }
     }
   ],
-  "collectionReference": "$[DATA][DETAIL]",
+  "collectionReference": "",
   "mapComplexValuesToString": true
 }

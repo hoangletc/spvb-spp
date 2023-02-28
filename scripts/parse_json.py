@@ -1,10 +1,13 @@
 import calendar
 import json
+import logging
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List
 
 from tqdm import tqdm
+
+DT_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
 
 
 def parser_default(d: List[dict], res_name: str, schema: set = None):
@@ -69,15 +72,14 @@ def parser_work_order(d: dict, schemas: dict = None) -> dict:
     wo, wo_status = d, d.get('wostatus', None)
 
     # Parse
-    if wo_status:
-        wo_s_tmp_before_sched = {x: None for x in WO_STATUS_ORDER}
-        wo_s_tmp_after_sched = {x: None for x in WO_STATUS_ORDER}
-        flag_resched = False
+    wo = parser_default(wo, "work_order", schemas['work_order'])['work_order']
 
+    if wo_status:
         if isinstance(wo_status, dict):
             wo_status = [wo_status]
 
-        for i, w in enumerate(wo_status):
+        wo_status_tmp = []
+        for w in wo_status:
             if w['status'] not in WO_STATUS_ORDER:
                 continue
 
@@ -87,39 +89,10 @@ def parser_work_order(d: dict, schemas: dict = None) -> dict:
                 schemas['work_order_status']
             )['work_order_status']
 
-            if i != 0 and w['status'] == 'WSCH':
-                flag_resched = True
+            wo_status_tmp.append(w)
 
-            if not flag_resched:
-                wo_s_tmp = wo_s_tmp_before_sched
-            else:
-                wo_s_tmp = wo_s_tmp_after_sched
+        wo_status = wo_status_tmp
 
-            if wo_s_tmp['WSCH'] is not None and \
-                    wo_s_tmp['WSCH']['changedate'] > w['changedate']:
-                continue
-            if wo_s_tmp[w['status']] is None or \
-                    wo_s_tmp[w['status']]['changedate'] < w['changedate']:
-                wo_s_tmp[w['status']] = w
-
-        # Correct status of dict before_sched and after_sched
-        for x in wo_s_tmp_before_sched.values():
-            if x is None:
-                continue
-
-            x['status'] = f"{x['status']}_BEFORE"
-        for x in wo_s_tmp_after_sched.values():
-            if x is None:
-                continue
-
-            x['status'] = f"{x['status']}_AFTER"
-
-        # Finalize WOStatus as single list
-        wo_status = [x for x in wo_s_tmp_before_sched.values() if x is not None] + \
-            [x for x in wo_s_tmp_after_sched.values() if x is not None]
-
-    wo = parser_default(wo, "work_order", schemas['work_order'])['work_order']
-    wo['is_sched'] = flag_resched
     wo = [wo]
 
     return {'work_order': wo, 'work_order_status': wo_status}
@@ -180,9 +153,15 @@ def parser_matu(d: dict, schemas: dict = None) -> dict:
 
 
 def parser_asset(d: dict, schemas: dict = None) -> dict:
+    def _to_str(a):
+        if isinstance(a, float):
+            a = round(a)
+
+        return str(a)
+
     asset, asset_status = d, d.get('assetstatus', None)
 
-    if asset_status == {}:
+    if asset_status in ({}, []):
         asset_status = None
 
     # Parse
@@ -199,25 +178,35 @@ def parser_asset(d: dict, schemas: dict = None) -> dict:
         # Tách downtime ra 2 phần
         final_asset_status = []
         for a_st in asset_status:
+            a_st['assetstatusid'] = _to_str(a_st['assetstatusid'])
+
+            try:
+                dt = datetime.strptime(a_st['changedate'], DT_FORMAT)
+                a_st['changedate'] = dt.strftime(DT_FORMAT)
+            except ValueError:
+                try:
+                    dt = datetime.strptime(a_st['changedate'], "%d-%b-%y")
+                    a_st['changedate'] = dt.strftime(DT_FORMAT)
+                except ValueError:
+                    logging.error(f"Datetime format không đúng: {a_st['changedate']}")
+
             if a_st['downtime'] == 0:
                 final_asset_status.append(a_st)
                 continue
 
-            dt = datetime.strptime(a_st['changedate'], "%Y-%m-%dT%H:%M:%S%z")
-
             if (dt + timedelta(hours=a_st['downtime'])).month != dt.month:
                 last_month_date = datetime(year=dt.year, month=dt.month, day=calendar.monthrange(
-                    dt.year, dt.month)[1], hour=23, minute=59, second=59)
-                first_nextmonth_date = datetime + timedelta(seconds=1)
+                    dt.year, dt.month)[1], hour=23, minute=59, second=59, tzinfo=dt.tzinfo)
+                first_nextmonth_date = last_month_date + timedelta(seconds=1)
 
-                downtime1 = (last_month_date - dt).hours
+                downtime1 = (last_month_date - dt).total_seconds() / 3600
                 downtime2 = a_st['downtime'] - downtime1
 
                 a_st['downtime'] = downtime1
 
                 new_ast = a_st.copy()
                 new_ast['downtime'] = downtime2
-                new_ast['changedate'] = first_nextmonth_date.strftime("%Y-%m-%dT%H:%M:%S%z")
+                new_ast['changedate'] = first_nextmonth_date.strftime(DT_FORMAT)
 
                 final_asset_status.append(a_st)
                 final_asset_status.append(new_ast)
@@ -225,10 +214,26 @@ def parser_asset(d: dict, schemas: dict = None) -> dict:
             else:
                 final_asset_status.append(a_st)
 
+        asset_status = final_asset_status
+
     asset_tmp = parser_default(asset, "asset", schemas['asset'])['asset']
+    asset_tmp['assetnum'] = _to_str(asset_tmp['assetnum'])
+    if 'ancestor' in asset_tmp:
+        asset_tmp['ancestor'] = _to_str(asset_tmp['ancestor'])
+    asset_tmp['assetnum'] = _to_str(asset_tmp['assetnum'])
+
+    try:
+        dt = datetime.strptime(asset_tmp['changedate'], DT_FORMAT)
+        asset_tmp['changedate'] = dt.strftime(DT_FORMAT)
+    except ValueError:
+        try:
+            dt = datetime.strptime(asset_tmp['changedate'], "%d-%b-%y")
+            asset_tmp['changedate'] = dt.strftime(DT_FORMAT)
+        except ValueError:
+            logging.error(f"Datetime format không đúng: {asset_tmp['changedate']}")
 
     # Supplement info for 'asset'
-    if 'assetancestor' in asset:
+    if 'assetancestor' in asset and asset['assetancestor'] is not None:
         if isinstance(asset['assetancestor'], list):
             assetancestor = asset['assetancestor']
         else:
@@ -237,9 +242,12 @@ def parser_asset(d: dict, schemas: dict = None) -> dict:
         if len(assetancestor) == 1:
             # Asset là 'line'
             asset_tmp['asset_hierachical_type'] = "line"
+            asset_tmp['line_asset_num'] = asset_tmp['assetnum']
+
         elif len(assetancestor) == 2:
             # Asset là 'machine'
             asset_tmp['asset_hierachical_type'] = "machine"
+            asset_tmp['machine_asset_num'] = asset_tmp['assetnum']
 
             # Get parent asset
             parent = None
@@ -247,12 +255,14 @@ def parser_asset(d: dict, schemas: dict = None) -> dict:
                 if x['hierarchylevels'] == 1:
                     parent = x
                     break
-            assert parent is not None, "asset['assetancestor'] không có parent asset (hierarchylevels = 1)"
+            assert parent is not None, "asset['assetancestor'] không có machine asset (hierarchylevels = 1)"
 
-            asset_tmp['parent'] = parent['ancestor']
+            asset_tmp['line_asset_num'] = _to_str(parent['ancestor'])
+
         elif len(assetancestor) == 3:
             # Asset là 'component'
             asset_tmp['asset_hierachical_type'] = "component"
+            asset_tmp['component_asset_num'] = asset_tmp['assetnum']
 
             # Get parent asset
             parent = None
@@ -260,9 +270,9 @@ def parser_asset(d: dict, schemas: dict = None) -> dict:
                 if x['hierarchylevels'] == 1:
                     parent = x
                     break
-            assert parent is not None, "asset['assetancestor'] không có parent asset (hierarchylevels = 1)"
+            assert parent is not None, "asset['assetancestor'] không có machine asset (hierarchylevels = 1)"
 
-            asset_tmp['parent'] = parent['ancestor']
+            asset_tmp['machine_asset_num'] = _to_str(parent['ancestor'])
 
             # Get grandparent asset
             grandparent = None
@@ -270,9 +280,13 @@ def parser_asset(d: dict, schemas: dict = None) -> dict:
                 if x['hierarchylevels'] == 2:
                     grandparent = x
                     break
-            assert grandparent is not None, "asset['assetancestor'] không có grandparent asset (hierarchylevels = 2)"
+            assert grandparent is not None, "asset['assetancestor'] không có line asset (hierarchylevels = 2)"
 
-            asset_tmp['grandparent'] = grandparent['ancestor']
+            asset_tmp['line_asset_num'] = _to_str(grandparent['ancestor'])
+
+        elif len(assetancestor) >= 4:
+            print(f"asset_num đang bị lỗi: {asset_tmp['assetnum']}")
+            # TODO: HoangLe [Feb-22]: Fix this
         else:
             raise NotImplementedError()
 
@@ -312,10 +326,10 @@ def parser_matr(d: dict, schemas: dict = None) -> dict:
     def _parse_time(dt_s: str):
         dt = None
         try:
-            dt = datetime.strptime(dt_s, "%Y-%m-%dT%H:%M:%S%z")
+            dt = datetime.strptime(dt_s, DT_FORMAT)
         except ValueError:
             try:
-                dt = datetime.strptime(dt_s, "%Y-%m-%d %H:%M:%S")
+                dt = datetime.strptime(dt_s, "%d-%b-%y")
             except ValueError:
                 print(f"Err: Cannot parse to datetime this: {dt_s}")
 
@@ -330,15 +344,7 @@ def parser_matr(d: dict, schemas: dict = None) -> dict:
     # Convert actualdate to from datetime with timezone to datetime
     # and add small amount to second for differentiating purpose
     dt = _parse_time(matr['actualdate'])
-    if dt is not None:
-        # Convert matr_id to small amount to be added
-        num_digits = len(str(matr['matrectransid']))
-        added = float(matr['matrectransid']) / (10**(num_digits + 1))
-        dt = dt + timedelta(seconds=added)
-        dt_s = dt.strftime("%Y-%m-%d %H:%M:%S.%f")
-
-        # Assign back to MATR
-        matr['actualdate'] = dt_s
+    matr['actualdate'] = dt.strftime("%Y-%m-%d %H:%M:%S")
 
     # Convert transdate to datetime
     dt = _parse_time(matr['transdate'])
@@ -395,11 +401,11 @@ def parser_json(data: List[dict], res_name: str,
 if __name__ == '__main__':
     # Khai báo những biến sau đây:
     # folder lưu kết quả xử lí
-    path_out_root = Path("D:\TC Data\SPP API JSONs\edited")
+    path_out_root = Path(r"D:\TC_Data\_data\_post_processed")
     # folder chứa file JSON
-    path_in = Path(r"D:\TC Data\SPP API JSONs\SPP\work_order")
+    path_in = Path(r"D:\TC_Data\_data\_pre_processed\inventory")
     # đường dẫn tới
-    path_schema = r"D:\TC Data\spvb-spp\scripts\schemmas.json"
+    path_schema = r"D:\TC_Data\spvb-spp\scripts\schemmas.json"
 
     path_out_root.mkdir(parents=True, exist_ok=True)
 
@@ -426,8 +432,7 @@ if __name__ == '__main__':
             path_out_dir = path_out_root / res_name
             path_out_dir.mkdir(parents=True, exist_ok=True)
 
-            n_existing_files = len(list(path_out_dir.glob("*.json")))
-            path_out = path_out_dir / f"{res_name}_{n_existing_files}.json"
+            path_out = path_out_dir / f"{res_name}_{path.stem}.json"
 
             with open(path_out, "w+", encoding="utf-8") as fp:
                 json.dump(dat, fp, indent=2, ensure_ascii=False)

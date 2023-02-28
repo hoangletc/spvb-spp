@@ -112,11 +112,11 @@ BEGIN
                 )
             )                                           AS W_INTEGRATION_ID
 			, 'N'                                       AS W_DELETE_FLG
-			, 1                                         AS W_DATASOURCE_NUM_ID
-			, GETDATE()                                 AS W_INSERT_DT
-			, GETDATE()                                 AS W_UPDATE_DT
-			, @p_batch_id                               AS W_BATCH_ID
-            , 'N'                                       AS W_UPDATE_FLG
+            , 'N' 							            AS W_UPDATE_FLG
+            , 1                                         AS W_DATASOURCE_NUM_ID
+            , DATEADD(HH, 7, GETDATE())                 AS W_INSERT_DT
+            , DATEADD(HH, 7, GETDATE())                 AS W_UPDATE_DT
+            , @p_batch_id                               AS W_BATCH_ID
         INTO #W_SAP_COST_CENTER_D_tmp
         FROM [FND].[W_SAP_CSKS_D] COST_CENTER
             LEFT JOIN [FND].[W_SAP_CSKT_D] CSKT ON 1=1
@@ -157,7 +157,7 @@ BEGIN
 			, W_INSERT_DT = src.W_INSERT_DT
 			, W_BATCH_ID = src.W_BATCH_ID
 			, W_INTEGRATION_ID = src.W_INTEGRATION_ID
-			, W_UPDATE_DT = getdate()
+			, W_UPDATE_DT = DATEADD(HH, 7, GETDATE())
 
         FROM [dbo].[W_SAP_COST_CENTER_D] tgt
         INNER JOIN #W_SAP_COST_CENTER_D_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID

@@ -3,13 +3,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-IF (OBJECT_ID('[dbo].[CMMS_proc_load_w_spp_item_d]') is not null)
-BEGIN
-    DROP PROCEDURE [dbo].[CMMS_proc_load_w_spp_item_d]
-END;
-GO
-
-CREATE PROC [dbo].[CMMS_proc_load_w_spp_item_d]
+alter PROC [dbo].[CMMS_proc_load_w_spp_item_d]
     @p_batch_id [bigint]
 AS
 BEGIN
@@ -94,41 +88,42 @@ BEGIN
 
 		SELECT
             CONVERT(nvarchar(1000), [DESCRIPTION])                  AS [DESCRIPTION]
-            , CONVERT(nvarchar(100), ISKIT)                          AS ISKIT
-            , CONVERT(nvarchar(100), ISSUE_UNIT)                     AS ISSUE_UNIT
-            , CONVERT(nvarchar(100), ITEM_NUM)                       AS ITEM_NUM
-            , CONVERT(nvarchar(100), ITEM_TYPE)                      AS ITEM_TYPE
-            , CONVERT(nvarchar(100), LOT_TYPE)                       AS LOT_TYPE
-            , CONVERT(nvarchar(100), LOT_TYPE_DESCRIPTION)           AS LOT_TYPE_DESCRIPTION
-            , CONVERT(nvarchar(100), ORDER_UNIT)                     AS ORDER_UNIT
-            , CONVERT(nvarchar(100), SPP_CLASSIFICATION)             AS SPP_CLASSIFICATION
+            , CONVERT(nvarchar(100), ISKIT)                         AS ISKIT
+            , CONVERT(nvarchar(100), ISSUE_UNIT)                    AS ISSUE_UNIT
+            , CONVERT(nvarchar(100), ITEM_NUM)                      AS ITEM_NUM
+            , CONVERT(nvarchar(100), ITEM_TYPE)                     AS ITEM_TYPE
+            , CONVERT(nvarchar(100), LOT_TYPE)                      AS LOT_TYPE
+            , CONVERT(nvarchar(100), LOT_TYPE_DESCRIPTION)          AS LOT_TYPE_DESCRIPTION
+            , CONVERT(nvarchar(100), ORDER_UNIT)                    AS ORDER_UNIT
+            , CONVERT(nvarchar(100), SPP_CLASSIFICATION)            AS SPP_CLASSIFICATION
             , CONVERT(
                 nvarchar(100),
                 CASE WHEN SPP_CLASSIFICATION_DESCRIPTION = ''
                 THEN 'Others'
                 ELSE SPP_CLASSIFICATION_DESCRIPTION END
-            )                                                        AS SPP_CLASSIFICATION_DESCRIPTION
-            , CONVERT(nvarchar(100), SPVB_ITEM_MUSTNO)               AS SPVB_ITEM_MUSTNO
-            , CONVERT(nvarchar(100), SPVB_MAX)                       AS SPVB_MAX
-            , CONVERT(nvarchar(100), SPVB_MIN)                       AS SPVB_MIN
-            , CONVERT(nvarchar(100), SPVB_MUSTRETURN)                AS SPVB_MUSTRETURN
-            , CONVERT(nvarchar(100), SPVB_PLANT)                     AS SPVB_PLANT
-            , CONVERT(nvarchar(100), [STATUS])                       AS [STATUS]
-            , CONVERT(nvarchar(100), STATUS_DESCRIPTION)             AS STATUS_DESCRIPTION
+            )                                                       AS SPP_CLASSIFICATION_DESCRIPTION
+            , CONVERT(nvarchar(100), SPVB_ITEM_MUSTNO)              AS SPVB_ITEM_MUSTNO
+            , CONVERT(nvarchar(100), SPVB_MAX)                      AS SPVB_MAX
+            , CONVERT(nvarchar(100), SPVB_MIN)                      AS SPVB_MIN
+            , CONVERT(nvarchar(100), SPVB_MUSTRETURN)               AS SPVB_MUSTRETURN
+            , CONVERT(nvarchar(100), SPVB_PLANT)                    AS SPVB_PLANT
+            , CONVERT(nvarchar(100), [STATUS])                      AS [STATUS]
+            , CONVERT(nvarchar(100), STATUS_DESCRIPTION)            AS STATUS_DESCRIPTION
             , ITEM_ID                                               AS ITEM_ID
             , CONVERT(nvarchar(300), SPVB_PRODUCTLINE)              AS SPVB_PRODUCTLINE
             , CONVERT(nvarchar(300), SPVB_MACHINE)                  AS SPVB_MACHINE
 
 			, CONVERT(
-                nvarchar(100), 
-                CONCAT_WS('~', ITEM_ID, ITEM_NUM, ISSUE_UNIT, SPP_CLASSIFICATION)
+                nvarchar(300), 
+                CONCAT(ITEM_ID, '~', ITEM_NUM, '~',
+                        '~', ISSUE_UNIT, '~', SPP_CLASSIFICATION)
                 )                                                   AS W_INTEGRATION_ID
 			, 'N'                                                   AS W_DELETE_FLG
-			, 1                                                     AS W_DATASOURCE_NUM_ID
-			, GETDATE()                                             AS W_INSERT_DT
-			, GETDATE()                                             AS W_UPDATE_DT
-			, NULL                                                  AS W_BATCH_ID
-            , 'N'                                                   AS W_UPDATE_FLG
+            , 'N' 											        AS W_UPDATE_FLG
+            , 8                                                     AS W_DATASOURCE_NUM_ID
+            , DATEADD(HH, 7, GETDATE())                             AS W_INSERT_DT
+            , DATEADD(HH, 7, GETDATE())                             AS W_UPDATE_DT
+            , @p_batch_id                                           AS W_BATCH_ID
     INTO #W_CMMS_ITEM_D_tmp
     FROM [FND].[W_CMMS_ITEM_D] F
 
@@ -175,7 +170,7 @@ BEGIN
 			, W_INSERT_DT = src.W_INSERT_DT
 			, W_BATCH_ID = src.W_BATCH_ID
 			, W_INTEGRATION_ID = src.W_INTEGRATION_ID
-			, W_UPDATE_DT = getdate()
+			, W_UPDATE_DT = DATEADD(HH, 7, GETDATE())
         FROM [dbo].[W_CMMS_ITEM_D] tgt
         INNER JOIN #W_CMMS_ITEM_D_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID
 

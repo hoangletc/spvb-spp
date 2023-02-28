@@ -199,8 +199,17 @@
         "name": "W_INSERT_DT",
         "type": "String"
       }
+    },
+    {
+      "source": {
+        "path": "$[''FILE_NAME'']"
+      },
+      "sink": {
+        "name": "FILE_NAME",
+        "type": "String"
+      }
     }
   ],
-  "collectionReference": "$[DATA][DETAIL]",
+  "collectionReference": "",
   "mapComplexValuesToString": true
 }

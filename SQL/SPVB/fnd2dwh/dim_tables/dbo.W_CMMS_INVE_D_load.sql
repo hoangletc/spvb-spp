@@ -3,17 +3,11 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-IF (OBJECT_ID('[dbo].[proc_load_w_cmms_wo_status_d]') is not null)
-BEGIN
-    DROP PROCEDURE [dbo].[proc_load_w_cmms_wo_status_d]
-END;
-GO
-
-CREATE PROC [dbo].[proc_load_w_cmms_wo_status_d]
+CREATE PROC [dbo].[CMMS_proc_load_w_spp_inve_d]
     @p_batch_id [bigint]
 AS
 BEGIN
-    DECLARE	@tgt_TableName nvarchar(200) = N'dbo.W_CMMS_WO_STATUS_D',
+    DECLARE	@tgt_TableName nvarchar(200) = N'dbo.W_CMMS_INVE_D',
 			@sql nvarchar(max),
 	        @column_name varchar(4000),
 	        @no_row bigint	,
@@ -82,34 +76,43 @@ BEGIN
 		-- 1. Check existence of (and remove) temp table
         PRINT '1. Check existence and remove of temp table'
 
-        IF OBJECT_ID(N'tempdb..#W_CMMS_WO_STATUS_D_tmp') IS NOT NULL 
+        IF OBJECT_ID(N'tempdb..#W_CMMS_INVE_D_tmp') IS NOT NULL 
         BEGIN
-            PRINT N'DELETE temporary table #W_CMMS_WO_STATUS_D_tmp'
-            DROP Table #W_CMMS_WO_STATUS_D_tmp
+            PRINT N'DELETE temporary table #W_CMMS_INVE_D_tmp'
+            DROP Table #W_CMMS_INVE_D_tmp
         END;
 
 
 		-- 2. Select everything into temp table
         PRINT '2. Select everything into temp table'
 
-		SELECT
-            CONVERT(nvarchar(20), WOSTATUSID)           AS ASSET_WID
-            , CONVERT(DATETIMEOFFSET, CHANGEDATE)       AS [DATE]
-            , CONVERT(nvarchar(30), PARENT)             AS WO_NUM
-            , CONVERT(nvarchar(10), [STATUS])           AS [STATUS]
+        SELECT
+            CONVERT(nvarchar(100), ISSUE_UNIT)          AS ISSUE_UNIT
+            , MIN_LEVEL                                 AS MIN_LEVEL
+            , MAX_LEVEL                                 AS MAX_LEVEL
+            , CONVERT(nvarchar(100), INVE_ID)           AS INVE_ID
+            , CONVERT(nvarchar(100), SITE_ID)           AS SITE_ID
+            , CONVERT(nvarchar(1000), STATUS_DESC)      AS STATUS_DESC
+            , CONVERT(nvarchar(100), ORDER_UNIT)        AS ORDER_UNIT
+            , CONVERT(nvarchar(100), ITEM_NUM)          AS ITEM_NUM
+            , ISNULL(
+                LAST_ISSUE_DATE, 
+                CONVERT(DATETIME2, LAST_ISSUE_DATE)
+            )                                           AS LAST_ISSUE_DATE
+            , CONVERT(nvarchar(100), [LOCATION])        AS [LOCATION]
 
-			, CONVERT(
-                nvarchar(100),
-                CONCAT(PARENT, '~', WOSTATUSID, '~', [STATUS])
+            , CONVERT(
+                nvarchar(100), 
+                INVE_ID
             )                                           AS W_INTEGRATION_ID
-			, 'N'                                       AS W_DELETE_FLG
-            , 'N' 							            AS W_UPDATE_FLG
+            , 'N'                                       AS W_DELETE_FLG
             , 8                                         AS W_DATASOURCE_NUM_ID
             , DATEADD(HH, 7, GETDATE())                 AS W_INSERT_DT
             , DATEADD(HH, 7, GETDATE())                 AS W_UPDATE_DT
-            , @p_batch_id                               AS W_BATCH_ID
-        INTO #W_CMMS_WO_STATUS_D_tmp
-        FROM [FND].[W_CMMS_WO_STATUS_D] F
+            , W_BATCH_ID                                AS W_BATCH_ID
+            , 'N'                                       AS W_UPDATE_FLG
+        INTO #W_CMMS_INVE_D_tmp
+        FROM [FND].[W_CMMS_INVE_D] AST
 
 
         -- 3. Update main table using W_INTEGRATION_ID
@@ -118,21 +121,27 @@ BEGIN
         -- 3.1. Mark existing records by flag 'Y'
         PRINT '3.1. Mark existing records by flag ''Y'''
 
-        UPDATE #W_CMMS_WO_STATUS_D_tmp
+        UPDATE #W_CMMS_INVE_D_tmp
 		SET W_UPDATE_FLG = 'Y'
-		FROM #W_CMMS_WO_STATUS_D_tmp tg
-        INNER JOIN [dbo].[W_CMMS_WO_STATUS_D] sc
+		FROM #W_CMMS_INVE_D_tmp tg
+        INNER JOIN [dbo].[W_CMMS_INVE_D] sc
         ON sc.W_INTEGRATION_ID = tg.W_INTEGRATION_ID
 
         -- 3.2. Start updating
         PRINT '3.2. Start updating'
 
-		UPDATE [dbo].[W_CMMS_WO_STATUS_D]
-		SET 
-            ASSET_WID = src.ASSET_WID
-			, [DATE] = src.[DATE]
-            , WO_NUM = src.WO_NUM
-            , [STATUS] = src.[STATUS]
+		UPDATE [dbo].[W_CMMS_INVE_D]
+		SET
+            ISSUE_UNIT = src.ISSUE_UNIT
+            , MIN_LEVEL = src.MIN_LEVEL
+            , MAX_LEVEL = src.MAX_LEVEL
+            , INVE_ID = src.INVE_ID
+            , SITE_ID = src.SITE_ID
+            , STATUS_DESC = src.STATUS_DESC
+            , ORDER_UNIT = src.ORDER_UNIT
+            , ITEM_NUM = src.ITEM_NUM
+            , LAST_ISSUE_DATE = src.LAST_ISSUE_DATE
+            , [LOCATION] = src.LOCATION
 
 			, W_DELETE_FLG = src.W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID = src.W_DATASOURCE_NUM_ID
@@ -140,18 +149,24 @@ BEGIN
 			, W_BATCH_ID = src.W_BATCH_ID
 			, W_INTEGRATION_ID = src.W_INTEGRATION_ID
 			, W_UPDATE_DT = DATEADD(HH, 7, GETDATE())
-        FROM [dbo].[W_CMMS_WO_STATUS_D] tgt
-        INNER JOIN #W_CMMS_WO_STATUS_D_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID
+        FROM [dbo].[W_CMMS_INVE_D] tgt
+        INNER JOIN #W_CMMS_INVE_D_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID
 
 
 	    -- 4. Insert non-existed records to main table from temp table
         PRINT '4. Insert non-existed records to main table from temp table'
 
-        INSERT INTO [dbo].[W_CMMS_WO_STATUS_D](
-            ASSET_WID
-            , [DATE]
-            , WO_NUM
-            , [STATUS]
+        INSERT INTO [dbo].[W_CMMS_INVE_D](
+            ISSUE_UNIT
+            , MIN_LEVEL
+            , MAX_LEVEL
+            , INVE_ID
+            , SITE_ID
+            , STATUS_DESC
+            , ORDER_UNIT
+            , ITEM_NUM
+            , LAST_ISSUE_DATE
+            , [LOCATION]
 
             , W_DELETE_FLG
             , W_DATASOURCE_NUM_ID
@@ -161,10 +176,16 @@ BEGIN
             , W_INTEGRATION_ID
         )
         SELECT
-            ASSET_WID
-            , [DATE]
-            , WO_NUM
-            , [STATUS]
+            ISSUE_UNIT
+            , MIN_LEVEL
+            , MAX_LEVEL
+            , INVE_ID
+            , SITE_ID
+            , STATUS_DESC
+            , ORDER_UNIT
+            , ITEM_NUM
+            , LAST_ISSUE_DATE
+            , [LOCATION]
 
             , W_DELETE_FLG
             , W_DATASOURCE_NUM_ID
@@ -172,19 +193,19 @@ BEGIN
             , W_UPDATE_DT
             , W_BATCH_ID
             , W_INTEGRATION_ID
-        FROM #W_CMMS_WO_STATUS_D_tmp
+        FROM #W_CMMS_INVE_D_tmp
         where W_UPDATE_FLG = 'N'		
 
 		/*delete & re-insert data refresh*/
 		DELETE FROM [dbo].[SAP_ETL_DATAFRESH_CONF] WHERE UPPER(TABLE_NAME) = UPPER(@tgt_TableName)
 
-		INSERT INTO [dbo].[SAP_ETL_DATAFRESH_CONF](
+		INSERT INTO [dbo].[SAP_ETL_DATAFRESH_CONF] (
             TABLE_NAME,
             REFRESH_DATE,
             IS_FULLLOAD,
             IS_EXIST_SSAS,
             LAST_UPDATE_DATE
-            )
+        )
         SELECT DISTINCT
             @tgt_TableName,
             NULL,
@@ -193,22 +214,21 @@ BEGIN
             DATEADD(HH, 7, GETDATE())
         FROM (
                 SELECT *
-            FROM W_CMMS_WO_STATUS_D
+            FROM W_CMMS_INVE_D
             ) M
         WHERE 1=1
             AND W_BATCH_ID = @p_batch_id
             AND W_DELETE_FLG = 'N'
 
             SET @src_rownum = ( SELECT COUNT(1)
-        FROM #W_CMMS_WO_STATUS_D_tmp );
+        FROM #W_CMMS_INVE_D_tmp );
             SET @tgt_rownum = ( 
                 SELECT
-            COUNT(DISTINCT W_INTEGRATION_ID)
-        FROM W_CMMS_WO_STATUS_D
-        WHERE 1=1
-            AND W_DELETE_FLG = 'N'
-            AND W_BATCH_ID = @p_batch_id
-            );
+                    COUNT(DISTINCT W_INTEGRATION_ID)
+                FROM W_CMMS_INVE_D
+                WHERE 1=1
+                    AND W_DELETE_FLG = 'N'
+                    AND W_BATCH_ID = @p_batch_id);
 
 	END TRY
 

@@ -19,7 +19,7 @@ CREATE TABLE [dbo].[W_CMMS_INVUL_D]
 	[DESCRIPTION] [nvarchar](200) NULL,
 	[TO_SITEID] [nvarchar](200) NULL,
 	[INVUSE_NUM] [nvarchar](200) NULL,
-	[ACTUALDATE] [nvarchar](50) NULL,
+	[ACTUALDATE] DATETIME2 NULL,
 	[RECEIVED_QTY] [real] NULL,
 	[ASSET_NUM] [nvarchar](200) NULL,
 	[COSTCENTER] [nvarchar](200) NULL,
@@ -42,8 +42,8 @@ CREATE TABLE [dbo].[W_CMMS_INVUL_D]
     [W_DELETE_FLG] VARCHAR(1) NULL,
     [W_DATASOURCE_NUM_ID] INT NULL,
     [W_INTEGRATION_ID] [nvarchar](300) NULL,
-    [W_INSERT_DT] [datetime] NULL,
-    [W_UPDATE_DT] [datetime] NULL,
+    [W_INSERT_DT] DATETIME2 NULL,
+    [W_UPDATE_DT] DATETIME2 NULL,
     [W_BATCH_ID] [bigint] NULL
 )
 WITH

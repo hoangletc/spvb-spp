@@ -1,6 +1,6 @@
 DECLARE @p_batch_id NVARCHAR(8) = '20230220';
 
-SELECT TOP 100
+SELECT
     FORMAT(CONVERT(DATE, CHANGEDATE), 'yyyyMMdd')   AS DATE_WID
     , ISNULL(PLANT.PLANT_WID, 0)                    AS PLANT_WID
     , ISNULL(LOC.LOC_WID, 0)                        AS LOCATION_WID
@@ -43,11 +43,25 @@ SELECT TOP 100
     , DATEADD(HH, 7, GETDATE())                     AS W_INSERT_DT
     , DATEADD(HH, 7, GETDATE())                     AS W_UPDATE_DT
     , @p_batch_id                                   AS W_BATCH_ID
--- INTO #W_CMMS_DOWNTIME_F_tmp
+INTO #W_CMMS_DOWNTIME_F_tmp
 FROM [FND].[W_CMMS_ASSET_STATUS_F] AS_ST
-    LEFT JOIN [dbo].[W_PLANT_SAP_D] PLANT ON 1=1
+    LEFT JOIN [dbo].[W_SAP_PLANT_EXTENDED_D] PLANT ON 1=1
         AND PLANT.PLANT_NAME_2 = LEFT(AS_ST.LOCATION, 3)
+        AND PLANT.STO_LOC = ''
     LEFT JOIN [dbo].[W_CMMS_LOC_D] LOC ON 1=1
         AND LOC.[LOCATION] = LEFT(AS_ST.[LOCATION], 7)
-    LEFT JOIN [dbo].[W_CMMS_ASSET_D] AST ON 1=1
-        AND AST.ASSET_NUM = AS_ST.ASSETNUM
+    OUTER APPLY (
+        SELECT TOP 1
+            ASSET_WID
+            , LINE_ASSET_NUM
+            , LINE_ASSET_DES
+            , [DESCRIPTION]
+        FROM [dbo].[W_CMMS_ASSET_D] AS AST_TMP
+        WHERE 1=1
+            AND AST_TMP.ASSET_NUM = AS_ST.ASSETNUM
+    ) AST
+;
+
+select top 10 * from #W_CMMS_DOWNTIME_F_tmp;
+
+-- DROP TABLE #W_CMMS_DOWNTIME_F_tmp;

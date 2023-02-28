@@ -3,13 +3,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-IF (OBJECT_ID('[dbo].[proc_load_w_cmms_loc_d]') is not null)
-BEGIN
-    DROP PROCEDURE [dbo].[proc_load_w_cmms_loc_d]
-END;
-GO
-
-CREATE PROC [dbo].[proc_load_w_cmms_loc_d]
+ALTER PROC [dbo].[CMMS_proc_load_w_spp_loc_d]
     @p_batch_id [bigint]
 AS
 BEGIN
@@ -93,27 +87,25 @@ BEGIN
         PRINT '2. Select everything into temp table'
 
 		SELECT
-            CONVERT(nvarchar(50), SPVB_WHC_GROUP)       AS SPVB_WHC_GROUP
-            , CONVERT(nvarchar(50), [DESCRIPTION])      AS [DESCRIPTION]
-            , CONVERT(nvarchar(50), [TYPE])             AS [TYPE]
-            , LOCATIONS_ID                              AS LOCATIONS_ID
-            , CONVERT(nvarchar(5), [SITE])              AS [SITE]
-            , CONVERT(nvarchar(50), TYPE_DESCRIPTION)   AS TYPE_DESCRIPTION
-            , CONVERT(nvarchar(50), STATUS_DESCRIPTION) AS STATUS_DESCRIPTION
-            , CONVERT(nvarchar(50), [LOCATION])         AS [LOCATION]
-            , CONVERT(nvarchar(50), [STATUS])           AS [STATUS]
+            CONVERT(nvarchar(1000), [DESCRIPTION])          AS [DESCRIPTION]
+            , CONVERT(nvarchar(50), [TYPE])                 AS [TYPE]
+            , LOCATIONS_ID                                  AS LOCATIONS_ID
+            , CONVERT(nvarchar(5), [SITE])                  AS [SITE]
+            , CONVERT(nvarchar(1000), TYPE_DESCRIPTION)     AS TYPE_DESCRIPTION
+            , CONVERT(nvarchar(100), STATUS_DESCRIPTION)    AS STATUS_DESCRIPTION
+            , CONVERT(nvarchar(50), [LOCATION])             AS [LOCATION]
+            , CONVERT(nvarchar(50), [STATUS])               AS [STATUS]
 
             , CONVERT(
                 nvarchar(100), 
-                CONCAT_WS('~', SPVB_WHC_GROUP, 
-                        LOCATIONS_ID, [TYPE])
-            )                                           AS W_INTEGRATION_ID
-            , 'N'                                       AS W_DELETE_FLG
-            , 1                                         AS W_DATASOURCE_NUM_ID
-            , GETDATE()                                 AS W_INSERT_DT
-            , GETDATE()                                 AS W_UPDATE_DT
-            , NULL                                      AS W_BATCH_ID
-            , 'N'                                       AS W_UPDATE_FLG
+                CONCAT(LOCATIONS_ID, '~', [TYPE])
+            )                                               AS W_INTEGRATION_ID
+            , 'N'                                           AS W_DELETE_FLG
+            , 'N' 							                AS W_UPDATE_FLG
+            , 8                                             AS W_DATASOURCE_NUM_ID
+            , DATEADD(HH, 7, GETDATE())                     AS W_INSERT_DT
+            , DATEADD(HH, 7, GETDATE())                     AS W_UPDATE_DT
+            , @p_batch_id                                   AS W_BATCH_ID
         INTO #W_CMMS_LOC_D_tmp
         FROM [FND].[W_CMMS_LOC_D]
 
@@ -134,8 +126,7 @@ BEGIN
 
 		UPDATE [dbo].[W_CMMS_LOC_D]
 		SET 
-			SPVB_WHC_GROUP = src.SPVB_WHC_GROUP
-            , [DESCRIPTION] = src.DESCRIPTION
+            [DESCRIPTION] = src.DESCRIPTION
             , [TYPE] = src.TYPE
             , LOCATIONS_ID = src.LOCATIONS_ID
             , [SITE] = src.SITE
@@ -149,7 +140,7 @@ BEGIN
 			, W_INSERT_DT = src.W_INSERT_DT
 			, W_BATCH_ID = src.W_BATCH_ID
 			, W_INTEGRATION_ID = src.W_INTEGRATION_ID
-			, W_UPDATE_DT = getdate()
+			, W_UPDATE_DT = DATEADD(HH, 7, GETDATE())
         FROM [dbo].[W_CMMS_LOC_D] tgt
         INNER JOIN #W_CMMS_LOC_D_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID
 
@@ -158,8 +149,7 @@ BEGIN
         PRINT '4. Insert non-existed records to main table from temp table'
 
         INSERT INTO [dbo].[W_CMMS_LOC_D] (
-            SPVB_WHC_GROUP
-            , [DESCRIPTION]
+            [DESCRIPTION]
             , [TYPE]
             , LOCATIONS_ID
             , [SITE]
@@ -176,8 +166,7 @@ BEGIN
             , W_INTEGRATION_ID
             )
         SELECT
-            SPVB_WHC_GROUP
-            , [DESCRIPTION]
+            [DESCRIPTION]
             , [TYPE]
             , LOCATIONS_ID
             , [SITE]

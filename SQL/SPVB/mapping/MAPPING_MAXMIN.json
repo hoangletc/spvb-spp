@@ -3,64 +3,55 @@
   "mappings": [
     {
       "source": {
-        "path": "$[''parent'']"
+        "path": "$[''MAX'']"
       },
       "sink": {
-        "name": "PARENT",
+        "name": "MAX",
+        "type": "Float"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''MIN'']"
+      },
+      "sink": {
+        "name": "MIN",
+        "type": "Float"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''Line'']"
+      },
+      "sink": {
+        "name": "LINE",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''glaccount'']"
+        "path": "$[''Machine'']"
       },
       "sink": {
-        "name": "GLACCOUNT",
+        "name": "MACHINE",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''wonum'']"
+        "path": "$[''Plant'']"
       },
       "sink": {
-        "name": "WONUM",
+        "name": "PLANT",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''changedate'']"
+        "path": "$[''Item Code'']"
       },
       "sink": {
-        "name": "CHANGEDATE",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''wostatusid'']"
-      },
-      "sink": {
-        "name": "WOSTATUSID",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''status'']"
-      },
-      "sink": {
-        "name": "STATUS",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''FILE_NAME'']"
-      },
-      "sink": {
-        "name": "FILE_NAME",
+        "name": "ITEM_NUM",
         "type": "String"
       }
     },
@@ -83,6 +74,6 @@
       }
     }
   ],
-  "collectionReference": "",
+  "collectionReference": "$[DATA][DETAIL]",
   "mapComplexValuesToString": true
 }

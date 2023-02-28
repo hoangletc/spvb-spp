@@ -147,19 +147,28 @@
     },
     {
       "source": {
-        "path": "$[''parent'']"
+        "path": "$[''line_asset_num'']"
       },
       "sink": {
-        "name": "PARENT",
+        "name": "LINE_ASSET_NUM",
         "type": "String"
       }
     },
     {
       "source": {
-        "path": "$[''grandparent'']"
+        "path": "$[''machine_asset_num'']"
       },
       "sink": {
-        "name": "GRANDPARENT",
+        "name": "MACHINE_ASSET_NUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''component_asset_num'']"
+      },
+      "sink": {
+        "name": "COMPONENT_ASSET_NUM",
         "type": "String"
       }
     },
@@ -174,11 +183,20 @@
     },
     {
       "source": {
+        "path": "$[''FILE_NAME'']"
+      },
+      "sink": {
+        "name": "FILE_NAME",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
         "path": "$[''W_BATCH_ID'']"
       },
       "sink": {
         "name": "W_BATCH_ID",
-        "type": "String"
+        "type": "Int64"
       }
     },
     {
@@ -191,6 +209,6 @@
       }
     }
   ],
-  "collectionReference": "$[DATA][DETAIL]",
+  "collectionReference": "",
   "mapComplexValuesToString": true
 }

@@ -8,7 +8,7 @@ CREATE TABLE [dbo].[W_CMMS_ASSET_D]
     [LOCATION_WID] INT NULL,
 
     [LINE_ASSET_NUM] [nvarchar](30) NULL,
-    [LINE_ASSET_DES] [nvarchar](100) NULL,
+    [LINE_ASSET_DES] [nvarchar](1000) NULL,
     [SPVB_COSTCENTER] [nvarchar](100) NULL,
     [CHANGE_DATE] [nvarchar](50) NULL,
     [SPVB_FIXEDASSETNUM] [nvarchar](100) NULL,
@@ -18,21 +18,21 @@ CREATE TABLE [dbo].[W_CMMS_ASSET_D]
     [TOTAL_DOWNTIME] [real] NULL,
     [ASSET_NUM] [nvarchar](30) NULL,
     [ASSET_TYPE] [nvarchar](100) NULL,
-    [SPVB_COSTCENTER_DESCRIPTION] [nvarchar](100) NULL,
+    [SPVB_COSTCENTER_DESCRIPTION] [nvarchar](1000) NULL,
     [INV_COST] [real] NULL,
-    [ISRUNNING] [nvarchar](5) NULL,
+    [IS_RUNNING] SMALLINT NULL,
     [LOCATION] [nvarchar](100) NULL,
     [SITE_ID] [nvarchar](100) NULL,
     [ASSET_HIERACHICAL_TYPE] [nvarchar](100) NULL,
-    [PARENT] [nvarchar](100) NULL,
-    [GRANDPARENT] [nvarchar](100) NULL,
-    [DESCRIPTION] [nvarchar](200) NULL,
+    [MACHINE_ASSET_NUM] [nvarchar](30) NULL,
+    [COMPONENT_ASSET_NUM] [nvarchar](30) NULL,
+    [DESCRIPTION] [nvarchar](1000) NULL,
 
     [W_DELETE_FLG] VARCHAR(1) NULL,
     [W_DATASOURCE_NUM_ID] INT NULL,
-    [W_INTEGRATION_ID] [nvarchar](300) NULL,
-    [W_INSERT_DT] [datetime] NULL,
-    [W_UPDATE_DT] [datetime] NULL,
+    [W_INTEGRATION_ID] [nvarchar](1000) NULL,
+    [W_INSERT_DT] DATETIME2 NULL,
+    [W_UPDATE_DT] DATETIME2 NULL,
     [W_BATCH_ID] [bigint] NULL
 )
 WITH
@@ -41,3 +41,9 @@ WITH
 	HEAP
 )
 GO
+
+alter table [dbo].[W_CMMS_ASSET_D]
+ALTER COLUMN LINE_ASSET_DES [nvarchar](1000);
+
+TRUNCATE TABLE [dbo].[W_CMMS_ASSET_D]
+SELECT COUNT(*) FROM [FND].[W_CMMS_ASSET_D]

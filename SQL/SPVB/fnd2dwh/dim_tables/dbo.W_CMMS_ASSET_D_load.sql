@@ -3,7 +3,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE PROC [dbo].[CMMS_proc_load_w_spp_asset_d]
+ALTER PROC [dbo].[CMMS_proc_load_w_spp_asset_d]
     @p_batch_id [bigint]
 AS
 BEGIN
@@ -86,65 +86,53 @@ BEGIN
 		-- 2. Select everything into temp table
         PRINT '2. Select everything into temp table'
 
-		;WITH TMP_ASSET_LINE_INFO AS (
-            -- NOTE: Nên để phần tìm Line info của mỗi asset vào Python script thay vì phải chạy lại mỗi lần query như vầy
-            select
-                T1.ASSET_NUM        AS ASSET_NUM
-                , T2.ASSET_NUM      AS LINE_ASSET_NUM
-                , T2.[DESCRIPTION]  AS LINE_ASSET_DESC
-            from [FND].[W_CMMS_ASSET_D] T1, [FND].[W_CMMS_ASSET_D] T2
-            where 1=1
-                AND T2.ASSET_NUM = CASE 
-                    WHEN T1.ASSET_HIERACHICAL_TYPE = 'machine' THEN T1.[PARENT]
-                    WHEN T1.ASSET_HIERACHICAL_TYPE = 'component' THEN T1.[GRANDPARENT]
-                    ELSE T1.[ASSET_NUM]
-                END
-        )
-            SELECT
-                ISNULL(LOC_X.LOC_WID, 0)                            AS LOCATION_WID
+		SELECT
+            ISNULL(LOC_X.LOC_WID, 0)                                    AS LOCATION_WID
 
-                , CASE 
-                    WHEN AST.ASSET_HIERACHICAL_TYPE = 'machine' THEN AST.[PARENT]
-                    WHEN AST.ASSET_HIERACHICAL_TYPE = 'component' THEN AST.[GRANDPARENT]
-                    ELSE AST.[ASSET_NUM] 
-                END                                                 AS LINE_ASSET_NUM
-                , TMP_ASST_L_INF.LINE_ASSET_DESC                    AS LINE_ASSET_DES
-                , CONVERT(nvarchar(50), SPVB_COSTCENTER)            AS SPVB_COSTCENTER
-                , CONVERT(nvarchar(50), CHANGE_DATE)                AS CHANGE_DATE
-                , CONVERT(nvarchar(50), SPVB_FIXEDASSETNUM)         AS SPVB_FIXEDASSETNUM
-                , CONVERT(nvarchar(50), TOTAL_COST)                 AS TOTAL_COST
-                , CONVERT(nvarchar(50), AST.[STATUS])               AS [STATUS]
-                , CONVERT(nvarchar(50), AST.[STATUS_DESCRIPTION])   AS STATUS_DESCRIPTION
-                , CONVERT(nvarchar(50), TOTAL_DOWNTIME)             AS TOTAL_DOWNTIME
-                , CONVERT(nvarchar(50), AST.ASSET_NUM)              AS ASSET_NUM
-                , CONVERT(nvarchar(50), ASSET_TYPE)                 AS ASSET_TYPE
-                , CONVERT(nvarchar(50), SPVB_COSTCENTER_DESCRIPTION) AS SPVB_COSTCENTER_DESCRIPTION
-                , INV_COST                                          AS INV_COST
-                , CONVERT(nvarchar(50), ISRUNNING)                  AS ISRUNNING
-                , CONVERT(nvarchar(50), AST.[LOCATION])             AS [LOCATION]
-                , CONVERT(nvarchar(50), SITE_ID)                    AS SITE_ID
-                , CONVERT(nvarchar(50), ASSET_HIERACHICAL_TYPE)     AS ASSET_HIERACHICAL_TYPE
-                , CONVERT(nvarchar(50), PARENT)                     AS PARENT
-                , CONVERT(nvarchar(50), GRANDPARENT)                AS GRANDPARENT
-                , CONVERT(nvarchar(100), AST.[DESCRIPTION])         AS [DESCRIPTION]
+            , CONVERT(nvarchar(50), AST.SPVB_COSTCENTER)                AS SPVB_COSTCENTER
+            , CONVERT(nvarchar(50), AST.CHANGE_DATE)                    AS CHANGE_DATE
+            , CONVERT(nvarchar(50), AST.SPVB_FIXEDASSETNUM)             AS SPVB_FIXEDASSETNUM
+            , CONVERT(nvarchar(50), AST.TOTAL_COST)                     AS TOTAL_COST
+            , CONVERT(nvarchar(50), AST.[STATUS])                       AS [STATUS]
+            , CONVERT(nvarchar(50), AST.[STATUS_DESCRIPTION])           AS STATUS_DESCRIPTION
+            , CONVERT(nvarchar(50), AST.TOTAL_DOWNTIME)                 AS TOTAL_DOWNTIME
+            , CONVERT(nvarchar(50), AST.ASSET_NUM)                      AS ASSET_NUM
+            , CONVERT(nvarchar(50), AST.ASSET_TYPE)                     AS ASSET_TYPE
+            , CONVERT(nvarchar(500), AST.SPVB_COSTCENTER_DESCRIPTION)   AS SPVB_COSTCENTER_DESCRIPTION
+            , CONVERT(DECIMAL(38, 20), AST.INV_COST)                    AS INV_COST
+            , CASE WHEN AST.ISRUNNING = 'True' THEN 1 ELSE 0 END        AS IS_RUNNING
+            , CONVERT(nvarchar(50), AST.[LOCATION])                     AS [LOCATION]
+            , CONVERT(nvarchar(50), AST.SITE_ID)                        AS SITE_ID
+            , CONVERT(nvarchar(50), AST.ASSET_HIERACHICAL_TYPE)         AS ASSET_HIERACHICAL_TYPE
+            , CONVERT(nvarchar(50), AST.LINE_ASSET_NUM)                 AS LINE_ASSET_NUM
+            , CONVERT(nvarchar(1000), AST2.[DESCRIPTION])               AS LINE_ASSET_DES
+            , CONVERT(nvarchar(50), AST.MACHINE_ASSET_NUM)              AS MACHINE_ASSET_NUM
+            , CONVERT(nvarchar(50), AST.COMPONENT_ASSET_NUM)            AS COMPONENT_ASSET_NUM
+            , CONVERT(nvarchar(1000), AST.[DESCRIPTION])                AS [DESCRIPTION]
 
-                , CONVERT(
-                    nvarchar(200), 
-                    CONCAT(ASSET_UID, '~', SPVB_COSTCENTER, '~',
-                            SPVB_FIXEDASSETNUM, '~', AST.[LOCATION])
-                )                                                   AS W_INTEGRATION_ID
-                , 'N'                                               AS W_DELETE_FLG
-                , 'N' 											    AS W_UPDATE_FLG
-                , 8                                                 AS W_DATASOURCE_NUM_ID
-                , DATEADD(HH, 7, GETDATE())                         AS W_INSERT_DT
-                , DATEADD(HH, 7, GETDATE())                         AS W_UPDATE_DT
-                , @p_batch_id                                       AS W_BATCH_ID
-            INTO #W_CMMS_ASSET_D_tmp
-            FROM [FND].[W_CMMS_ASSET_D] AST
-                LEFT JOIN [dbo].[W_CMMS_LOC_D] LOC_X ON 1=1
-                    AND LOC_X.[LOCATION] = LEFT(AST.[LOCATION], 7)
-                LEFT JOIN TMP_ASSET_LINE_INFO TMP_ASST_L_INF ON 1=1
-                    AND AST.ASSET_NUM = TMP_ASST_L_INF.ASSET_NUM
+            , CONVERT(
+                nvarchar(200), 
+                CONCAT(AST.ASSET_UID, '~', AST.SPVB_COSTCENTER, '~',
+                        AST.SPVB_FIXEDASSETNUM, '~', AST.[LOCATION])
+            )                                                           AS W_INTEGRATION_ID
+            , 'N'                                                       AS W_DELETE_FLG
+            , 'N' 											            AS W_UPDATE_FLG
+            , 8                                                         AS W_DATASOURCE_NUM_ID
+            , DATEADD(HH, 7, GETDATE())                                 AS W_INSERT_DT
+            , DATEADD(HH, 7, GETDATE())                                 AS W_UPDATE_DT
+            , @p_batch_id                                               AS W_BATCH_ID
+        INTO #W_CMMS_ASSET_D_tmp
+        FROM [FND].[W_CMMS_ASSET_D] AST
+            LEFT JOIN [dbo].[W_CMMS_LOC_D] LOC_X ON 1=1
+                AND LOC_X.[LOCATION] = LEFT(AST.[LOCATION], 7)
+            OUTER APPLY (
+                SELECT TOP 1 [DESCRIPTION] FROM [FND].[W_CMMS_ASSET_D] AS AST_TMP
+                WHERE 1=1
+                    AND AST_TMP.LINE_ASSET_NUM = AST.ASSET_NUM
+                    AND LEFT(AST_TMP.LOCATION, 3) = LEFT(AST.LOCATION, 3)
+            ) AST2 
+                
+        ;
 
 
         -- 3. Update main table using W_INTEGRATION_ID
@@ -178,12 +166,12 @@ BEGIN
             , ASSET_TYPE = src.ASSET_TYPE
             , SPVB_COSTCENTER_DESCRIPTION = src.SPVB_COSTCENTER_DESCRIPTION
             , INV_COST = src.INV_COST
-            , ISRUNNING = src.ISRUNNING
+            , IS_RUNNING = src.IS_RUNNING
             , [LOCATION] = src.LOCATION
             , SITE_ID = src.SITE_ID
             , ASSET_HIERACHICAL_TYPE = src.ASSET_HIERACHICAL_TYPE
-            , PARENT = src.PARENT
-            , GRANDPARENT = src.GRANDPARENT
+            , MACHINE_ASSET_NUM = src.MACHINE_ASSET_NUM
+            , COMPONENT_ASSET_NUM = src.COMPONENT_ASSET_NUM
             , [DESCRIPTION] = src.DESCRIPTION
 
 			, W_DELETE_FLG = src.W_DELETE_FLG
@@ -191,7 +179,7 @@ BEGIN
 			, W_INSERT_DT = src.W_INSERT_DT
 			, W_BATCH_ID = src.W_BATCH_ID
 			, W_INTEGRATION_ID = src.W_INTEGRATION_ID
-			, W_UPDATE_DT = getdate()
+			, W_UPDATE_DT = DATEADD(HH, 7, GETDATE())
         FROM [dbo].[W_CMMS_ASSET_D] tgt
         INNER JOIN #W_CMMS_ASSET_D_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID
 
@@ -214,12 +202,12 @@ BEGIN
             , ASSET_TYPE
             , SPVB_COSTCENTER_DESCRIPTION
             , INV_COST
-            , ISRUNNING
+            , IS_RUNNING
             , [LOCATION]
             , SITE_ID
             , ASSET_HIERACHICAL_TYPE
-            , PARENT
-            , GRANDPARENT
+            , MACHINE_ASSET_NUM
+            , COMPONENT_ASSET_NUM
             , [DESCRIPTION]
 
             , W_DELETE_FLG
@@ -244,12 +232,12 @@ BEGIN
             , ASSET_TYPE
             , SPVB_COSTCENTER_DESCRIPTION
             , INV_COST
-            , ISRUNNING
+            , IS_RUNNING
             , [LOCATION]
             , SITE_ID
             , ASSET_HIERACHICAL_TYPE
-            , PARENT
-            , GRANDPARENT
+            , MACHINE_ASSET_NUM
+            , COMPONENT_ASSET_NUM
             , [DESCRIPTION]
 
             , W_DELETE_FLG

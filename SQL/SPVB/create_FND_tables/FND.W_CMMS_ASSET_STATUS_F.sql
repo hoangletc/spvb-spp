@@ -1,0 +1,34 @@
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [FND].[W_CMMS_ASSET_STATUS_F]
+(
+	[CODE] [nvarchar](50) NULL,
+	[CODE_DESCRIPTION] [nvarchar](1000) NULL,
+	[CHANGEDATE] DATETIME2 NULL,
+	[DOWNTIME] [nvarchar](50) NULL,
+	[ISRUNNING] [nvarchar](50) NULL,
+	[ASSETSTATUSID] [nvarchar](50) NULL,
+	[LOCATION] [nvarchar](50) NULL,
+	[ASSETNUM] [nvarchar](50) NULL,
+	[OPERATIONAL] [nvarchar](50) NULL,
+	[WONUM] [nvarchar](50) NULL,
+	[SPVB_ISSUE] [nvarchar](1000) NULL,
+	[SPVB_CA] [nvarchar](500) NULL,
+	[SPVB_PA] [nvarchar](100) NULL,
+	[REMARKS] [nvarchar](50) NULL,
+
+	[FILE_NAME] [nvarchar](500) NULL,
+	[W_BATCH_ID] [bigint] NULL,
+	[W_INSERT_DT] DATETIME2 NULL
+)
+WITH
+(
+	DISTRIBUTION = ROUND_ROBIN,
+	HEAP
+)
+GO
+
+ALTER TABLE [FND].[W_CMMS_ASSET_STATUS_F]
+ALTER COLUMN [SPVB_CA] [nvarchar](500);

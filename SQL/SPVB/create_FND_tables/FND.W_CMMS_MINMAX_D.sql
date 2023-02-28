@@ -1,0 +1,22 @@
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [FND].[W_CMMS_MINMAX_D]
+(
+	[MAX] [real] NULL,
+	[MIN] [real] NULL,
+	[LINE] [nvarchar](30) NULL,
+	[MACHINE] [nvarchar](30) NULL,
+	[PLANT] [nvarchar](20) NULL,
+	[ITEM_NUM] [nvarchar](20) NULL,
+
+    [W_BATCH_ID] [bigint] NULL,
+	[W_INSERT_DT] DATETIME NULL
+)
+WITH
+(
+	DISTRIBUTION = ROUND_ROBIN,
+	HEAP
+)
+GO

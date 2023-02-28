@@ -3,13 +3,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-IF (OBJECT_ID('[dbo].[proc_load_w_cmms_transaction_f]') is not null)
-BEGIN
-    DROP PROCEDURE [dbo].[proc_load_w_cmms_transaction_f]
-END;
-GO
-
-CREATE PROC [dbo].[proc_load_w_cmms_transaction_f]
+CREATE PROC [dbo].[CMMS_proc_load_w_transaction_f]
     @p_batch_id [bigint]
 AS 
 BEGIN
@@ -92,11 +86,10 @@ BEGIN
 		-- 2. Select everything into temp table
         PRINT '2. Select everything into temp table'
 
-		;WITH
-		TMP_WO_X AS (
+		;WITH TMP_WO_X AS (
 			SELECT
 				WO.*
-				, CASE WHEN WO.IS_SCHED = 'False'
+				, CASE WHEN WO.IS_SCHED = 0
 					THEN WO.DATE_FINISHED_BFR
 					ELSE WO.DATE_FINISHED_AFT
 				END                                 	AS ACTUAL_FINISH
@@ -111,14 +104,15 @@ BEGIN
 
 				, CONVERT(
 					NVARCHAR(100), 
-					CONCAT_WS('~', ASSET, ITEM_NO, PONUM, MRNUM, BINNUM)
+					CONCAT(ASSET, '~', ITEM_NO, '~', PONUM,
+							'~', MRNUM, '~', BINNUM)
 				)                                           AS W_INTEGRATION_ID
 				, 'N'                                       AS W_DELETE_FLG
 				, 'N' 										AS W_UPDATE_FLG
-				, 1                                         AS W_DATASOURCE_NUM_ID
-				, GETDATE()                                 AS W_INSERT_DT
-				, GETDATE()                                 AS W_UPDATE_DT
-				, NULL                                      AS W_BATCH_ID
+				, 8                                         AS W_DATASOURCE_NUM_ID
+				, DATEADD(HH, 7, GETDATE())                 AS W_INSERT_DT
+				, DATEADD(HH, 7, GETDATE())                 AS W_UPDATE_DT
+				, @p_batch_id                               AS W_BATCH_ID
 			INTO #W_CMMS_TRANSACTION_F_tmp
 			FROM (
 				SELECT
@@ -182,25 +176,21 @@ BEGIN
 
 				FROM FND.W_CMMS_MATU_F MATU
 					LEFT JOIN [dbo].[W_CMMS_INVU_D] INVU ON 1=1
-						AND INVU.MATU_ID = MATU.MATU_ID
-						AND INVU.ASSET_NUM = MATU.ASSET_NUM
-						AND INVU.ITEM_NUM = MATU.ITEM_NUM
+						AND INVU.INVU_ID = MATU.INVUSE_ID
 					LEFT JOIN [dbo].[W_CMMS_LOC_D] LOC ON 1=1
 						AND LOC.[LOCATION] = MATU.STORELOC
 					LEFT JOIN [dbo].[W_CMMS_ITEM_D] IT ON 1=1
 						AND IT.ITEM_NUM = MATU.ITEM_NUM
 					LEFT JOIN [dbo].[W_CMMS_INVUL_D] INVUL ON 1=1
-						AND INVU.MATU_ID = MATU.MATU_ID
-						AND INVU.ASSET_NUM = MATU.ASSET_NUM
-						AND INVU.ITEM_NUM = MATU.ITEM_NUM
+						AND INVUL.INVUSELINE_ID = MATU.INVUSELINE_ID
 					LEFT JOIN [dbo].[W_CMMS_ASSET_D] AST ON 1=1
 						AND AST.ASSET_NUM = MATU.ASSET_NUM
 					LEFT JOIN [TMP_WO_X] ON 1=1
 						AND TMP_WO_X.WORK_ORDERS = MATU.REFWO
+						AND TMP_WO_X.ASSET_NUM = MATU.ASSET_NUM
 
 				UNION ALL
 
-				
 				SELECT
 					LOC.LOC_WID                             AS LOC_WID
 					, AST.ASSET_WID                         AS ASSET_WID
@@ -270,18 +260,17 @@ BEGIN
 					, INVUL.SPVB_WONUMREF                   AS RET_WONUM
 
 				FROM FND.W_CMMS_MATR_F MATR
-					LEFT JOIN [dbo].[W_CMMS_INVU_D] INVU ON 1=1
-						AND INVU.ASSET_NUM = MATR.ASSET_NUM
-						AND INVU.ITEM_NUM = MATR.ITEM_NUM
+				LEFT JOIN [dbo].[W_CMMS_INVU_D] INVU ON 1=1
+						AND INVU.INVU_ID = MATR.INVU_ID
 					LEFT JOIN [dbo].[W_CMMS_ITEM_D] IT ON 1=1
 						AND IT.ITEM_NUM = MATR.ITEM_NUM
 					LEFT JOIN [dbo].[W_CMMS_INVUL_D] INVUL ON 1=1
-						AND INVUL.ASSET_NUM = MATR.ASSET_NUM
-						AND INVUL.ITEM_NUM = MATR.ITEM_NUM
+						AND INVUL.INVUSELINE_NUM = MATR.INVUSELINEID
 					LEFT JOIN [dbo].[W_CMMS_ASSET_D] AST ON 1=1
 						AND AST.ASSET_NUM = MATR.ASSET_NUM
 					LEFT JOIN [TMP_WO_X] ON 1=1
 						AND TMP_WO_X.WORK_ORDERS = MATR.REFWO
+						AND TMP_WO_X.ASSETNUM = MATR.ASSETNUM
 					LEFT JOIN [dbo].[W_CMMS_LOC_D] LOC ON 1=1
 						AND LOC.[LOCATION] = MATR.TO_STORELOC
 
@@ -291,7 +280,8 @@ BEGIN
 					LOC.LOC_WID                             AS LOC_WID
 					, NULL                                  AS ASSET_WID
 					, NULL                                  AS INVU_WID
-					, INVUL.INVUL_WID                       AS INVUL_WID
+					-- , INVUL.INVUL_WID                       AS INVUL_WID
+					, NULL                                  AS INVUL_WID
 					, IT.ITEM_WID                           AS ITEM_WID
 					, NULL                                  AS WO_WID
 					, FORMAT(
@@ -311,10 +301,11 @@ BEGIN
 					, NULL                                  AS TRANSACTION_UOM
 					, INVT.BIN_NUM                          AS BINNUM
 					, NULL                                  AS OVERHAUL
-					, CASE WHEN INVUL.SPVB_MUSTRETURN_ORG = 1
-						THEN 'Y'
-						ELSE 'N'
-					END                                     AS MUST_RETURN_ORIGINAL
+					-- , CASE WHEN INVUL.SPVB_MUSTRETURN_ORG = 1
+					--     THEN 'Y'
+					--     ELSE 'N'
+					-- END                                     AS MUST_RETURN_ORIGINAL
+					, NULL                                  AS MUST_RETURN_ORIGINAL
 					, NULL                                  AS MUST_RETURN_USER_INPUT
 					, NULL                                  AS MUST_RETURN_REMARK
 					, 0                                     AS PRICE
@@ -340,8 +331,8 @@ BEGIN
 						AND LOC.[LOCATION] = INVT.STORELOC
 					LEFT JOIN [dbo].[W_CMMS_ITEM_D] IT ON 1=1
 						AND IT.ITEM_NUM = INVT.ITEM_NUM
-					LEFT JOIN [dbo].[W_CMMS_INVUL_D] INVUL ON 1=1
-						AND INVUL.ITEM_NUM = INVT.ITEM_NUM
+					-- LEFT JOIN [dbo].[W_CMMS_INVUL_D] INVUL ON 1=1
+					--     AND INVUL.INVUSELINE_ID = INVT.
 
 				UNION ALL
 
@@ -399,6 +390,7 @@ BEGIN
 				FROM [FND].[W_CMMS_SERV_F] SERV
 					LEFT JOIN [TMP_WO_X] ON 1=1
 						AND TMP_WO_X.WORK_ORDERS = SERV.REFWO
+						AND TMP_WO_X.ASSETNUM = SERV.ASSET_NUM
 					LEFT JOIN [dbo].[W_CMMS_ASSET_D] AST ON 1=1
 						AND AST.ASSET_NUM = SERV.ASSET_NUM
 		) TRANS
@@ -467,7 +459,7 @@ BEGIN
 			, W_INSERT_DT = src.W_INSERT_DT
 			, W_BATCH_ID = src.W_BATCH_ID
 			, W_INTEGRATION_ID = src.W_INTEGRATION_ID
-			, W_UPDATE_DT = getdate()
+			, W_UPDATE_DT = DATEADD(HH, 7, GETDATE())
 		FROM [dbo].[W_CMMS_TRANSACTION_F] tgt
 		INNER JOIN #W_CMMS_TRANSACTION_F_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID
 

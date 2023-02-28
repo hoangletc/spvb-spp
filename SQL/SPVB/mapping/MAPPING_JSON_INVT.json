@@ -3,10 +3,10 @@
   "mappings": [
     {
       "source": {
-        "path": "$[''actualdate'']"
+        "path": "$[''transdate'']"
       },
       "sink": {
-        "name": "ACTUALDATE",
+        "name": "TRANSDATE",
         "type": "String"
       }
     },
@@ -111,15 +111,6 @@
     },
     {
       "source": {
-        "path": "$[''transdate'']"
-      },
-      "sink": {
-        "name": "TRANSDATE",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
         "path": "$[''transtype'']"
       },
       "sink": {
@@ -133,6 +124,15 @@
       },
       "sink": {
         "name": "TRANSTYPE_DESCRIPTION",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''FILE_NAME'']"
+      },
+      "sink": {
+        "name": "FILE_NAME",
         "type": "String"
       }
     },
@@ -155,6 +155,6 @@
       }
     }
   ],
-  "collectionReference": "$[DATA][DETAIL]",
+  "collectionReference": "",
   "mapComplexValuesToString": true
 }

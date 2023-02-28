@@ -16,8 +16,9 @@
     "location",
     "siteid",
     "asset_hierachical_type",
-    "parent",
-    "grandparent",
+    "line_asset_num",
+    "machine_asset_num",
+    "component_asset_num",
     "description"
   ],
   "asset_status": [
@@ -102,6 +103,7 @@
     "fromsiteid",
     "fromstoreloc",
     "invuselineid",
+    "invuseid",
     "issue",
     "issuetype",
     "issueunit",
@@ -243,9 +245,15 @@
     "actualdate"
   ],
   "asset_ancestor": ["ancestor", "hierarchylevels", "assetancestorid"],
-  "work_order_status": ["parent", "changedate", "wostatusid", "status"],
+  "work_order_status": [
+    "parent",
+    "changedate",
+    "wostatusid",
+    "status",
+    "wonum"
+  ],
   "inventory_trans": [
-    "actualdate",
+    "transdate",
     "binnum",
     "curbal",
     "externalrefid",
@@ -257,14 +265,13 @@
     "quantity",
     "siteid",
     "storeloc",
-    "transdate",
-    "transtype",
     "transtype_description"
   ],
   "inventory_cost": ["avgcost", "invcostid", "stdcost", "lastcost"],
   "inventory": [
     "issueunit",
     "minlevel",
+    "spvb_maxlevel",
     "inventoryid",
     "siteid",
     "status_description",

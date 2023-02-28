@@ -3,13 +3,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-IF (OBJECT_ID('[dbo].[proc_load_w_cmms_invu_d]') is not null)
-BEGIN
-    DROP PROCEDURE [dbo].[proc_load_w_cmms_invu_d]
-END;
-GO
-
-CREATE PROC [dbo].[proc_load_w_cmms_invu_d]
+CREATE PROC [dbo].[CMMS_proc_load_w_spp_invu_d]
     @p_batch_id [bigint]
 AS
 BEGIN
@@ -93,33 +87,34 @@ BEGIN
         PRINT '2. Select everything into temp table'
 
         SELECT
-            CONVERT(nvarchar(100), [DESCRIPTION])           AS [DESCRIPTION]
-            , CONVERT(nvarchar(50), CURRENCY_CODE)          AS CURRENCY_CODE
-            , CONVERT(nvarchar(50), INVUSE_NUM)             AS INVUSE_NUM
-            , CONVERT(nvarchar(50), INV_OWNER)              AS INV_OWNER
+            CONVERT(nvarchar(200), [DESCRIPTION])           AS [DESCRIPTION]
+            , CONVERT(nvarchar(200), CURRENCY_CODE)         AS CURRENCY_CODE
+            , CONVERT(nvarchar(200), INVUSE_NUM)            AS INVUSE_NUM
+            , CONVERT(nvarchar(200), INV_OWNER)             AS INV_OWNER
             , INVU_ID                                       AS INVU_ID
-            , CONVERT(nvarchar(50), FROM_STORELOC)          AS FROM_STORELOC
-            , CONVERT(nvarchar(50), STATUS_DESCRIPTION)     AS STATUS_DESCRIPTION
-            , CONVERT(nvarchar(50), CHANGEDATE)             AS CHANGEDATE
-            , CONVERT(nvarchar(50), USETYPE_DESCRIPTION)    AS USETYPE_DESCRIPTION
-            , CONVERT(nvarchar(50), EXCHANGEDATE)           AS EXCHANGEDATE
-            , CONVERT(nvarchar(50), RECEIPTS_DESCRIPTION)   AS RECEIPTS_DESCRIPTION
-            , CONVERT(nvarchar(50), RECEIPTS)               AS RECEIPTS
-            , CONVERT(nvarchar(50), SPVB_INTERNAL)          AS SPVB_INTERNAL
-            , CONVERT(nvarchar(50), USETYPE)                AS USETYPE
-            , CONVERT(nvarchar(50), [STATUS])               AS [STATUS]
-            , CONVERT(nvarchar(50), ITEM_NUM)               AS ITEM_NUM
-            , CONVERT(nvarchar(50), ASSET_NUM)              AS ASSET_NUM
+            , CONVERT(nvarchar(200), FROM_STORELOC)         AS FROM_STORELOC
+            , CONVERT(nvarchar(200), STATUS_DESCRIPTION)    AS STATUS_DESCRIPTION
+            , CONVERT(DATETIME2, CHANGEDATE)                AS CHANGEDATE
+            , CONVERT(nvarchar(200), USETYPE_DESCRIPTION)   AS USETYPE_DESCRIPTION
+            , CONVERT(DATETIME2, EXCHANGEDATE)              AS EXCHANGEDATE
+            , CONVERT(nvarchar(200), RECEIPTS_DESCRIPTION)  AS RECEIPTS_DESCRIPTION
+            , CONVERT(nvarchar(200), RECEIPTS)              AS RECEIPTS
+            , CONVERT(nvarchar(200), SPVB_INTERNAL)         AS SPVB_INTERNAL
+            , CONVERT(nvarchar(200), USETYPE)               AS USETYPE
+            , CONVERT(nvarchar(200), [STATUS])              AS [STATUS]
+            , CONVERT(nvarchar(200), ITEM_NUM)              AS ITEM_NUM
+            , CONVERT(nvarchar(200), ASSET_NUM)             AS ASSET_NUM
             , MATU_ID                                       AS MATU_ID
 
             , CONVERT(
                 nvarchar(200), 
-                CONCAT_WS('~', INVU_ID, MATU_ID, ASSET_NUM, ITEM_NUM)
+                CONCAT(INVU_ID, '~', MATU_ID, '~',
+                        ASSET_NUM, '~', ITEM_NUM)
             )                                               AS W_INTEGRATION_ID
             , 'N'                                           AS W_DELETE_FLG
-            , 1                                             AS W_DATASOURCE_NUM_ID
-            , GETDATE()                                     AS W_INSERT_DT
-            , GETDATE()                                     AS W_UPDATE_DT
+            , 8                                             AS W_DATASOURCE_NUM_ID
+            , DATEADD(HH, 7, GETDATE())                     AS W_INSERT_DT
+            , DATEADD(HH, 7, GETDATE())                     AS W_UPDATE_DT
             , W_BATCH_ID                                    AS W_BATCH_ID
             , 'N'                                           AS W_UPDATE_FLG
         INTO #W_CMMS_INVU_D_tmp
@@ -167,7 +162,7 @@ BEGIN
 			, W_INSERT_DT = src.W_INSERT_DT
 			, W_BATCH_ID = src.W_BATCH_ID
 			, W_INTEGRATION_ID = src.W_INTEGRATION_ID
-			, W_UPDATE_DT = getdate()
+			, W_UPDATE_DT = DATEADD(HH, 7, GETDATE())
         FROM [dbo].[W_CMMS_INVU_D] tgt
         INNER JOIN #W_CMMS_INVU_D_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID
 

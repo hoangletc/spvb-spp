@@ -2,6 +2,7 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
+
 CREATE TABLE [FND].[W_CMMS_MATU_F]
 (
 	[INVUSELINE] [nvarchar](100) NULL,
@@ -12,7 +13,7 @@ CREATE TABLE [FND].[W_CMMS_MATU_F]
 	[QTY_REQUESTED] [real] NULL,
 	[REFWO] [nvarchar](100) NULL,
 	[STORELOC] [nvarchar](100) NULL,
-	[DESCRIPTION] [nvarchar](250) NULL,
+	[DESCRIPTION] [nvarchar](1000) NULL,
 	[LINECOST] [real] NULL,
 	[BINNUM] [nvarchar](100) NULL,
 	[CURRENCY_CODE] [nvarchar](100) NULL,
@@ -23,8 +24,8 @@ CREATE TABLE [FND].[W_CMMS_MATU_F]
 	[MRNUM] [nvarchar](100) NULL,
 	[ACTUAL_COST] [real] NULL,
 	[EXCHANGERATE] [real] NULL,
-	[TRANSDATE] [nvarchar](100) NULL,
-	[ACTUALDATE] [nvarchar](100) NULL,
+	[TRANSDATE] datetime2 NULL,
+	[ACTUALDATE] datetime2 NULL,
 	[ASSET_NUM] [nvarchar](100) NULL,
 	[TO_SITEID] [nvarchar](100) NULL,
 	[ISSUE_TYPE] [nvarchar](100) NULL,
@@ -32,9 +33,9 @@ CREATE TABLE [FND].[W_CMMS_MATU_F]
 	[QUANTITY] [real] NULL,
 	[INVUSELINE_ID] [nvarchar](100) NULL,
 	[MATU_ID] [bigint] NULL,
-
+	[FILE_NAME] [nvarchar](100) NULL,
 	[W_BATCH_ID] [bigint] NULL,
-	[W_INSERT_DT] DATETIME NULL
+	[W_INSERT_DT] [datetime2] NULL
 )
 WITH
 (

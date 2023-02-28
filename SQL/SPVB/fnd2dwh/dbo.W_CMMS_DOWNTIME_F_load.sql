@@ -2,10 +2,7 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-
-CREATE PROC [dbo].[CMMS_proc_load_w_spp_downtime_f]
-    @p_batch_id [bigint]
-AS 
+CREATE PROC [dbo].[CMMS_proc_load_w_spp_downtime_f] @p_batch_id [bigint] AS 
 BEGIN
     DECLARE	@tgt_TableName nvarchar(200) = N'dbo.W_CMMS_DOWNTIME_F',
 			@sql nvarchar(max),
@@ -87,10 +84,7 @@ BEGIN
         PRINT '2. Select everything into temp table'
 
 		SELECT
-			FORMAT(
-				CONVERT(DATETIME2, CHANGEDATE), 
-				'yyyyMMdd'
-			)  												AS DATE_WID
+			FORMAT(CONVERT(DATE, CHANGEDATE), 'yyyyMMdd')   AS DATE_WID
 			, ISNULL(PLANT.PLANT_WID, 0)                    AS PLANT_WID
 			, ISNULL(LOC.LOC_WID, 0)                        AS LOCATION_WID
 			, ISNULL(AST.ASSET_WID, 0)                      AS ASSET_WID
@@ -134,112 +128,121 @@ BEGIN
 			, @p_batch_id                                   AS W_BATCH_ID
 		INTO #W_CMMS_DOWNTIME_F_tmp
 		FROM [FND].[W_CMMS_ASSET_STATUS_F] AS_ST
-			LEFT JOIN [dbo].[W_PLANT_SAP_D] PLANT ON 1=1
+			LEFT JOIN [dbo].[W_SAP_PLANT_EXTENDED_D] PLANT ON 1=1
 				AND PLANT.PLANT_NAME_2 = LEFT(AS_ST.LOCATION, 3)
+				AND PLANT.STO_LOC = ''
 			LEFT JOIN [dbo].[W_CMMS_LOC_D] LOC ON 1=1
 				AND LOC.[LOCATION] = LEFT(AS_ST.[LOCATION], 7)
-			LEFT JOIN [dbo].[W_CMMS_ASSET_D] AST ON 1=1
-				AND AST.ASSET_NUM = AS_ST.ASSETNUM
+			OUTER APPLY (
+				SELECT TOP 1
+					ASSET_WID
+					, LINE_ASSET_NUM
+					, LINE_ASSET_DES
+					, [DESCRIPTION]
+				FROM [dbo].[W_CMMS_ASSET_D] AS AST_TMP
+				WHERE 1=1
+					AND AST_TMP.ASSET_NUM = AS_ST.ASSETNUM
+			) AST
+		;
 
 
+		-- 3. Update main table using W_INTEGRATION_ID
+		PRINT '3. Update main table using W_INTEGRATION_ID'
 
-			-- 3. Update main table using W_INTEGRATION_ID
-			PRINT '3. Update main table using W_INTEGRATION_ID'
+		-- 3.1. Mark existing records by flag 'Y'
+		PRINT '3.1. Mark existing records by flag ''Y'''
 
-			-- 3.1. Mark existing records by flag 'Y'
-			PRINT '3.1. Mark existing records by flag ''Y'''
+		UPDATE #W_CMMS_DOWNTIME_F_tmp
+		SET W_UPDATE_FLG = 'Y'
+		FROM #W_CMMS_DOWNTIME_F_tmp tg
+		INNER JOIN [dbo].[W_CMMS_DOWNTIME_F] sc 
+		ON sc.W_INTEGRATION_ID = tg.W_INTEGRATION_ID
 
-			UPDATE #W_CMMS_DOWNTIME_F_tmp
-			SET W_UPDATE_FLG = 'Y'
-			FROM #W_CMMS_DOWNTIME_F_tmp tg
-			INNER JOIN [dbo].[W_CMMS_DOWNTIME_F] sc 
-			ON sc.W_INTEGRATION_ID = tg.W_INTEGRATION_ID
+		-- 3.2. Start updating
+		PRINT '3.2. Start updating'
 
-			-- 3.2. Start updating
-			PRINT '3.2. Start updating'
+		UPDATE  [dbo].[W_CMMS_DOWNTIME_F]
+		SET 
+			DATE_WID = src.DATE_WID
+			, PLANT_WID = src.PLANT_WID
+			, LOCATION_WID = src.LOCATION_WID
+			, ASSET_WID = src.ASSET_WID
 
-			UPDATE  [dbo].[W_CMMS_DOWNTIME_F]
-			SET 
-				DATE_WID = src.DATE_WID
-				, PLANT_WID = src.PLANT_WID
-				, LOCATION_WID = src.LOCATION_WID
-				, ASSET_WID = src.ASSET_WID
+			, LINE_ASSET_NUM = src.LINE_ASSET_NUM
+			, LINE_ASSET_DESCRIPTION = src.LINE_ASSET_DESC
+			, ASSET_NUM = src.ASSET_NUM
+			, DOWNTIME = src.DOWNTIME
+			, [NAME] = src.NAME
+			, ANALYSIS_1 = src.ANALYSIS_1
+			, ANALYSIS_2 = src.ANALYSIS_2
+			, ANALYSIS_3 = src.ANALYSIS_3
+			, DOWNTIME_CODE = src.DOWNTIME_CODE
+			, ISSUE = src.ISSUE
 
-				, LINE_ASSET_NUM = src.LINE_ASSET_NUM
-				, LINE_ASSET_DESCRIPTION = src.LINE_ASSET_DESC
-				, ASSET_NUM = src.ASSET_NUM
-				, DOWNTIME = src.DOWNTIME
-				, [NAME] = src.NAME
-				, ANALYSIS_1 = src.ANALYSIS_1
-				, ANALYSIS_2 = src.ANALYSIS_2
-				, ANALYSIS_3 = src.ANALYSIS_3
-				, DOWNTIME_CODE = src.DOWNTIME_CODE
-				, ISSUE = src.ISSUE
-
-				, W_DELETE_FLG = src.W_DELETE_FLG
-				, W_DATASOURCE_NUM_ID = src.W_DATASOURCE_NUM_ID
-				, W_INSERT_DT = src.W_INSERT_DT
-				, W_BATCH_ID = src.W_BATCH_ID
-				, W_INTEGRATION_ID = src.W_INTEGRATION_ID
-				, W_UPDATE_DT = DATEADD(HH, 7, GETDATE())
-			FROM [dbo].[W_CMMS_DOWNTIME_F] tgt
-			INNER JOIN #W_CMMS_DOWNTIME_F_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID
+			, W_DELETE_FLG = src.W_DELETE_FLG
+			, W_DATASOURCE_NUM_ID = src.W_DATASOURCE_NUM_ID
+			, W_INSERT_DT = src.W_INSERT_DT
+			, W_BATCH_ID = src.W_BATCH_ID
+			, W_INTEGRATION_ID = src.W_INTEGRATION_ID
+			, W_UPDATE_DT = DATEADD(HH, 7, GETDATE())
+		FROM [dbo].[W_CMMS_DOWNTIME_F] tgt
+		INNER JOIN #W_CMMS_DOWNTIME_F_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID
 
 
-			-- 4. Insert non-existed records to main table from temp table
-			PRINT '4. Insert non-existed records to main table from temp table'
+		-- 4. Insert non-existed records to main table from temp table
+		PRINT '4. Insert non-existed records to main table from temp table'
 
-			INSERT INTO [dbo].[W_CMMS_DOWNTIME_F](
-				DATE_WID
-				, PLANT_WID
-				, LOCATION_WID
-				, ASSET_WID
+		INSERT INTO [dbo].[W_CMMS_DOWNTIME_F](
+			DATE_WID
+			, PLANT_WID
+			, LOCATION_WID
+			, ASSET_WID
 
-				, LINE_ASSET_NUM
-				, LINE_ASSET_DESCRIPTION
-				, ASSET_NUM
-				, DOWNTIME
-				, [NAME]
-				, ANALYSIS_1
-				, ANALYSIS_2
-				, ANALYSIS_3
-				, DOWNTIME_CODE
-				, ISSUE
+			, LINE_ASSET_NUM
+			, LINE_ASSET_DESCRIPTION
+			, ASSET_NUM
+			, DOWNTIME
+			, [NAME]
+			, ANALYSIS_1
+			, ANALYSIS_2
+			, ANALYSIS_3
+			, DOWNTIME_CODE
+			, ISSUE
 
-				, W_DELETE_FLG
-				, W_DATASOURCE_NUM_ID
-				, W_INSERT_DT
-				, W_UPDATE_DT
-				, W_BATCH_ID
-				, W_INTEGRATION_ID
-			)
-			SELECT
-				DATE_WID
-				, PLANT_WID
-				, LOCATION_WID
-				, ASSET_WID
+			, W_DELETE_FLG
+			, W_DATASOURCE_NUM_ID
+			, W_INSERT_DT
+			, W_UPDATE_DT
+			, W_BATCH_ID
+			, W_INTEGRATION_ID
+		)
+		SELECT
+			DATE_WID
+			, PLANT_WID
+			, LOCATION_WID
+			, ASSET_WID
 
-				, LINE_ASSET_NUM
-				, LINE_ASSET_DESC
-				, ASSET_NUM
-				, DOWNTIME
-				, [NAME]
-				, ANALYSIS_1
-				, ANALYSIS_2
-				, ANALYSIS_3
-				, DOWNTIME_CODE
-				, ISSUE
+			, LINE_ASSET_NUM
+			, LINE_ASSET_DESC
+			, ASSET_NUM
+			, DOWNTIME
+			, [NAME]
+			, ANALYSIS_1
+			, ANALYSIS_2
+			, ANALYSIS_3
+			, DOWNTIME_CODE
+			, ISSUE
 
-				, W_DELETE_FLG
-				, W_DATASOURCE_NUM_ID
-				, W_INSERT_DT
-				, W_UPDATE_DT
-				, W_BATCH_ID
-				, W_INTEGRATION_ID
-			FROM #W_CMMS_DOWNTIME_F_tmp
-			where W_UPDATE_FLG = 'N'
+			, W_DELETE_FLG
+			, W_DATASOURCE_NUM_ID
+			, W_INSERT_DT
+			, W_UPDATE_DT
+			, W_BATCH_ID
+			, W_INTEGRATION_ID
+		FROM #W_CMMS_DOWNTIME_F_tmp
+		where W_UPDATE_FLG = 'N'
 
-		
+
 
 		/*delete & re-insert data refresh*/
 		DELETE FROM [dbo].[SAP_ETL_DATAFRESH_CONF] WHERE UPPER(TABLE_NAME) = UPPER(@tgt_TableName)

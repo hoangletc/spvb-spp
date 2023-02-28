@@ -30,8 +30,8 @@ CREATE TABLE [dbo].[W_CMMS_ITEM_D]
     [W_DELETE_FLG] VARCHAR(1) NULL,
     [W_DATASOURCE_NUM_ID] INT NULL,
     [W_INTEGRATION_ID] [nvarchar](300) NULL,
-    [W_INSERT_DT] [datetime] NULL,
-    [W_UPDATE_DT] [datetime] NULL,
+    [W_INSERT_DT] [datetime2] NULL,
+    [W_UPDATE_DT] [datetime2] NULL,
     [W_BATCH_ID] [bigint] NULL
 )
 WITH
