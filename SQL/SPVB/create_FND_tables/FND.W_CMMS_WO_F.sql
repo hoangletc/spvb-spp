@@ -6,6 +6,8 @@ CREATE TABLE [FND].[W_CMMS_WO_F]
 (
 	[ACTFINISH] [nvarchar](100) NULL,
 	[ACTSTART] [nvarchar](100) NULL,
+	[WORKORDER_ID] [nvarchar](20) NULL,
+	[SITE_ID] [nvarchar](20) NULL,
 	[ASSETNUM] [nvarchar](100) NULL,
 	[DESCRIPTION] [nvarchar](1000) NULL,
 	[GLACCOUNT] [nvarchar](100) NULL,

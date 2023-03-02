@@ -12,19 +12,10 @@
     },
     {
       "source": {
-        "path": "$[''glaccount'']"
+        "path": "$[''workorderid'']"
       },
       "sink": {
-        "name": "GLACCOUNT",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''wonum'']"
-      },
-      "sink": {
-        "name": "WONUM",
+        "name": "WORKORDER_ID",
         "type": "String"
       }
     },

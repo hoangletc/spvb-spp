@@ -12,26 +12,41 @@ SELECT
     END                                                     AS DATE_WID
     , ISNULL(AST.ASSET_WID, 0)                              AS ASSET_WID
 
+    , CONVERT(NVARCHAR(30), WO.WORKORDER_ID)                AS WORKORDER_ID
     , CONVERT(NVARCHAR(30), WO.WONUM)                       AS WORK_ORDERS
     , CONVERT(NVARCHAR(100), WO.[DESCRIPTION])              AS [DESCRIPTION]
     , CONVERT(nvarchar(5), WORKTYPE)                        AS [TYPE]
-    , CASE WHEN SPVB_OVERHAUL = 'False'
+    , CASE WHEN SPVB_OVERHAUL = '0'
         THEN 'N' ELSE 'Y' END                               AS OVERHAUL
     , CONVERT(NVARCHAR(50), PMNUM)                          AS PM
     , CONVERT(NVARCHAR(50), JPNUM)                          AS JOB_PLAN
-    -- , CONVERT(NVARCHAR( 5), SITEID)                         AS [SITE]
     , CONVERT(NVARCHAR(1000), WO.[DESCRIPTION])             AS JOB_DESCRIPTION
-    , NULL                                                  AS [SITE]
+    , CONVERT(NVARCHAR(10), WO.[SITE_ID])                   AS [SITE]
     , CONVERT(NVARCHAR(50), WO.[LOCATION])                  AS [LOCATION]
     , CONVERT(NVARCHAR(30), ASSETNUM)                       AS ASSET_NUM
     , CONVERT(NVARCHAR(10), WO.[STATUS])                    AS [STATUS]
     , CONVERT(NVARCHAR(10), [SUPERVISOR])                   AS [SUPERVISOR]
     , CONVERT(NVARCHAR(100), SUPPERVISORNAME, 103)          AS SUPERVISOR_NAME
-    , CONVERT(DATETIMEOFFSET, REPORTDATE, 103)              AS DATE_CREATION
-    , CONVERT(DATETIMEOFFSET, TARGSTARTDATE, 103)           AS DATE_TARGET_START
-    , CONVERT(DATETIMEOFFSET, SCHEDFINISH, 103)             AS DATE_TARGET_FINISH
-    , CONVERT(DATETIMEOFFSET, WSCHEDSTART, 103)             AS DATE_SCHEDULE_START
-    , CONVERT(DATETIMEOFFSET, SCHEDFINISH, 103)             AS DATE_SCHEDULE_FINISH
+    , CASE WHEN REPORTDATE IS NULL OR REPORTDATE = ''
+        THEN NULL
+        ELSE CONVERT(DATETIMEOFFSET, REPORTDATE, 103)
+    END                                                     AS DATE_CREATION
+    , CASE WHEN TARGSTARTDATE IS NULL OR TARGSTARTDATE = ''
+        THEN NULL
+        ELSE CONVERT(DATETIMEOFFSET, TARGSTARTDATE, 103)
+    END                                                     AS DATE_TARGET_START
+    , CASE WHEN WSCHEDSTART IS NULL OR WSCHEDSTART = ''
+        THEN NULL
+        ELSE CONVERT(DATETIMEOFFSET, WSCHEDSTART, 103)
+    END                                                     AS DATE_SCHEDULE_START
+    , CASE WHEN TARGCOMPDATE IS NULL OR TARGCOMPDATE = ''
+        THEN NULL
+        ELSE CONVERT(DATETIMEOFFSET, TARGCOMPDATE, 103)
+    END                                                     AS DATE_TARGET_FINISH
+    , CASE WHEN SCHEDFINISH IS NULL OR SCHEDFINISH = ''
+        THEN NULL
+        ELSE CONVERT(DATETIMEOFFSET, SCHEDFINISH, 103)
+    END                                                     AS DATE_SCHEDULE_FINISH
     , CONVERT(NVARCHAR(10), WO.PARENT)                	    AS PARENT
     , 0                                                     AS IS_SCHED  -- NOTE: Hiện tại đang chờ logic của Avenue cho phần resched
 
@@ -81,52 +96,45 @@ FROM [FND].[W_CMMS_WO_F] WO
     LEFT JOIN [dbo].[W_CMMS_ASSET_D] AST ON 1=1
         AND AST.[ASSET_NUM] = WO.[ASSETNUM]
         AND LEFT(AST.LOCATION, 3) = LEFT(WO.LOCATION, 3)
-    
     OUTER APPLY ( 
         SELECT TOP 1 * FROM [FND].[W_CMMS_WO_STATUS_D] TMP_WSCH
         WHERE 1=1
-            AND TMP_WSCH.WONUM = WO.WONUM
-            
+            AND TMP_WSCH.WORKORDER_ID = WO.WORKORDER_ID
             AND TMP_WSCH.STATUS = 'WSCH'
         ORDER BY CHANGE_DATE DESC
     ) WO_S_WSCH
     OUTER APPLY ( 
         SELECT TOP 1 * FROM [FND].[W_CMMS_WO_STATUS_D] TMP_PLN
         WHERE 1=1
-            AND TMP_PLN.WONUM = WO.WONUM
-            AND TMP_PLN.GLACCOUNT = WO.GLACCOUNT
+            AND TMP_PLN.WORKORDER_ID = WO.WORKORDER_ID
             AND TMP_PLN.STATUS = 'PLANNING'
         ORDER BY CHANGE_DATE DESC
     ) WO_S_PLN
     OUTER APPLY ( 
         SELECT TOP 1 * FROM [FND].[W_CMMS_WO_STATUS_D] TMP_APPRV
         WHERE 1=1
-            AND TMP_APPRV.WONUM = WO.WONUM
-            AND TMP_APPRV.GLACCOUNT = WO.GLACCOUNT
+            AND TMP_APPRV.WORKORDER_ID = WO.WORKORDER_ID
             AND TMP_APPRV.STATUS = 'APPR'
         ORDER BY CHANGE_DATE DESC
     ) WO_S_APPRV
     OUTER APPLY ( 
         SELECT TOP 1 * FROM [FND].[W_CMMS_WO_STATUS_D] TMP_FINSH
         WHERE 1=1
-            AND TMP_FINSH.WONUM = WO.WONUM
-            AND TMP_FINSH.GLACCOUNT = WO.GLACCOUNT
+            AND TMP_FINSH.WORKORDER_ID = WO.WORKORDER_ID
             AND TMP_FINSH.STATUS = 'FINISHED'
         ORDER BY CHANGE_DATE DESC
     ) WO_S_FINSH
     OUTER APPLY ( 
         SELECT TOP 1 * FROM [FND].[W_CMMS_WO_STATUS_D] TMP_CPLT
         WHERE 1=1
-            AND TMP_CPLT.WONUM = WO.WONUM
-            AND TMP_CPLT.GLACCOUNT = WO.GLACCOUNT
+            AND TMP_CPLT.WORKORDER_ID = WO.WORKORDER_ID
             AND TMP_CPLT.STATUS = 'COMPLETED'
         ORDER BY CHANGE_DATE DESC
     ) WO_S_CPLT
     OUTER APPLY ( 
         SELECT TOP 1 * FROM [FND].[W_CMMS_WO_STATUS_D] TMP_COMP
         WHERE 1=1
-            AND TMP_COMP.WONUM = WO.WONUM
-            AND TMP_COMP.GLACCOUNT = WO.GLACCOUNT
+            AND TMP_COMP.WORKORDER_ID = WO.WORKORDER_ID
             AND TMP_COMP.STATUS = 'COMP'
         ORDER BY CHANGE_DATE DESC
     ) WO_S_COMP
@@ -137,25 +145,25 @@ WHERE 1=1
 ;
 
 
-SELECT * FROM [dbo].[W_CMMS_ASSET_D]
-WHERE ASSET_NUM = '170072010000'
+-- SELECT * FROM [dbo].[W_CMMS_ASSET_D]
+-- WHERE ASSET_NUM = '170072010000'
 
--- DROP TABLE #W_CMMS_WO_F_tmp;
-select top 30 * from #W_CMMS_WO_F_tmp;
-SELECT * FROM FND.W_CMMS_WO_F
-WHERE 1=1
-    AND WONUM = 'WO7000043279'
+-- -- DROP TABLE #W_CMMS_WO_F_tmp;
+-- select top 30 * from #W_CMMS_WO_F_tmp;
+-- SELECT * FROM FND.W_CMMS_WO_F
+-- WHERE 1=1
+--     AND WONUM = 'WO7000043279'
 
-SELECT count(*)
-FROM [FND].[W_CMMS_WO_F] WO
-WHERE 1=1
-    AND wo.ISTASK = 0
-    AND wo.WORKTYPE IN ('PM', 'CM')
-;
-
-select count(*) from #W_CMMS_WO_F_tmp;
+-- SELECT count(*)
+-- FROM [FND].[W_CMMS_WO_F] WO
+-- WHERE 1=1
+--     AND wo.ISTASK = 0
+--     AND wo.WORKTYPE IN ('PM', 'CM')
+-- ;
 
 
+
+-- SELECT TOP 10 * FROM [STG].[W_CMMS_WO_FS];
 -- 01-06-2021 08:00:00
 
 -- select WSCHEDSTART
@@ -166,3 +174,5 @@ select count(*) from #W_CMMS_WO_F_tmp;
 --     AND wo.WORKTYPE IN ('PM', 'CM')
 -- ;
     
+select top 50 * from #W_CMMS_WO_F_tmp where ASSET_NUM <> '' AND ASSET_WID = 0;
+SELECT TOP 10 * FROM FND.W_CMMS_WO_F WHERE WONUM = 'WO6000034378'

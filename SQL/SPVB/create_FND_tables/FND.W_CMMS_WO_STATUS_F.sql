@@ -5,10 +5,9 @@ GO
 CREATE TABLE [FND].[W_CMMS_WO_STATUS_D]
 (
 	[PARENT] [nvarchar](100) NULL,
-	[WONUM] [nvarchar](100) NULL,
-	[GLACCOUNT] [nvarchar](100) NULL,
+	[WORKORDER_ID] [nvarchar](100) NULL,
 	[CHANGEDATE] [nvarchar](100) NULL,
-	[WOSTATUSID] [nvarchar](100) NULL,
+	[WOSTATUS_ID] [nvarchar](100) NULL,
 	[STATUS] [nvarchar](100) NULL,
 	[FILE_NAME] [nvarchar](100) NULL,
 
@@ -21,4 +20,3 @@ WITH
 	HEAP
 )
 GO
-

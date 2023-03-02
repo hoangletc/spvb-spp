@@ -2,10 +2,7 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-
-ALTER PROC [dbo].[CMMS_proc_load_w_spp_asset_d]
-    @p_batch_id [bigint]
-AS
+ALTER PROC [dbo].[CMMS_proc_load_w_spp_asset_d] @p_batch_id [bigint] AS
 BEGIN
     DECLARE	@tgt_TableName nvarchar(200) = N'dbo.W_CMMS_ASSET_D',
 			@sql nvarchar(max),
@@ -90,7 +87,9 @@ BEGIN
             ISNULL(LOC_X.LOC_WID, 0)                                    AS LOCATION_WID
 
             , CONVERT(nvarchar(50), AST.SPVB_COSTCENTER)                AS SPVB_COSTCENTER
-            , CONVERT(nvarchar(50), AST.CHANGE_DATE)                    AS CHANGE_DATE
+            , CASE WHEN AST.CHANGE_DATE IS NULL THEN NULL
+                ELSE CONVERT(DATETIME2, AST.CHANGE_DATE)
+            END                                                         AS CHANGE_DATE
             , CONVERT(nvarchar(50), AST.SPVB_FIXEDASSETNUM)             AS SPVB_FIXEDASSETNUM
             , CONVERT(nvarchar(50), AST.TOTAL_COST)                     AS TOTAL_COST
             , CONVERT(nvarchar(50), AST.[STATUS])                       AS [STATUS]
@@ -109,6 +108,30 @@ BEGIN
             , CONVERT(nvarchar(50), AST.MACHINE_ASSET_NUM)              AS MACHINE_ASSET_NUM
             , CONVERT(nvarchar(50), AST.COMPONENT_ASSET_NUM)            AS COMPONENT_ASSET_NUM
             , CONVERT(nvarchar(1000), AST.[DESCRIPTION])                AS [DESCRIPTION]
+            , CASE WHEN AST.ASSET_HIERACHICAL_TYPE <> 'machine' THEN NULL
+                WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'B02' THEN 'Building'
+                WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'CIP' THEN 'CIP'
+                WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'S02' THEN 'Sugar'
+                WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'S03' THEN 'Syrup'
+                WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'U03' THEN 'Utilities'
+                WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'W03' THEN 'Wastewater'
+                WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'W04' THEN 'Water treatment'
+                WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'W05' THEN 'Workshop'
+                WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'W06' THEN 'Warehouse'
+                WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'Q01' THEN 'QC'
+                WHEN CHARINDEX('Máy', AST.[DESCRIPTION]) = 1
+                    THEN (
+                        CASE WHEN CHARINDEX('Line', AST.[DESCRIPTION]) = 0
+                        THEN TRIM(SUBSTRING(AST.[DESCRIPTION], 5, LEN(AST.[DESCRIPTION]) - 3))
+                        ELSE TRIM(SUBSTRING(AST.[DESCRIPTION], 5, CHARINDEX('Line', AST.[DESCRIPTION])))
+                        END
+                    )
+                WHEN CHARINDEX('Line', AST.[DESCRIPTION]) = 1
+                    THEN TRIM(SUBSTRING(AST.[DESCRIPTION], 6, CHARINDEX('Line', AST.[DESCRIPTION], 2) - 7))
+                    -- THEN NULL
+                ELSE TRIM(SUBSTRING(AST.[DESCRIPTION], 0, CHARINDEX('Line', AST.[DESCRIPTION])))
+                -- ELSE NULL
+            END                                                         AS [MACHINE_SHORT_NAME]
 
             , CONVERT(
                 nvarchar(200), 
@@ -173,6 +196,7 @@ BEGIN
             , MACHINE_ASSET_NUM = src.MACHINE_ASSET_NUM
             , COMPONENT_ASSET_NUM = src.COMPONENT_ASSET_NUM
             , [DESCRIPTION] = src.DESCRIPTION
+            , [MACHINE_SHORT_NAME] = src.[MACHINE_SHORT_NAME]
 
 			, W_DELETE_FLG = src.W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID = src.W_DATASOURCE_NUM_ID
@@ -209,6 +233,7 @@ BEGIN
             , MACHINE_ASSET_NUM
             , COMPONENT_ASSET_NUM
             , [DESCRIPTION]
+            , [MACHINE_SHORT_NAME]
 
             , W_DELETE_FLG
             , W_DATASOURCE_NUM_ID
@@ -239,6 +264,7 @@ BEGIN
             , MACHINE_ASSET_NUM
             , COMPONENT_ASSET_NUM
             , [DESCRIPTION]
+            , [MACHINE_SHORT_NAME]
 
             , W_DELETE_FLG
             , W_DATASOURCE_NUM_ID

@@ -10,19 +10,20 @@ from xlsx2csv import Xlsx2csv
 logging.getLogger().setLevel(logging.DEBUG)
 
 cols_main = [
-    'ACTFINISH', 'ACTSTART', 'ASSETNUM', 'DESCRIPTION', 'GLACCOUNT',
-    'HASCHILDREN', 'ISTASK', 'JPNUM', 'LOCATION', 'PMDUEDATE', 'PMNUM',
-    'REPORTDATE', 'SCHEDFINISH', 'WSCHEDSTART', 'SPVB_OVERHAUL',
-    'SPVB_TASK_STATUS', 'STATUS', 'SUPERVISOR', 'TARGCOMPDATE',
-    'TARGSTARTDATE', 'WONUM', 'WOPRIORITY', 'WORKTYPE', 'PARENT',
+    'WORKORDERID', 'SITEID', 'WORKORDER_ACTFINISH', 'WORKORDER_ACTSTART',
+    'ASSETNUM', 'DESCRIPTION', 'GLACCOUNT', 'HASCHILDREN', 'ISTASK',
+    'JPNUM', 'LOCATION', 'PMDUEDATE', 'PMNUM', 'WORKORDER_REPORTDATE',
+    'WORKORDER_SCHEDFINISH', 'WORKORDER_SCHEDSTART', 'SPVB_OVERHAUL',
+    'SPVB_TASK_STATUS', 'STATUS', 'SUPERVISOR', 'WORKORDER_TARGCOMPDATE',
+    'WORKORDER_TARGSTARTDATE', 'WONUM', 'WOPRIORITY', 'WORKTYPE', 'PARENT',
     'SUPERVISOR_1', 'SUPPERVISORNAME'
 ]
-cols_status = ['GLACCOUNT', 'WONUM', 'PARENT_1', 'CHANGEDATE', 'WOSTATUSID', 'STATUS_1']
+cols_status = ['WORKORDERID', 'PARENT_1', 'WOSTATUS_CHANGEDATE', 'WOSTATUSID', 'STATUS_1']
 
-cols_total = cols_main + cols_status[2:]
+cols_total = cols_main + cols_status[1:]
 
-cols_main_map = {x: x.lower() for x in cols_main}
-cols_status_map = {x: x.removesuffix('_1').lower() for x in cols_status}
+cols_main_map = {x: x.removeprefix('WORKORDER_').lower() for x in cols_main}
+cols_status_map = {x: x.removeprefix('WOSTATUS_').removesuffix('_1').lower() for x in cols_status}
 
 
 def read_excel(path: str, sheet_name: str) -> pd.DataFrame:
@@ -40,14 +41,19 @@ def read_excel(path: str, sheet_name: str) -> pd.DataFrame:
 
 
 if __name__ == '__main__':
-    path = Path(r"D:\TC_Data\_data\prod_Feb25\WO_02.xlsx")
+    path = Path(r"D:\TC_Data\_data\prod_Mar1\export_WO_04_1.xlsx")
     path_dir_out_wo = Path(r"D:\TC_Data\_data\_post_processed\work_order")
     path_dir_out_wo_status = Path(r"D:\TC_Data\_data\_post_processed\work_order_status")
 
     path_dir_out_wo.mkdir(parents=True, exist_ok=True)
     path_dir_out_wo_status.mkdir(parents=True, exist_ok=True)
 
-    for sheet in ['Export Worksheet', 'Sheet1', 'Sheet2', 'Sheet3', 'Sheet4', 'Sheet5']:
+    logger.info(f"* Start processing: {path.stem}")
+
+    for sheet in pd.ExcelFile(path).sheet_names:
+        if sheet == 'SQL':
+            continue
+
         logger.info(f"Load sheet: {sheet}")
 
         df = read_excel(path, sheet_name=sheet)
@@ -58,7 +64,7 @@ if __name__ == '__main__':
             .size() \
             .reset_index() \
             .rename(columns=cols_main_map) \
-            .drop([0], axis=1) \
+            .drop([0, 'supervisor_1'], axis=1) \
             .replace({np.nan: None})
 
         path_wo = path_dir_out_wo / f"{path.stem.replace(' ', '_')}_{sheet}.json"
@@ -75,6 +81,6 @@ if __name__ == '__main__':
             .drop([0], axis=1) \
             .replace({np.nan: None})
 
-        path_wo_status = path_dir_out_wo_status / f"{path.stem.replace(' ', '_')}_{sheet}.json"
+        path_wo_status = path_dir_out_wo_status / f"{path.stem.replace(' ', '_')}_{sheet.replace(' ', '_')}.json"
         with open(path_wo_status, 'w+', encoding='utf-8') as fp:
             df_wo_status.to_json(fp, orient='records', indent=2, force_ascii=False)

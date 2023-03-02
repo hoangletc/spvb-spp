@@ -10,7 +10,7 @@ CREATE TABLE [dbo].[W_CMMS_ASSET_D]
     [LINE_ASSET_NUM] [nvarchar](30) NULL,
     [LINE_ASSET_DES] [nvarchar](1000) NULL,
     [SPVB_COSTCENTER] [nvarchar](100) NULL,
-    [CHANGE_DATE] [nvarchar](50) NULL,
+    [CHANGE_DATE] DATETIME2 NULL,
     [SPVB_FIXEDASSETNUM] [nvarchar](100) NULL,
     [TOTAL_COST] [real] NULL,
     [STATUS] [nvarchar](100) NULL,

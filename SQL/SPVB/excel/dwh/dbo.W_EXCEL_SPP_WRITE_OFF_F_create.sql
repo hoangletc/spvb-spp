@@ -1,0 +1,33 @@
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [dbo].[W_EXCEL_SPP_WRITE_OFF_F]
+(
+	[DATE_WID] [bigint] NULL,
+	[PLANT_WID] [bigint] NULL,
+	[MATERIAL_WID] [bigint] NULL,
+	[MATERIAL_NUMBER] [varchar](100) NULL,
+	[MATERIAL_NAME] [nvarchar](300) NULL,
+	[BASE_UNIT] [varchar](50) NULL,
+	[REQUEST_WO_QTY_TM] [decimal](38, 20) NULL,
+	[REQUEST_WO_QTY_LM] [decimal](38, 20) NULL,
+	[REQUEST_WO_QTY_RWH] [decimal](38, 20) NULL,
+	[TOTAL_REQUEST_WO_QTY] [decimal](38, 20) NULL,
+	[TOTAL_REQUEST_WO_AMT] [decimal](38, 20) NULL,
+	[UNIT_PRICE] [decimal](38, 20) NULL,
+	[PLANT_NAME] [varchar](30) NULL,
+	[W_DELETE_FLG] [nvarchar](2) NULL,
+	[W_DATASOURCE_NUM_ID] [nvarchar](2) NULL,
+	[W_INTEGRATION_ID] [nvarchar](4000) NULL,
+	[FILE_NAME] [nvarchar](4000) NULL,
+	[W_INSERT_DT] [datetime] NULL,
+	[W_UPDATE_DT] [datetime] NULL,
+	[W_BATCH_ID] [bigint] NULL
+)
+WITH
+(
+	DISTRIBUTION = ROUND_ROBIN,
+	CLUSTERED COLUMNSTORE INDEX
+)
+GO

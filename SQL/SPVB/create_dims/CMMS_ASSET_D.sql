@@ -23,6 +23,30 @@ SELECT
     , CONVERT(nvarchar(50), AST.MACHINE_ASSET_NUM)              AS MACHINE_ASSET_NUM
     , CONVERT(nvarchar(50), AST.COMPONENT_ASSET_NUM)            AS COMPONENT_ASSET_NUM
     , CONVERT(nvarchar(1000), AST.[DESCRIPTION])                AS [DESCRIPTION]
+    , CASE WHEN AST.ASSET_HIERACHICAL_TYPE <> 'machine' THEN NULL
+        WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'B02' THEN 'Building'
+        WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'CIP' THEN 'CIP'
+        WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'S02' THEN 'Sugar'
+        WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'S03' THEN 'Syrup'
+        WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'U03' THEN 'Utilities'
+        WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'W03' THEN 'Wastewater'
+        WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'W04' THEN 'Water treatment'
+        WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'W05' THEN 'Workshop'
+        WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'W06' THEN 'Warehouse'
+        WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'Q01' THEN 'QC'
+        WHEN CHARINDEX('Máy', AST.[DESCRIPTION]) = 1
+            THEN (
+                CASE WHEN CHARINDEX('Line', AST.[DESCRIPTION]) = 0
+                THEN TRIM(SUBSTRING(AST.[DESCRIPTION], 5, LEN(AST.[DESCRIPTION]) - 3))
+                ELSE TRIM(SUBSTRING(AST.[DESCRIPTION], 5, CHARINDEX('Line', AST.[DESCRIPTION])))
+                END
+            )
+        WHEN CHARINDEX('Line', AST.[DESCRIPTION]) = 1
+            THEN TRIM(SUBSTRING(AST.[DESCRIPTION], 6, CHARINDEX('Line', AST.[DESCRIPTION], 2) - 7))
+            -- THEN NULL
+        ELSE TRIM(SUBSTRING(AST.[DESCRIPTION], 0, CHARINDEX('Line', AST.[DESCRIPTION])))
+        -- ELSE NULL
+    END                                                         AS [MACHINE_SHORT_NAME]
 
     , CONVERT(
         nvarchar(200), 
@@ -35,7 +59,7 @@ SELECT
     , DATEADD(HH, 7, GETDATE())                                 AS W_INSERT_DT
     , DATEADD(HH, 7, GETDATE())                                 AS W_UPDATE_DT
     , @p_batch_id                                               AS W_BATCH_ID
--- INTO #W_CMMS_ASSET_D_tmp
+INTO #W_CMMS_ASSET_D_tmp
 FROM [FND].[W_CMMS_ASSET_D] AST
     LEFT JOIN [dbo].[W_CMMS_LOC_D] LOC_X ON 1=1
         AND LOC_X.[LOCATION] = LEFT(AST.[LOCATION], 7)

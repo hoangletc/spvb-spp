@@ -1,0 +1,48 @@
+SELECT * FROM dbo.W_SAP_SPP_BALANCE_F
+WHERE 1=1
+    AND MATERIAL_NUMBER = '60000108'
+    AND PLANT_CODE = '1050'
+    AND STORAGE_LOCATION = 'SP01'
+    AND DATE_WID = '20230131'
+;
+-- ok
+
+SELECT * FROM dbo.W_SAP_SPP_BALANCE_F
+WHERE 1=1
+    AND MATERIAL_NUMBER = '60000168'
+    AND PLANT_CODE = '1050'
+    AND STORAGE_LOCATION = 'SP01'
+    AND DATE_WID = '20230131'
+;
+-- ok
+
+SELECT * FROM dbo.W_SAP_SPP_BALANCE_F
+WHERE 1=1
+    AND MATERIAL_NUMBER = '60000169'
+    AND PLANT_CODE = '1050'
+    AND STORAGE_LOCATION = 'SP01'
+    AND DATE_WID = '20230131'
+;
+-- issue 
+
+SELECT *
+FROM fnd.W_CMMS_MATU_F
+where item_num = '60000169' and  issue_type = 'RETURN'
+order by actualdate
+
+;
+
+SELECT *
+FROM fnd.W_CMMS_MATr_F
+where itemnum = '60000169'
+order by actualdate
+-- where issuetype = 'RETURN'
+;
+
+select *
+from dbo.W_SAP_SPP_TRANSACTION_F
+WHERE
+    MATERIAL_NUMBER = '60000169'
+    AND PLANT_CODE = '1050'
+ORDER BY 1
+;

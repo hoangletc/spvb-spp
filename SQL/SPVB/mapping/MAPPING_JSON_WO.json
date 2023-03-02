@@ -21,6 +21,24 @@
     },
     {
       "source": {
+        "path": "$[''workorderid'']"
+      },
+      "sink": {
+        "name": "WORKORDER_ID",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''siteid'']"
+      },
+      "sink": {
+        "name": "SITE_ID",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
         "path": "$[''assetnum'']"
       },
       "sink": {

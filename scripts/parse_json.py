@@ -185,10 +185,10 @@ def parser_asset(d: dict, schemas: dict = None) -> dict:
                 a_st['changedate'] = dt.strftime(DT_FORMAT)
             except ValueError:
                 try:
-                    dt = datetime.strptime(a_st['changedate'], "%d-%b-%y")
+                    dt = datetime.strptime(a_st['changedate'], "%d/%m/%Y %H:%M:%S")
                     a_st['changedate'] = dt.strftime(DT_FORMAT)
                 except ValueError:
-                    logging.error(f"Datetime format không đúng: {a_st['changedate']}")
+                    logging.error(f"Datetime format không đúng ('%d/%m/%Y %H:%M:%S'): {a_st['changedate']}")
 
             if a_st['downtime'] == 0:
                 final_asset_status.append(a_st)
@@ -227,7 +227,7 @@ def parser_asset(d: dict, schemas: dict = None) -> dict:
         asset_tmp['changedate'] = dt.strftime(DT_FORMAT)
     except ValueError:
         try:
-            dt = datetime.strptime(asset_tmp['changedate'], "%d-%b-%y")
+            dt = datetime.strptime(asset_tmp['changedate'], "%d/%m/%Y %H:%M:%S")
             asset_tmp['changedate'] = dt.strftime(DT_FORMAT)
         except ValueError:
             logging.error(f"Datetime format không đúng: {asset_tmp['changedate']}")
@@ -403,7 +403,7 @@ if __name__ == '__main__':
     # folder lưu kết quả xử lí
     path_out_root = Path(r"D:\TC_Data\_data\_post_processed")
     # folder chứa file JSON
-    path_in = Path(r"D:\TC_Data\_data\_pre_processed\inventory")
+    path_in = Path(r"D:\TC_Data\_data\_pre_processed\asset")
     # đường dẫn tới
     path_schema = r"D:\TC_Data\spvb-spp\scripts\schemmas.json"
 

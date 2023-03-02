@@ -3,9 +3,8 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE PROC [dbo].[CMMS_proc_load_w_transaction_f]
-    @p_batch_id [bigint]
-AS 
+
+ALTER PROC [dbo].[CMMS_proc_load_w_transaction_f] @p_batch_id [bigint] AS 
 BEGIN
     DECLARE	@tgt_TableName nvarchar(200) = N'dbo.W_CMMS_TRANSACTION_F',
 			@sql nvarchar(max),
@@ -94,10 +93,16 @@ BEGIN
 					ELSE WO.DATE_FINISHED_AFT
 				END                                 	AS ACTUAL_FINISH
 				, WO_STA.CHANGEDATE               		AS LAST_STATUS_DATE
+				, AST.LINE_ASSET_NUM
 			FROM [dbo].[W_CMMS_WO_F] AS WO
 				LEFT JOIN [FND].[W_CMMS_WO_STATUS_D] WO_STA ON 1=1
 					AND WO_STA.PARENT = WO.WORK_ORDERS
 					AND WO_STA.STATUS = WO.[STATUS]
+				LEFT JOIN [dbo].W_CMMS_ASSET_D AST ON 1=1
+					AND WO.ASSET_NUM IS NOT NULL
+					AND WO.ASSET_NUM <> ''
+					AND WO.ASSET_NUM = AST.ASSET_NUM
+					AND LEFT(WO.LOCATION, 3) = LEFT(AST.LOCATION, 3)
 		)
 			SELECT 
 				TRANS.*
@@ -117,7 +122,7 @@ BEGIN
 			FROM (
 				SELECT
 					LOC.LOC_WID                             AS LOC_WID
-					, AST.ASSET_WID                         AS ASSET_WID
+					, TMP_WO_X.ASSET_WID                    AS ASSET_WID
 					, INVU.INVU_WID                         AS INVU_WID
 					, INVUL.INVUL_WID                       AS INVUL_WID
 					, IT.ITEM_WID                           AS ITEM_WID
@@ -126,7 +131,6 @@ BEGIN
 						CONVERT(DATE, MATU.ACTUALDATE), 
 						'yyyymmdd'
 					)                                       AS DATE_WID
-
 					, INVU.INVUSE_NUM                       AS USAGE
 					, MATU.STORELOC                         AS WAREHOUSE
 					, LOC.[DESCRIPTION]                     AS WAREHOUSE_NAME
@@ -160,7 +164,7 @@ BEGIN
 						ELSE NULL 
 					END                                     AS WORK_ORDER
 					, MATU.ASSET_NUM                        AS ASSET
-					, AST.LINE_ASSET_NUM                    AS [LINE]
+					, TMP_WO_X.LINE_ASSET_NUM               AS [LINE]
 					, TMP_WO_X.[TYPE]                       AS WORK_TYPE
 					, TMP_WO_X.[STATUS]                     AS WORKORDER_STATUS
 					, TMP_WO_X.ACTUAL_FINISH                AS ACTUAL_FINISH
@@ -173,27 +177,34 @@ BEGIN
 					, MATU.PONUM                            AS PONUM
 					, NULL                                  AS SAP_DND
 					, INVUL.SPVB_WONUMREF                   AS RET_WONUM
-
 				FROM FND.W_CMMS_MATU_F MATU
-					LEFT JOIN [dbo].[W_CMMS_INVU_D] INVU ON 1=1
-						AND INVU.INVU_ID = MATU.INVUSE_ID
 					LEFT JOIN [dbo].[W_CMMS_LOC_D] LOC ON 1=1
 						AND LOC.[LOCATION] = MATU.STORELOC
 					LEFT JOIN [dbo].[W_CMMS_ITEM_D] IT ON 1=1
 						AND IT.ITEM_NUM = MATU.ITEM_NUM
-					LEFT JOIN [dbo].[W_CMMS_INVUL_D] INVUL ON 1=1
-						AND INVUL.INVUSELINE_ID = MATU.INVUSELINE_ID
 					LEFT JOIN [dbo].[W_CMMS_ASSET_D] AST ON 1=1
 						AND AST.ASSET_NUM = MATU.ASSET_NUM
+						AND LEFT(AST.LOCATION, 3) = LEFT(MATU.LOCATION, 3)
 					LEFT JOIN [TMP_WO_X] ON 1=1
 						AND TMP_WO_X.WORK_ORDERS = MATU.REFWO
 						AND TMP_WO_X.ASSET_NUM = MATU.ASSET_NUM
+					LEFT JOIN [dbo].[W_CMMS_INVUL_D] INVUL ON 1=1
+						AND MATU.INVUSELINE_ID IS NOT NULL
+						AND MATU.INVUSELINE_ID <> ''
+						AND INVUL.INVUSELINE_ID = MATU.INVUSELINE_ID
+					OUTER APPLY (
+						SELECT TOP 1 * FROM[dbo].[W_CMMS_INVU_D] TMP_INVU
+						WHERE 1=1
+							AND MATU.INVUSE_ID IS NOT NULL
+							AND MATU.INVUSE_ID <> ''
+							AND TMP_INVU.INVU_ID = MATU.INVUSE_ID
+					) INVU
 
 				UNION ALL
 
 				SELECT
 					LOC.LOC_WID                             AS LOC_WID
-					, AST.ASSET_WID                         AS ASSET_WID
+					, TMP_WO_X.ASSET_WID                    AS ASSET_WID
 					, INVU_WID                              AS INVU_WID
 					, INVUL_WID                             AS INVUL_WID
 					, ITEM_WID                              AS ITEM_WID
@@ -202,33 +213,35 @@ BEGIN
 						CONVERT(DATE, MATR.ACTUALDATE), 
 						'yyyymmdd'
 					)                                       AS DATE_WID
-
-					, CASE WHEN MATR.ISSUE_TYPE = 'TRANSFER'
+					, CASE WHEN MATR.ISSUETYPE = 'TRANSFER'
 						THEN INVU.INVUSE_NUM       
 						ELSE MATR.SPVB_SAPRECEIPT
 					END                                     AS USAGE
-					, CASE WHEN MATR.FROM_STORELOC = 'INSPECTION' THEN MATR.FROM_STORELOC
-						WHEN MATR.TO_STORELOC = 'INSPECTION' THEN MATR.FROM_STORELOC
-						WHEN MATR.FROM_STORELOC = MATR.TO_STORELOC THEN MATR.FROM_STORELOC
-						ELSE 'From ' + MATR.FROM_STORELOC + ' To ' + MATR.TO_STORELOC
+					, CASE WHEN MATR.FROMSTORELOC = 'INSPECTION'
+							THEN MATR.FROMSTORELOC
+						WHEN MATR.TOSTORELOC = 'INSPECTION'
+							THEN MATR.FROMSTORELOC
+						WHEN MATR.FROMSTORELOC = MATR.TOSTORELOC
+							THEN MATR.FROMSTORELOC
+						ELSE 'From ' + MATR.FROMSTORELOC + ' To ' + MATR.TOSTORELOC
 					END                                     AS WAREHOUSE
 					, LOC.[DESCRIPTION]                     AS WAREHOUSE_NAME
-					, CASE WHEN MATR.ISSUE_TYPE = 'TRANSFER' 
-							AND MATR.FROM_STORELOC = 'INSPECTION'
-							AND MATR.SHIPMENT_NUM IS NOT NULL
+					, CASE WHEN MATR.ISSUETYPE = 'TRANSFER' 
+							AND MATR.FROMSTORELOC = 'INSPECTION'
+							AND MATR.SHIPMENTNUM IS NOT NULL
 						THEN 'SHIPRECEIPT' 
-						WHEN MATR.ISSUE_TYPE = 'TRANSFER'
-							AND MATR.FROM_STORELOC = 'INSPECTION'
-							AND MATR.SHIPMENT_NUM IS NULL
+						WHEN MATR.ISSUETYPE = 'TRANSFER'
+							AND MATR.FROMSTORELOC = 'INSPECTION'
+							AND MATR.SHIPMENTNUM IS NULL
 						THEN 'RECEIPT'
-						ELSE MATR.ISSUE_TYPE
+						ELSE MATR.ISSUETYPE
 					END                                     AS TRANSACTION_TYPE
 					, MATR.TRANSDATE                        AS TRANSACTION_DATE
 					, MATR.ACTUALDATE                       AS ACTUAL_DATE
-					, MATR.ITEM_NUM                         AS ITEM_NO
+					, MATR.ITEMNUM                          AS ITEM_NO
 					, IT.DESCRIPTION                        AS [DESCRIPTION]
 					, MATR.QUANTITY                         AS TRANSACTION_QUANT
-					, MATR.ISSUE_UNIT                       AS TRANSACTION_UOM
+					, MATR.ISSUEUNIT                        AS TRANSACTION_UOM
 					, MATR.BINNUM                           AS BINNUM
 					, [TMP_WO_X].OVERHAUL                   AS OVERHAUL
 					, CASE WHEN INVUL.SPVB_MUSTRETURN_ORG = 'True'
@@ -237,16 +250,16 @@ BEGIN
 					END                                     AS MUST_RETURN_ORIGINAL
 					, NULL                                  AS MUST_RETURN_USER_INPUT
 					, INVUL.SPVB_REASON                     AS MUST_RETURN_REMARK
-					, MATR.UNIT_COST                        AS PRICE
+					, MATR.UNITCOST                         AS PRICE
 					, MATR.LINECOST                         AS AMOUNT
 					, MATR.MRNUM                            AS MRNUM
 					, CASE WHEN TMP_WO_X.PARENT IS NULL 
 						THEN TMP_WO_X.WORK_ORDERS
 						ELSE NULL 
 					END                                     AS WORK_ORDER
-					, MATR.ASSET_NUM                        AS ASSET
-					, AST.LINE_ASSET_NUM                    AS [LINE]
-					, [TMP_WO_X].TYPE                       AS WORK_TYPE
+					, MATR.ASSETNUM                         AS ASSET
+					, TMP_WO_X.LINE_ASSET_NUM               AS [LINE]
+					, [TMP_WO_X].[TYPE]                     AS WORK_TYPE
 					, [TMP_WO_X].[STATUS]                   AS WORKORDER_STATUS
 					, [TMP_WO_X].ACTUAL_FINISH              AS ACTUAL_FINISH
 					, [TMP_WO_X].LAST_STATUS_DATE           AS WO_LAST_STATUSDATE
@@ -258,21 +271,25 @@ BEGIN
 					, MATR.SPVB_SAPPO                       AS PONUM
 					, MATR.SPVB_DND                         AS SAO_DND
 					, INVUL.SPVB_WONUMREF                   AS RET_WONUM
-
 				FROM FND.W_CMMS_MATR_F MATR
-				LEFT JOIN [dbo].[W_CMMS_INVU_D] INVU ON 1=1
-						AND INVU.INVU_ID = MATR.INVU_ID
-					LEFT JOIN [dbo].[W_CMMS_ITEM_D] IT ON 1=1
-						AND IT.ITEM_NUM = MATR.ITEM_NUM
+					OUTER APPLY (
+						SELECT TOP 1 * FROM[dbo].[W_CMMS_INVU_D] TMP_INVU
+						WHERE 1=1
+							AND MATR.INVUSE_ID IS NOT NULL
+							AND MATR.INVUSE_ID <> ''
+							AND TMP_INVU.INVU_ID = MATR.INVUSE_ID
+					) INVU
 					LEFT JOIN [dbo].[W_CMMS_INVUL_D] INVUL ON 1=1
-						AND INVUL.INVUSELINE_NUM = MATR.INVUSELINEID
-					LEFT JOIN [dbo].[W_CMMS_ASSET_D] AST ON 1=1
-						AND AST.ASSET_NUM = MATR.ASSET_NUM
+						AND MATR.INVUSELINE_ID IS NOT NULL
+						AND MATR.INVUSELINE_ID <> ''
+						AND INVUL.INVUSELINE_ID = MATR.INVUSELINE_ID
+					LEFT JOIN [dbo].[W_CMMS_ITEM_D] IT ON 1=1
+						AND IT.ITEM_NUM = MATR.ITEMNUM
 					LEFT JOIN [TMP_WO_X] ON 1=1
 						AND TMP_WO_X.WORK_ORDERS = MATR.REFWO
-						AND TMP_WO_X.ASSETNUM = MATR.ASSETNUM
 					LEFT JOIN [dbo].[W_CMMS_LOC_D] LOC ON 1=1
-						AND LOC.[LOCATION] = MATR.TO_STORELOC
+						AND MATR.TOSTORELOC <> 'INSPECTION'
+						AND LOC.[LOCATION] = MATR.TOSTORELOC
 
 				UNION ALL
 
@@ -280,7 +297,6 @@ BEGIN
 					LOC.LOC_WID                             AS LOC_WID
 					, NULL                                  AS ASSET_WID
 					, NULL                                  AS INVU_WID
-					-- , INVUL.INVUL_WID                       AS INVUL_WID
 					, NULL                                  AS INVUL_WID
 					, IT.ITEM_WID                           AS ITEM_WID
 					, NULL                                  AS WO_WID
@@ -301,10 +317,6 @@ BEGIN
 					, NULL                                  AS TRANSACTION_UOM
 					, INVT.BIN_NUM                          AS BINNUM
 					, NULL                                  AS OVERHAUL
-					-- , CASE WHEN INVUL.SPVB_MUSTRETURN_ORG = 1
-					--     THEN 'Y'
-					--     ELSE 'N'
-					-- END                                     AS MUST_RETURN_ORIGINAL
 					, NULL                                  AS MUST_RETURN_ORIGINAL
 					, NULL                                  AS MUST_RETURN_USER_INPUT
 					, NULL                                  AS MUST_RETURN_REMARK
@@ -331,8 +343,6 @@ BEGIN
 						AND LOC.[LOCATION] = INVT.STORELOC
 					LEFT JOIN [dbo].[W_CMMS_ITEM_D] IT ON 1=1
 						AND IT.ITEM_NUM = INVT.ITEM_NUM
-					-- LEFT JOIN [dbo].[W_CMMS_INVUL_D] INVUL ON 1=1
-					--     AND INVUL.INVUSELINE_ID = INVT.
 
 				UNION ALL
 
@@ -362,7 +372,7 @@ BEGIN
 					, SERV.QUANTITY                         AS TRANSACTION_QUANT
 					, NULL                                  AS TRANSACTION_UOM
 					, NULL                                  AS BINNUM
-					, CASE WHEN TMP_WO_X.OVERHAUL = 1
+					, CASE WHEN TMP_WO_X.OVERHAUL = 'Y'
 						THEN 'Y'
 						ELSE 'N'
 					END                                     AS OVERHAUL
@@ -374,7 +384,7 @@ BEGIN
 					, NULL                                  AS MRNUM
 					, NULL                                  AS WORK_ORDER
 					, SERV.ASSET_NUM                        AS ASSET
-					, AST.LINE_ASSET_NUM                    AS [LINE]
+					, [TMP_WO_X].LINE_ASSET_NUM             AS [LINE]
 					, TMP_WO_X.[TYPE]                       AS WORK_TYPE
 					, TMP_WO_X.[STATUS]                     AS WORKORDER_STATUS
 					, TMP_WO_X.ACTUAL_FINISH                AS ACTUAL_FINISH
@@ -390,9 +400,6 @@ BEGIN
 				FROM [FND].[W_CMMS_SERV_F] SERV
 					LEFT JOIN [TMP_WO_X] ON 1=1
 						AND TMP_WO_X.WORK_ORDERS = SERV.REFWO
-						AND TMP_WO_X.ASSETNUM = SERV.ASSET_NUM
-					LEFT JOIN [dbo].[W_CMMS_ASSET_D] AST ON 1=1
-						AND AST.ASSET_NUM = SERV.ASSET_NUM
 		) TRANS
 
 
