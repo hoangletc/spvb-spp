@@ -3,7 +3,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-create PROC [dbo].[EXCEL_proc_load_w_spp_purchase_f] @p_batch_id [bigint] AS 
+ALTER PROC [dbo].[EXCEL_proc_load_w_spp_purchase_f] @p_batch_id [bigint] AS 
 BEGIN
     DECLARE	@tgt_TableName nvarchar(200) = N'dbo.W_EXCEL_SPP_PURCHASE_F',
 			@sql nvarchar(max),
@@ -74,10 +74,10 @@ BEGIN
 		-- 1. Check existence and remove of temp table
         PRINT '1. Check existence and remove of temp table'
 
-        IF OBJECT_ID(N'tempdb..#W_EXCEL_SPP_SPENDING_AOP_tmp') IS NOT NULL 
+        IF OBJECT_ID(N'tempdb..#W_EXCEL_SPP_PURCHASE_tmp') IS NOT NULL 
         BEGIN
-            PRINT N'DELETE temporary table #W_EXCEL_SPP_SPENDING_AOP_tmp'
-            DROP Table #W_EXCEL_SPP_SPENDING_AOP_tmp
+            PRINT N'DELETE temporary table #W_EXCEL_SPP_PURCHASE_tmp'
+            DROP Table #W_EXCEL_SPP_PURCHASE_tmp
         END;
 
 
@@ -85,7 +85,8 @@ BEGIN
         PRINT '2. Select everything into temp table'
 
 		SELECT
-			[PLANT]
+			ISNULL(PLANT.PLANT_WID, 0)                      AS PLANT_WID
+			, [PLANT_NAME]
 			, [LINE]
 			, [MACHINE]
 			, [ITEM_CODE]
@@ -94,6 +95,7 @@ BEGIN
 			, [MANUFACTURER]
 			, [UOM]
 
+			, [PRICE]
 			, [QUANTITY]
 			, [OVH]
 			, [PM]
@@ -105,17 +107,20 @@ BEGIN
 			, [AVG_LEVEL]
 			, [PERIOD]
 			, [PURCHASING]
-			, PLANT_NAME
-			
-			, W_INTEGRATION_ID                              AS W_INTEGRATION_ID
+
+			, F.W_INTEGRATION_ID                              AS W_INTEGRATION_ID
 			, 'N'                                           AS W_DELETE_FLG
 			, 'N' 											AS W_UPDATE_FLG
 			, 8                                             AS W_DATASOURCE_NUM_ID
 			, DATEADD(HH, 7, GETDATE())                     AS W_INSERT_DT
 			, DATEADD(HH, 7, GETDATE())                     AS W_UPDATE_DT
 			, @p_batch_id                                   AS W_BATCH_ID
-		INTO #W_EXCEL_SPP_SPENDING_AOP_tmp
-		FROM FND.W_EXCEL_SPP_PURCHASE_F
+		INTO #W_EXCEL_SPP_PURCHASE_tmp
+		FROM FND.W_EXCEL_SPP_PURCHASE_F F
+			LEFT JOIN [dbo].[W_SAP_PLANT_EXTENDED_D] PLANT ON 1=1
+			AND PLANT.PLANT_NAME_2 = PLANT_NAME
+			AND STo_LOC = ''
+	
 		;
 
 
@@ -125,9 +130,9 @@ BEGIN
 		-- 3.1. Mark existing records by flag 'Y'
 		PRINT '3.1. Mark existing records by flag ''Y'''
 
-		UPDATE #W_EXCEL_SPP_SPENDING_AOP_tmp
+		UPDATE #W_EXCEL_SPP_PURCHASE_tmp
 		SET W_UPDATE_FLG = 'Y'
-		FROM #W_EXCEL_SPP_SPENDING_AOP_tmp tg
+		FROM #W_EXCEL_SPP_PURCHASE_tmp tg
 		INNER JOIN [dbo].[W_EXCEL_SPP_PURCHASE_F] sc 
 		ON sc.W_INTEGRATION_ID = tg.W_INTEGRATION_ID
 
@@ -135,8 +140,9 @@ BEGIN
 		PRINT '3.2. Start updating'
 
 		UPDATE  [dbo].[W_EXCEL_SPP_PURCHASE_F]
-		SET 
-			[PLANT] = src.[PLANT]
+		SET
+			PLANT_WID = src.PLANT_WID
+			, [PLANT_NAME] = src.[PLANT_NAME]
 			, [LINE] = src.[LINE]
 			, [MACHINE] = src.[MACHINE]
 			, [ITEM_CODE] = src.[ITEM_CODE]
@@ -144,6 +150,7 @@ BEGIN
 			, [CODE] = src.[CODE]
 			, [MANUFACTURER] = src.[MANUFACTURER]
 			, [UOM] = src.[UOM]
+			, [PRICE] = src.[PRICE]
 			, [QUANTITY] = src.[QUANTITY]
 			, [OVH] = src.[OVH]
 			, [PM] = src.[PM]
@@ -164,14 +171,15 @@ BEGIN
 			, W_INTEGRATION_ID = src.W_INTEGRATION_ID
 			, W_UPDATE_DT = DATEADD(HH, 7, GETDATE())
 		FROM [dbo].[W_EXCEL_SPP_PURCHASE_F] tgt
-		INNER JOIN #W_EXCEL_SPP_SPENDING_AOP_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID
+		INNER JOIN #W_EXCEL_SPP_PURCHASE_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID
 
 
 		-- 4. Insert non-existed records to main table from temp table
 		PRINT '4. Insert non-existed records to main table from temp table'
 
 		INSERT INTO [dbo].[W_EXCEL_SPP_PURCHASE_F](
-			[PLANT]
+			[PLANT_WID]
+			, [PLANT_NAME]
 			, [LINE]
 			, [MACHINE]
 			, [ITEM_CODE]
@@ -180,6 +188,7 @@ BEGIN
 			, [MANUFACTURER]
 			, [UOM]
 
+			, [PRICE]
 			, [QUANTITY]
 			, [OVH]
 			, [PM]
@@ -192,8 +201,6 @@ BEGIN
 			, [PERIOD]
 			, [PURCHASING]
 
-			, PLANT_NAME
-
 			, W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID
 			, W_INSERT_DT
@@ -202,7 +209,8 @@ BEGIN
 			, W_INTEGRATION_ID
 		)
 		SELECT
-			[PLANT]
+			[PLANT_WID]
+			, [PLANT_NAME]
 			, [LINE]
 			, [MACHINE]
 			, [ITEM_CODE]
@@ -211,6 +219,7 @@ BEGIN
 			, [MANUFACTURER]
 			, [UOM]
 
+			, [PRICE]
 			, [QUANTITY]
 			, [OVH]
 			, [PM]
@@ -221,8 +230,7 @@ BEGIN
 			, [MAX_LEVEL]
 			, [AVG_LEVEL]
 			, [PERIOD]
-			, [PURCHASING]			
-			, PLANT_NAME
+			, [PURCHASING]
 
 			, W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID
@@ -230,7 +238,7 @@ BEGIN
 			, W_UPDATE_DT
 			, W_BATCH_ID
 			, W_INTEGRATION_ID
-		FROM #W_EXCEL_SPP_SPENDING_AOP_tmp
+		FROM #W_EXCEL_SPP_PURCHASE_tmp
 		where W_UPDATE_FLG = 'N'
 
 
@@ -260,7 +268,7 @@ BEGIN
             AND W_BATCH_ID = @p_batch_id
             AND W_DELETE_FLG = 'N'
 
-		SET @src_rownum = ( SELECT COUNT(1) FROM #W_EXCEL_SPP_SPENDING_AOP_tmp );
+		SET @src_rownum = ( SELECT COUNT(1) FROM #W_EXCEL_SPP_PURCHASE_tmp );
 		SET @tgt_rownum = ( 
             SELECT 
                 COUNT(DISTINCT W_INTEGRATION_ID)

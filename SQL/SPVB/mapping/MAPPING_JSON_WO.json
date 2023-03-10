@@ -138,10 +138,10 @@
     },
     {
       "source": {
-        "path": "$[''wschedstart'']"
+        "path": "$[''schedstart'']"
       },
       "sink": {
-        "name": "WSCHEDSTART",
+        "name": "SCHEDSTART",
         "type": "String"
       }
     },

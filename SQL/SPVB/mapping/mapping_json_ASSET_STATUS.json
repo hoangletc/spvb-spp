@@ -30,10 +30,28 @@
     },
     {
       "source": {
+        "path": "$[''changedate_org'']"
+      },
+      "sink": {
+        "name": "CHANGEDATE_ORG",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
         "path": "$[''downtime'']"
       },
       "sink": {
         "name": "DOWNTIME",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''downtime_org'']"
+      },
+      "sink": {
+        "name": "DOWNTIME_ORG",
         "type": "String"
       }
     },
@@ -70,6 +88,15 @@
       },
       "sink": {
         "name": "ASSETNUM",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''assetuid'']"
+      },
+      "sink": {
+        "name": "ASSET_UID",
         "type": "String"
       }
     },
@@ -125,6 +152,15 @@
       "sink": {
         "name": "REMARKS",
         "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''is_split'']"
+      },
+      "sink": {
+        "name": "IS_SPLIT",
+        "type": "Int64"
       }
     },
     {

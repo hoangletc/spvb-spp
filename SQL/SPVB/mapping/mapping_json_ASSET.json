@@ -147,6 +147,15 @@
     },
     {
       "source": {
+        "path": "$[''asset_hierachical_count'']"
+      },
+      "sink": {
+        "name": "ASSET_HIERACHICAL_COUNT",
+        "type": "Int64"
+      }
+    },
+    {
+      "source": {
         "path": "$[''line_asset_num'']"
       },
       "sink": {

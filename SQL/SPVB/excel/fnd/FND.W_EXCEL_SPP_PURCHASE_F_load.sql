@@ -64,19 +64,24 @@ BEGIN
 			, W_UPDATE_DT = DATEADD(HH, 7, GETDATE())
 			, W_BATCH_ID = @p_batch_id
 		WHERE W_DELETE_FLG = 'N'
-			AND FILE_PATH IN (SELECT DISTINCT FILE_PATH FROM STG.W_EXCEL_SPP_PURCHASE_FS /*WHERE W_BATCH_ID = @p_batch_id*/)
+			AND FILE_NAME IN (SELECT DISTINCT FILE_NAME FROM STG.W_EXCEL_SPP_PURCHASE_FS /*WHERE W_BATCH_ID = @p_batch_id*/)
 	;
 		WITH A AS (																	
-			SELECT 
-				CONVERT(NVARCHAR(20), Prop_2)							AS [LINE]
-				, CONVERT(NVARCHAR(30), Prop_3)							AS [MACHINE]
-				, CONVERT(NVARCHAR(30), Prop_4)							AS [ITEM_CODE]
+			SELECT
+				SUBSTRING(FILE_NAME, 19, 3)									AS PLANT_NAME
+				, CONVERT(NVARCHAR(20), Prop_2)								AS [LINE]
+				, CONVERT(NVARCHAR(30), Prop_3)								AS [MACHINE]
+				, CONVERT(NVARCHAR(30), Prop_4)								AS [ITEM_CODE]
 				, CONVERT(NVARCHAR(1000), Prop_5)							AS [DESCRIPTION]
 				, CONVERT(NVARCHAR(100), Prop_6)							AS [CODE]
 				, CONVERT(NVARCHAR(100), Prop_7)							AS [MANUFACTURER]
 				, CONVERT(NVARCHAR(100), Prop_8)							AS [UOM]
+				, CASE WHEN Prop_30 IS NULL THEN NULL
+					WHEN TRIM(Prop_30) = '-' THEN 0.0
+					ELSE CONVERT(FLOAT, Prop_30)
+				END 														AS [PRICE]
 				, CASE WHEN Prop_9 IS NULL OR ISNUMERIC(Prop_9) = 0 
-						OR TRIM(Prop_9) = '-' THEN 0.0 		
+						OR TRIM(Prop_9) = '-' THEN 0.0
 					ELSE CONVERT(FLOAT, Prop_9)
 				END 														AS [QUANTITY]
 				, CASE WHEN Prop_10 IS NULL OR ISNUMERIC(Prop_10) = 0 
@@ -160,17 +165,9 @@ BEGIN
 					ELSE CONVERT(FLOAT, Prop_29)
 				END 														AS [DECEMBER]
 
+				, FILE_NAME
 
-				, SUBSTRING(FILE_PATH, 19, 3)								AS PLANT_NAME
-				, FILE_PATH
-
-				, CONCAT(
-					Prop_3
-					, '~'
-					, LEFT(REPLACE(FILE_PATH, 'Write-off_', ''), 3)
-					, '~'
-					, SUBSTRING(REPLACE(FILE_PATH, 'Write-off_', ''), 5,6)
-				) 															AS W_INTEGRATION_ID
+				, CONCAT(Prop_1, '~', Prop_2, '~', Prop_3, '~', Prop_4) 	AS W_INTEGRATION_ID
 			FROM STG.W_EXCEL_SPP_PURCHASE_FS
 		), TMP_UNPIVOT AS (
 			SELECT
@@ -196,6 +193,7 @@ BEGIN
 			) AS TMP
 		)
 			INSERT INTO FND.W_EXCEL_SPP_PURCHASE_F(
+				PLANT_NAME
 				, [LINE]
 				, [MACHINE]
 				, [ITEM_CODE]
@@ -204,6 +202,7 @@ BEGIN
 				, [MANUFACTURER]
 				, [UOM]
 
+				, [PRICE]
 				, [QUANTITY]
 				, [OVH]
 				, [PM]
@@ -216,8 +215,7 @@ BEGIN
 				, [PERIOD]
 				, [PURCHASING]
 
-				, PLANT_NAME
-				, FILE_PATH
+				, [FILE_NAME]
 
 				, [W_DELETE_FLG]
 				, W_DATASOURCE_NUM_ID
@@ -227,7 +225,8 @@ BEGIN
 				, W_INTEGRATION_ID
 			)
 			select 
-				[LINE]
+				[PLANT_NAME]
+				, [LINE]
 				, [MACHINE]
 				, [ITEM_CODE]
 				, [DESCRIPTION]
@@ -235,6 +234,7 @@ BEGIN
 				, [MANUFACTURER]
 				, [UOM]
 
+				, [PRICE]
 				, [QUANTITY]
 				, [OVH]
 				, [PM]
@@ -247,8 +247,7 @@ BEGIN
 				, [PERIOD]
 				, [PURCHASING]
 
-				, PLANT_NAME
-				, FILE_PATH
+				, [FILE_NAME]
 
 				, 'N' 						AS [W_DELETE_FLG]
 				, 3 						AS [W_DATASOURCE_NUM_ID]

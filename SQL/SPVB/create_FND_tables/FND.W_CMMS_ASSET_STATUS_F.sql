@@ -7,19 +7,24 @@ CREATE TABLE [FND].[W_CMMS_ASSET_STATUS_F]
 	[CODE] [nvarchar](50) NULL,
 	[CODE_DESCRIPTION] [nvarchar](1000) NULL,
 	[CHANGEDATE] DATETIME2 NULL,
+	[CHANGEDATE_ORG] DATETIME2 NULL,
 	[DOWNTIME] [nvarchar](50) NULL,
+	[DOWNTIME_ORG] [nvarchar](50) NULL,
 	[ISRUNNING] [nvarchar](50) NULL,
 	[ASSETSTATUSID] [nvarchar](50) NULL,
 	[LOCATION] [nvarchar](50) NULL,
 	[ASSETNUM] [nvarchar](50) NULL,
+	[ASSET_UID] [nvarchar](30) NULL,
 	[OPERATIONAL] [nvarchar](50) NULL,
 	[WONUM] [nvarchar](50) NULL,
 	[SPVB_ISSUE] [nvarchar](1000) NULL,
 	[SPVB_CA] [nvarchar](500) NULL,
 	[SPVB_PA] [nvarchar](100) NULL,
 	[REMARKS] [nvarchar](50) NULL,
-
+	[IS_SPLIT] INT NULL,
 	[FILE_NAME] [nvarchar](500) NULL,
+
+	[W_INTEGRATION_ID] [nvarchar](4000) NULL,
 	[W_BATCH_ID] [bigint] NULL,
 	[W_INSERT_DT] DATETIME2 NULL
 )
@@ -30,5 +35,4 @@ WITH
 )
 GO
 
-ALTER TABLE [FND].[W_CMMS_ASSET_STATUS_F]
-ALTER COLUMN [SPVB_CA] [nvarchar](500);
+SELECT TOP 10 * FROM [FND].[W_CMMS_ASSET_STATUS_F];

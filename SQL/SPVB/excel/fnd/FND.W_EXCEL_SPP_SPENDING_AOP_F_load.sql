@@ -1,4 +1,4 @@
-SET ANSI_NULLS ON
+                                     SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
@@ -72,9 +72,8 @@ BEGIN
 		;
 
 		WITH A AS (																	
-			SELECT 
-				Prop_1 											    AS OPEX_LINE
-				, Prop_4 											AS AP_ACCOUNT
+			SELECT
+				Prop_4 											AS AP_ACCOUNT
 				, Prop_5 											AS SAP_ACCOUNT_NAME
 				, Prop_6 											AS [DESCRIPTION]
 				, CASE WHEN Prop_7 = '' THEN 0.0 		
@@ -158,8 +157,7 @@ BEGIN
 			) AS TMP
 		)
 			INSERT INTO FND.W_EXCEL_SPP_SPENDING_AOP_F (
-				OPEX_LINE
-				, AP_ACCOUNT
+				AP_ACCOUNT
 				, SAP_ACCOUNT_NAME
 				, [DESCRIPTION]
 				, AOP_AMOUNT
@@ -185,8 +183,7 @@ BEGIN
 				, W_INTEGRATION_ID
 			)
 			select 
-				OPEX_LINE
-				, AP_ACCOUNT
+				AP_ACCOUNT
 				, SAP_ACCOUNT_NAME
 				, [DESCRIPTION]
 				, AOP_AMOUNT
@@ -204,15 +201,19 @@ BEGIN
 				, PLANT_NAME
 				, FILE_PATH
 
-				, 'N' 						AS [W_DELETE_FLG]
-				, 3 						AS [W_DATASOURCE_NUM_ID]
-				, DATEADD(HH, 7, GETDATE()) AS [W_INSERT_DT]
-				, DATEADD(HH, 7, GETDATE()) AS [W_UPDATE_DT]
-				, @p_batch_id				AS [W_BATCH_ID]
-				, W_INTEGRATION_ID
+				, 'N' 												AS [W_DELETE_FLG]
+				, 3 												AS [W_DATASOURCE_NUM_ID]
+				, DATEADD(HH, 7, GETDATE()) 						AS [W_INSERT_DT]
+				, DATEADD(HH, 7, GETDATE()) 						AS [W_UPDATE_DT]
+				, @p_batch_id										AS [W_BATCH_ID]
+				, CONCAT([PERIOD], '~', [LINE_FUNCTION_NAME], '~', [MACHINE],
+					'~', [AP_ACCOUNT], '~', [SPP_SERVICE], '~', [PLANT_NAME], 
+					'~', [SAP_ACCOUNT_NAME]
+				) 													AS INTEGRATION
 			FROM TMP_UNPIVOT
-			;
-
+			WHERE 1=1
+				AND AP_ACCOUNT IS NOT NULL
+		;
 	/*
 		/*delete & re-insert data refresh*/
 		DELETE FROM [dbo].[SAP_ETL_DATAFRESH_CONF] WHERE UPPER(TABLE_NAME) = UPPER(@tgt_TableName)

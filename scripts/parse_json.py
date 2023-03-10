@@ -9,6 +9,8 @@ from tqdm import tqdm
 
 DT_FORMAT = "%Y-%m-%dT%H:%M:%S%z"
 
+prev_items = set()
+
 
 def parser_default(d: List[dict], res_name: str, schema: set = None):
     def _parse(key_list, val):
@@ -178,8 +180,6 @@ def parser_asset(d: dict, schemas: dict = None) -> dict:
         # Tách downtime ra 2 phần
         final_asset_status = []
         for a_st in asset_status:
-            a_st['assetstatusid'] = _to_str(a_st['assetstatusid'])
-
             try:
                 dt = datetime.strptime(a_st['changedate'], DT_FORMAT)
                 a_st['changedate'] = dt.strftime(DT_FORMAT)
@@ -189,6 +189,11 @@ def parser_asset(d: dict, schemas: dict = None) -> dict:
                     a_st['changedate'] = dt.strftime(DT_FORMAT)
                 except ValueError:
                     logging.error(f"Datetime format không đúng ('%d/%m/%Y %H:%M:%S'): {a_st['changedate']}")
+
+            a_st['assetstatusid'] = _to_str(a_st['assetstatusid'])
+            a_st['is_split'] = 0
+            a_st['changedate_org'] = a_st['changedate']
+            a_st['downtime_org'] = a_st['downtime']
 
             if a_st['downtime'] == 0:
                 final_asset_status.append(a_st)
@@ -207,6 +212,7 @@ def parser_asset(d: dict, schemas: dict = None) -> dict:
                 new_ast = a_st.copy()
                 new_ast['downtime'] = downtime2
                 new_ast['changedate'] = first_nextmonth_date.strftime(DT_FORMAT)
+                new_ast['is_split'] = 1
 
                 final_asset_status.append(a_st)
                 final_asset_status.append(new_ast)
@@ -238,6 +244,8 @@ def parser_asset(d: dict, schemas: dict = None) -> dict:
             assetancestor = asset['assetancestor']
         else:
             assetancestor = [asset['assetancestor']]
+
+        asset_tmp['asset_hierachical_count'] = len(assetancestor)
 
         if len(assetancestor) == 1:
             # Asset là 'line'
@@ -294,8 +302,16 @@ def parser_asset(d: dict, schemas: dict = None) -> dict:
     if asset_status:
         for x in asset_status:
             x['assetnum'] = asset_tmp['assetnum']
+            x['assetuid'] = asset_tmp['assetuid']
 
     asset = [asset_tmp]
+
+    # Discard asset if it exists
+    if asset[0]['assetuid'] not in prev_items:
+        prev_items.add(asset[0]['assetuid'])
+    else:
+        asset = []
+
     return {'asset': asset, 'asset_status': asset_status}
 
 
@@ -403,7 +419,7 @@ if __name__ == '__main__':
     # folder lưu kết quả xử lí
     path_out_root = Path(r"D:\TC_Data\_data\_post_processed")
     # folder chứa file JSON
-    path_in = Path(r"D:\TC_Data\_data\_pre_processed\asset")
+    path_in = Path(r"D:\TC_Data\_data\_pre_processed\item")
     # đường dẫn tới
     path_schema = r"D:\TC_Data\spvb-spp\scripts\schemmas.json"
 

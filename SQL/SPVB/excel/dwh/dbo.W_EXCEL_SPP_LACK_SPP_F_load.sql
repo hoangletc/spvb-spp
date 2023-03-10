@@ -3,9 +3,9 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-ALTER PROC [dbo].[EXCEL_proc_load_w_spp_spending_aop_f] @p_batch_id [bigint] AS 
+alter PROC [dbo].[EXCEL_proc_load_w_spp_lack_spp_f] @p_batch_id [bigint] AS 
 BEGIN
-    DECLARE	@tgt_TableName nvarchar(200) = N'dbo.W_EXCEL_SPP_SPENDING_AOP_F',
+    DECLARE	@tgt_TableName nvarchar(200) = N'dbo.W_EXCEL_SPP_LACK_SPP_F',
 			@sql nvarchar(max),
 	        @column_name varchar(4000),
 	        @no_row bigint	,
@@ -74,10 +74,10 @@ BEGIN
 		-- 1. Check existence and remove of temp table
         PRINT '1. Check existence and remove of temp table'
 
-        IF OBJECT_ID(N'tempdb..#W_EXCEL_SPP_SPENDING_AOP_tmp') IS NOT NULL 
+        IF OBJECT_ID(N'tempdb..#W_EXCEL_SPP_LACK_SPP_tmp') IS NOT NULL 
         BEGIN
-            PRINT N'DELETE temporary table #W_EXCEL_SPP_SPENDING_AOP_tmp'
-            DROP Table #W_EXCEL_SPP_SPENDING_AOP_tmp
+            PRINT N'DELETE temporary table #W_EXCEL_SPP_LACK_SPP_tmp'
+            DROP Table #W_EXCEL_SPP_LACK_SPP_tmp
         END;
 
 
@@ -85,36 +85,33 @@ BEGIN
         PRINT '2. Select everything into temp table'
 
 		SELECT
-			ISNULL(PLANT.PLANT_WID, 0)                      AS PLANT_WID
-			, AP_ACCOUNT
-			, SAP_ACCOUNT_NAME
-			, [DESCRIPTION]
-			, AOP_AMOUNT
-			, NORM_ONE_OFF
-			, JULF_22
-			, INC_DEC_PERCENT
-			, NOTE
-			, [PERIOD]
-			, [SPENDING_AMOUNT]
-			, RM_TYPE
-			, LINE_FUNCTION_NAME
-			, MACHINE
-			, PM_CM_OVH
-			, SPP_SERVICE
-			, PLANT_NAME
+			[YEAR] * 10000 + [MONTH] * 100 + 1		AS DATE_WID
+			, ISNULL(IT.ITEM_WID, 0)				AS ITEM_WID
+			, ISNULL(P.PLANT_WID, 0)				AS PLANT_WID
+
+			, F.ITEM_NUM
+			, F.[DESCRIPTION]
+			, F.[WAREHOUSE]
+			, M.SAP_PLANT
+			, M.SAP_STO_LOC
+			, [LACK_SPP]
 			
-			, F.W_INTEGRATION_ID                            AS W_INTEGRATION_ID
-			, 'N'                                           AS W_DELETE_FLG
-			, 'N' 											AS W_UPDATE_FLG
-			, 3                                             AS W_DATASOURCE_NUM_ID
-			, DATEADD(HH, 7, GETDATE())                     AS W_INSERT_DT
-			, DATEADD(HH, 7, GETDATE())                     AS W_UPDATE_DT
-			, @p_batch_id                                   AS W_BATCH_ID
-		INTO #W_EXCEL_SPP_SPENDING_AOP_tmp
-		FROM FND.W_EXCEL_SPP_SPENDING_AOP_F F
-			LEFT JOIN [dbo].[W_SAP_PLANT_EXTENDED_D] PLANT ON 1=1
-			AND PLANT.PLANT_NAME_2 = PLANT_NAME
-			AND STo_LOC = ''
+			, F.W_INTEGRATION_ID                    AS W_INTEGRATION_ID
+			, 'N'                                   AS W_DELETE_FLG
+			, 'N' 									AS W_UPDATE_FLG
+			, 3                                     AS W_DATASOURCE_NUM_ID
+			, DATEADD(HH, 7, GETDATE())             AS W_INSERT_DT
+			, DATEADD(HH, 7, GETDATE())             AS W_UPDATE_DT
+			, @p_batch_id                           AS W_BATCH_ID
+		INTO #W_EXCEL_SPP_LACK_SPP_tmp
+		FROM FND.W_EXCEL_SPP_LACK_SPP_F F
+			LEFT JOIN [dbo].[W_CMMS_ITEM_D] IT ON 1=1
+				AND IT.ITEM_NUM = F.ITEM_NUM
+			LEFT JOIN [FND].[W_EXCEL_SPP_MAPPING_SLOC_SAP_CMMS_D] M ON 1=1
+				AND M.CMMS_STO_LOC = F.WAREHOUSE
+			LEFT JOIN [dbo].[W_SAP_PLANT_EXTENDED_D] P ON 1=1
+				AND P.STO_LOC = M.SAP_STO_LOC
+				AND P.PLANT = M.SAP_PLANT
 		;
 
 
@@ -124,34 +121,27 @@ BEGIN
 		-- 3.1. Mark existing records by flag 'Y'
 		PRINT '3.1. Mark existing records by flag ''Y'''
 
-		UPDATE #W_EXCEL_SPP_SPENDING_AOP_tmp
+		UPDATE #W_EXCEL_SPP_LACK_SPP_tmp
 		SET W_UPDATE_FLG = 'Y'
-		FROM #W_EXCEL_SPP_SPENDING_AOP_tmp tg
-		INNER JOIN [dbo].[W_EXCEL_SPP_SPENDING_AOP_F] sc 
+		FROM #W_EXCEL_SPP_LACK_SPP_tmp tg
+		INNER JOIN [dbo].[W_EXCEL_SPP_LACK_SPP_F] sc 
 		ON sc.W_INTEGRATION_ID = tg.W_INTEGRATION_ID
 
 		-- 3.2. Start updating
 		PRINT '3.2. Start updating'
 
-		UPDATE  [dbo].[W_EXCEL_SPP_SPENDING_AOP_F]
-		SET
-			PLANT_WID = src.PLANT_WID
-			, AP_ACCOUNT = src.AP_ACCOUNT
-			, SAP_ACCOUNT_NAME = src.SAP_ACCOUNT_NAME
-			, [DESCRIPTION] = src.DESCRIPTION
-			, AOP_AMOUNT = src.AOP_AMOUNT
-			, NORM_ONE_OFF = src.NORM_ONE_OFF
-			, JULF_22 = src.JULF_22
-			, INC_DEC_PERCENT = src.INC_DEC_PERCENT
-			, NOTE = src.NOTE
-			, [PERIOD] = src.[PERIOD]
-			, [SPENDING_AMOUNT] = src.[SPENDING_AMOUNT]
-			, RM_TYPE = src.RM_TYPE
-			, LINE_FUNCTION_NAME = src.LINE_FUNCTION_NAME
-			, MACHINE = src.MACHINE
-			, PM_CM_OVH = src.PM_CM_OVH
-			, SPP_SERVICE = src.SPP_SERVICE
-			, PLANT_NAME = src.PLANT_NAME
+		UPDATE  [dbo].[W_EXCEL_SPP_LACK_SPP_F]
+		SET 
+			[ITEM_WID] = src.[ITEM_WID]
+			, [PLANT_WID] = src.[PLANT_WID]
+			, [DATE_WID] = src.[DATE_WID]
+
+			, [ITEM_NUM] = src.[ITEM_NUM]
+			, [DESCRIPTION] = src.[DESCRIPTION]
+			, [WAREHOUSE] = src.[WAREHOUSE]
+			, [SAP_PLANT] = src.[SAP_PLANT]
+			, [SAP_STO_LOC] = src.[SAP_STO_LOC]
+			, [LACK_SPP] = src.[LACK_SPP]
 
 			, W_DELETE_FLG = src.W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID = src.W_DATASOURCE_NUM_ID
@@ -159,31 +149,24 @@ BEGIN
 			, W_BATCH_ID = src.W_BATCH_ID
 			, W_INTEGRATION_ID = src.W_INTEGRATION_ID
 			, W_UPDATE_DT = DATEADD(HH, 7, GETDATE())
-		FROM [dbo].[W_EXCEL_SPP_SPENDING_AOP_F] tgt
-		INNER JOIN #W_EXCEL_SPP_SPENDING_AOP_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID
+		FROM [dbo].[W_EXCEL_SPP_LACK_SPP_F] tgt
+		INNER JOIN #W_EXCEL_SPP_LACK_SPP_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID
 
 
 		-- 4. Insert non-existed records to main table from temp table
 		PRINT '4. Insert non-existed records to main table from temp table'
 
-		INSERT INTO [dbo].[W_EXCEL_SPP_SPENDING_AOP_F](
+		INSERT INTO [dbo].[W_EXCEL_SPP_LACK_SPP_F](
 			[PLANT_WID]
-			, AP_ACCOUNT
-			, SAP_ACCOUNT_NAME
+			, [ITEM_WID]
+			, [DATE_WID]
+
+			, ITEM_NUM
 			, [DESCRIPTION]
-			, AOP_AMOUNT
-			, NORM_ONE_OFF
-			, JULF_22
-			, INC_DEC_PERCENT
-			, NOTE
-			, [PERIOD]
-			, [SPENDING_AMOUNT]
-			, RM_TYPE
-			, LINE_FUNCTION_NAME
-			, MACHINE
-			, PM_CM_OVH
-			, SPP_SERVICE
-			, PLANT_NAME
+			, [WAREHOUSE]
+			, SAP_PLANT
+			, SAP_STO_LOC
+			, [LACK_SPP]
 
 			, W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID
@@ -193,23 +176,16 @@ BEGIN
 			, W_INTEGRATION_ID
 		)
 		SELECT
-			PLANT_WID
-			, AP_ACCOUNT
-			, SAP_ACCOUNT_NAME
+			[PLANT_WID]
+			, [ITEM_WID]
+			, [DATE_WID]
+
+			, ITEM_NUM
 			, [DESCRIPTION]
-			, AOP_AMOUNT
-			, NORM_ONE_OFF
-			, JULF_22
-			, INC_DEC_PERCENT
-			, NOTE
-			, [PERIOD]
-			, [SPENDING_AMOUNT]
-			, RM_TYPE
-			, LINE_FUNCTION_NAME
-			, MACHINE
-			, PM_CM_OVH
-			, SPP_SERVICE
-			, PLANT_NAME
+			, [WAREHOUSE]
+			, SAP_PLANT
+			, SAP_STO_LOC
+			, [LACK_SPP]
 
 			, W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID
@@ -217,8 +193,9 @@ BEGIN
 			, W_UPDATE_DT
 			, W_BATCH_ID
 			, W_INTEGRATION_ID
-		FROM #W_EXCEL_SPP_SPENDING_AOP_tmp
+		FROM #W_EXCEL_SPP_LACK_SPP_tmp
 		where W_UPDATE_FLG = 'N'
+
 
 
 		/*delete & re-insert data refresh*/
@@ -240,17 +217,17 @@ BEGIN
             DATEADD(HH, 7, GETDATE())
         FROM (
             SELECT *
-            FROM W_EXCEL_SPP_SPENDING_AOP_F
+            FROM W_EXCEL_SPP_LACK_SPP_F
         ) M
         WHERE 1=1
             AND W_BATCH_ID = @p_batch_id
             AND W_DELETE_FLG = 'N'
 
-		SET @src_rownum = ( SELECT COUNT(1) FROM #W_EXCEL_SPP_SPENDING_AOP_tmp );
+		SET @src_rownum = ( SELECT COUNT(1) FROM #W_EXCEL_SPP_LACK_SPP_tmp );
 		SET @tgt_rownum = ( 
             SELECT 
                 COUNT(DISTINCT W_INTEGRATION_ID)
-            FROM W_EXCEL_SPP_SPENDING_AOP_F
+            FROM W_EXCEL_SPP_LACK_SPP_F
             WHERE 1=1
                 AND W_DELETE_FLG = 'N' 
                 AND W_BATCH_ID = @p_batch_id
@@ -277,36 +254,3 @@ BEGIN
 			@tgt_chk_value 		= @tgt_chk_value
 END
 GO
-
-
-SELECT TOP 50 * FROM FND.W_EXCEL_SPP_SPENDING_AOP_F
-WHERE AP_ACCOUNT IS NULL;
-
-SELECT DISTINCT SPENDING_AMOUNT
-FROM FND.W_EXCEL_SPP_SPENDING_AOP_F;
-
-WITH TMP AS (
-	SELECT
-		[PERIOD]
-		, [LINE_FUNCTION_NAME]
-		, [MACHINE]
-		, [AP_ACCOUNT]
-		, CONCAT([PERIOD], '~', [LINE_FUNCTION_NAME], '~', [MACHINE],'~', [AP_ACCOUNT],
-			'~', [SPP_SERVICE], '~', [PLANT_NAME], '~', [SAP_ACCOUNT_NAME]
-		) AS INTEGRATION
-	FROM FND.W_EXCEL_SPP_SPENDING_AOP_F
-	WHERE AP_ACCOUNT IS NOT NULL
-),
-TMP1 AS (
-	SELECT
-		[PERIOD]
-		, [LINE_FUNCTION_NAME]
-		, [MACHINE]
-		, [AP_ACCOUNT]
-		, COUNT(INTEGRATION) OVER (PARTITION BY INTEGRATION) AS TOTAL
-	FROM TMP
-)
-	select * from TMP1 WHERE TOTAL > 1
-;
-
-select top 10 * from FND.W_EXCEL_SPP_SPENDING_AOP_F;
