@@ -2,7 +2,6 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-
 ALTER PROC [dbo].[CMMS_proc_load_w_spp_wo_f] @p_batch_id [bigint] AS 
 BEGIN
     DECLARE	@tgt_TableName nvarchar(200) = N'dbo.W_CMMS_WO_F',
@@ -87,10 +86,10 @@ BEGIN
 		SELECT
 			ISNULL(PLANT.PLANT_WID, 0)                              AS PLANT_WID
 			, ISNULL(AST.LOCATION_WID, 0)                           AS LOC_WID
-			, CASE WHEN SCHEDSTART IS NULL OR SCHEDSTART = ''
+			, CASE WHEN SCHEDFINISH IS NULL OR SCHEDFINISH = ''
 				THEN 0
 				ELSE FORMAT(
-					CONVERT(DATETIME2, SCHEDSTART, 103), 
+					CONVERT(DATETIME2, SCHEDFINISH, 103), 
 					'yyyyMMdd'
 				)
 			END                                                     AS DATE_WID
@@ -181,8 +180,7 @@ BEGIN
 
 			, CONVERT(
 				NVARCHAR(300), 
-				CONCAT(WO.WONUM, '~', ASSETNUM, '~',
-						PMNUM, '~', SUPERVISOR, '~', JPNUM)
+				CONCAT(WO.WONUM, '~', WO.WORKORDER_ID)
 			)                                                       AS W_INTEGRATION_ID
 			, 'N'                                                   AS W_DELETE_FLG
 			, 'N' 											        AS W_UPDATE_FLG
@@ -299,7 +297,7 @@ BEGIN
 		-- 3.2. Start updating
 		PRINT '3.2. Start updating'
 
-		UPDATE  [dbo].[W_CMMS_WO_F]
+		UPDATE [dbo].[W_CMMS_WO_F]
 		SET 
 			PLANT_WID = src.PLANT_WID
 			, LOC_WID = src.LOC_WID

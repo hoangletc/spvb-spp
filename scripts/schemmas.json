@@ -20,7 +20,8 @@
     "line_asset_num",
     "machine_asset_num",
     "component_asset_num",
-    "description"
+    "description",
+    "ancestor"
   ],
   "asset_status": [
     "code",
@@ -269,7 +270,8 @@
     "quantity",
     "siteid",
     "storeloc",
-    "transtype_description"
+    "transtype_description",
+    "transtype"
   ],
   "inventory_cost": ["avgcost", "invcostid", "stdcost", "lastcost"],
   "inventory": [

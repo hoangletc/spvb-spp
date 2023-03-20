@@ -3,7 +3,9 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-ALTER PROC [dbo].[EXCEL_proc_load_w_spp_line_category_downtime_f] @p_batch_id [bigint] AS 
+select top 10 * from dbo.W_EXCEL_SPP_LINE_CATEGORY_DOWNTIME_F;
+
+CREATE PROC [dbo].[EXCEL_proc_load_w_spp_line_category_downtime_f] @p_batch_id [bigint] AS 
 BEGIN
     DECLARE	@tgt_TableName nvarchar(200) = N'dbo.W_EXCEL_SPP_LINE_CATEGORY_DOWNTIME_F',
 			@sql nvarchar(max),

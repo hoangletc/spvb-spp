@@ -12,6 +12,15 @@
     },
     {
       "source": {
+        "path": "$[''ancestor'']"
+      },
+      "sink": {
+        "name": "ANCESTOR",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
         "path": "$[''spvb_costcenter'']"
       },
       "sink": {
@@ -21,7 +30,7 @@
     },
     {
       "source": {
-        "path": "$[''changedate'']"
+        "path": "$[''asset_changedate'']"
       },
       "sink": {
         "name": "CHANGE_DATE",
@@ -44,15 +53,6 @@
       "sink": {
         "name": "TOTAL_COST",
         "type": "Float"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''status'']"
-      },
-      "sink": {
-        "name": "STATUS",
-        "type": "String"
       }
     },
     {
@@ -114,7 +114,7 @@
         "path": "$[''isrunning'']"
       },
       "sink": {
-        "name": "ISRUNNING",
+        "name": "IS_RUNNING",
         "type": "String"
       }
     },
@@ -138,46 +138,10 @@
     },
     {
       "source": {
-        "path": "$[''asset_hierachical_type'']"
+        "path": "$[''children'']"
       },
       "sink": {
-        "name": "ASSET_HIERACHICAL_TYPE",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''asset_hierachical_count'']"
-      },
-      "sink": {
-        "name": "ASSET_HIERACHICAL_COUNT",
-        "type": "Int64"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''line_asset_num'']"
-      },
-      "sink": {
-        "name": "LINE_ASSET_NUM",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''machine_asset_num'']"
-      },
-      "sink": {
-        "name": "MACHINE_ASSET_NUM",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''component_asset_num'']"
-      },
-      "sink": {
-        "name": "COMPONENT_ASSET_NUM",
+        "name": "CHILDREN",
         "type": "String"
       }
     },

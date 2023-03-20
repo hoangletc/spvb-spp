@@ -2,8 +2,7 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-
-ALTER PROC [dbo].[EXCEL_proc_load_fnd_w_spp_line_category_downtime_f] @p_batch_id [bigint] AS
+CREATE PROC [dbo].[EXCEL_proc_load_fnd_w_spp_line_category_downtime_f] @p_batch_id [bigint] AS
 
 BEGIN
 	--DECLARE @p_batch_id bigint = 2020111601
@@ -68,48 +67,48 @@ BEGIN
 	;
 		WITH A AS (																	
 			SELECT
-				CONVERT(NVARCHAR(10), [Site])								AS [PLANT_NAME]
+				  CONVERT(NVARCHAR(10), [Site])								AS [PLANT_NAME]
 				, CONVERT(NVARCHAR(50), [CAT])								AS [CATEGORY]
 				, CONVERT(NVARCHAR(50), [Asset No])							AS [ASSET_NUM]
 				, CONVERT(NVARCHAR(1000), [Line])							AS [LINE_DESCRIPTION]
 				, CONVERT(NVARCHAR(20), [CODE])								AS [CODE]
-				, CONVERT(DECIMAL(38, 20), [YTD])							AS [YEAR_TO_DATE]
-
-				, CONVERT(DECIMAL(38, 20), [Jan])							AS [JANUARY]
-				, CONVERT(DECIMAL(38, 20), [Feb])							AS [FEBRUARY]
-				, CONVERT(DECIMAL(38, 20), [Mar])							AS [MARCH]
-				, CONVERT(DECIMAL(38, 20), [Apr])							AS [APRIL]
+				, CONVERT(NVARCHAR(20), [YEAR]) AS [YEAR]
+				--, CONVERT(DECIMAL(38, 20), [YTD])							AS [YEAR_TO_DATE]
+				, CONVERT(DECIMAL(38, 20), [Jan])							AS [JAN]
+				, CONVERT(DECIMAL(38, 20), [Feb])							AS [FEB]
+				, CONVERT(DECIMAL(38, 20), [Mar])							AS [MAR]
+				, CONVERT(DECIMAL(38, 20), [Apr])							AS [APR]
 				, CONVERT(DECIMAL(38, 20), [May])							AS [MAY]
-				, CONVERT(DECIMAL(38, 20), [Jun])							AS [JUNE]
-				, CONVERT(DECIMAL(38, 20), [Jul])							AS [JULY]
-				, CONVERT(DECIMAL(38, 20), [Aug])							AS [AUGUST]
-				, CONVERT(DECIMAL(38, 20), [Sep])							AS [SEPTEMBER]
-				, CONVERT(DECIMAL(38, 20), [Oct])							AS [OCTOBER]
-				, CONVERT(DECIMAL(38, 20), [Nov])							AS [NOVEMBER]
-				, CONVERT(DECIMAL(38, 20), [Dec])							AS [DECEMBER]
+				, CONVERT(DECIMAL(38, 20), [Jun])							AS [JUN]
+				, CONVERT(DECIMAL(38, 20), [Jul])							AS [JUL]
+				, CONVERT(DECIMAL(38, 20), [Aug])							AS [AUG]
+				, CONVERT(DECIMAL(38, 20), [Sep])							AS [SEP]
+				, CONVERT(DECIMAL(38, 20), [Oct])							AS [OCT]
+				, CONVERT(DECIMAL(38, 20), [Nov])							AS [NOV]
+				, CONVERT(DECIMAL(38, 20), [Dec])							AS [DEC]
 
 				, FILE_PATH
 			FROM STG.[W_EXCEL_SPP_LINE_CATEGORY_DOWNTIME_FS]
 		), TMP_UNPIVOT AS (
 			SELECT
 				TMP.*
-				, 2023 * 100 + MONTH([MONTH] + ' 1 2023') 					AS [PERIOD]
+				, CONVERT(VARCHAR, CONVERT(DATE, CONCAT([YEAR], '-' + [MONTH], '-01')),112)					AS [PERIOD]
 			FROM A
 			UNPIVOT (
 				DOWNTIME
 				FOR [MONTH] IN (
-					[JANUARY]
-					, [FEBRUARY]
-					, [MARCH]
-					, [APRIL]
+					  [JAN]
+					, [FEB]
+					, [MAR]
+					, [APR]
 					, [MAY]
-					, [JUNE]
-					, [JULY]
-					, [AUGUST]
-					, [SEPTEMBER]
-					, [OCTOBER]
-					, [NOVEMBER]
-					, [DECEMBER]
+					, [JUN]
+					, [JUL]
+					, [AUG]
+					, [SEP]
+					, [OCT]
+					, [NOV]
+					, [DEC]
 				)
 			) AS TMP
 		)
@@ -133,12 +132,12 @@ BEGIN
 				, W_INTEGRATION_ID
 			)
 			select 
-				PLANT_NAME
+				  PLANT_NAME
 				, [CATEGORY]
 				, [ASSET_NUM]
 				, [LINE_DESCRIPTION]
 				, [CODE]
-				, [YEAR_TO_DATE]
+				, NULL [YEAR_TO_DATE]
 
 				, [PERIOD]
 				, [DOWNTIME]
@@ -149,9 +148,30 @@ BEGIN
 				, DATEADD(HH, 7, GETDATE()) 								AS [W_INSERT_DT]
 				, DATEADD(HH, 7, GETDATE()) 								AS [W_UPDATE_DT]
 				, @p_batch_id												AS [W_BATCH_ID]
-				, CONCAT([CATEGORY], '~', [PLANT_NAME], 
+				, CONCAT([CATEGORY], '~', [PLANT_NAME], '~', CONVERT(NVARCHAR(20), [CODE])	,
 						'~', [ASSET_NUM], '~', [PERIOD]) 					AS W_INTEGRATION_ID
 			from TMP_UNPIVOT
+			UNION ALL
+			SELECT
+				  CONVERT(NVARCHAR(10), [Site])								AS [PLANT_NAME]
+				, CONVERT(NVARCHAR(50), [CAT])								AS [CATEGORY]
+				, CONVERT(NVARCHAR(50), [Asset No])							AS [ASSET_NUM]
+				, CONVERT(NVARCHAR(1000), [Line])							AS [LINE_DESCRIPTION]
+				, CONCAT(CONVERT(NVARCHAR(20), [CODE]), ' YTD')				AS [CODE]
+				, CONVERT(DECIMAL(38, 20), [YTD])							AS [YEAR_TO_DATE]
+				, CONVERT(VARCHAR, CONVERT(DATE, CONCAT(CONVERT(NVARCHAR(20), [YEAR]), '-Jan', '-01')), 112) as [PERIOD]-- hot fix before chinh lai ten file
+				, null as [DOWNTIME]
+				, FILE_PATH
+				, 'N' 														AS [W_DELETE_FLG]
+				, 3 														AS [W_DATASOURCE_NUM_ID]
+				, DATEADD(HH, 7, GETDATE()) 								AS [W_INSERT_DT]
+				, DATEADD(HH, 7, GETDATE()) 								AS [W_UPDATE_DT]
+				, @p_batch_id [W_BATCH_ID]
+				, CONCAT
+					(	CONVERT(NVARCHAR(50), [CAT]), '~', CONVERT(NVARCHAR(10), [Site]), '~', CONCAT(CONVERT(NVARCHAR(20), [CODE]), ' YTD'), 
+						'~', CONVERT(NVARCHAR(50), [Asset No]), '~', CONVERT(VARCHAR, CONVERT(DATE, CONCAT(CONVERT(NVARCHAR(20), [YEAR]), '-Jan', '-01')), 112)
+					) 					AS W_INTEGRATION_ID
+			FROM STG.[W_EXCEL_SPP_LINE_CATEGORY_DOWNTIME_FS]
 		;
 
 		/*delete & re-insert data refresh*/

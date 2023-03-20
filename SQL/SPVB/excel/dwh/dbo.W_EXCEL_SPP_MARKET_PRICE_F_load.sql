@@ -74,10 +74,10 @@ BEGIN
 		-- 1. Check existence and remove of temp table
         PRINT '1. Check existence and remove of temp table'
 
-        IF OBJECT_ID(N'tempdb..#W_EXCEL_SPP_SPENDING_AOP_tmp') IS NOT NULL 
+        IF OBJECT_ID(N'tempdb..#W_EXCEL_SPP_MARKET_PRICE_tmp') IS NOT NULL 
         BEGIN
-            PRINT N'DELETE temporary table #W_EXCEL_SPP_SPENDING_AOP_tmp'
-            DROP Table #W_EXCEL_SPP_SPENDING_AOP_tmp
+            PRINT N'DELETE temporary table #W_EXCEL_SPP_MARKET_PRICE_tmp'
+            DROP Table #W_EXCEL_SPP_MARKET_PRICE_tmp
         END;
 
 
@@ -85,25 +85,44 @@ BEGIN
         PRINT '2. Select everything into temp table'
 
 		SELECT
-			CODE
-			, PLANT
-			, SPP_CODE
-			, [DESCRIPTION]
-			, BASE_UNIT
-			, PRICE
-			, PLANT_NAME
-			, [PERIOD]
+			ISNULL(PRODUCT.PRODUCT_WID, 0)      			AS PRODUCT_WID
+			, ISNULL(PL_X.PLANT_WID, 0)						AS PLANT_WID
+			, FORMAT(
+				EOMONTH(CONVERT(VARCHAR, [PERIOD]) + '01')
+				, 'yyyyMMdd'
+			)												AS DATE_WID
 			
-			, W_INTEGRATION_ID                              AS W_INTEGRATION_ID
+			, F.PLANT
+			, ISNULL(PLANT_NAME, PL_X.PLANT_NAME_2)			AS PLANT_NAME
+			, F.STO_LOC										AS STORAGE_LOCATION
+			, SPP_CODE										AS MATERIAL_NUMBER
+			, PRICE											AS MARKET_PRICE
+			, [DESCRIPTION]
+			, CODE
+			, BASE_UNIT
+			
+			, CONCAT(SPP_CODE, '~', 
+					ISNULL(PLANT_NAME, PL_X.PLANT_NAME_2),
+					'~', F.STO_LOC
+			)                                               AS W_INTEGRATION_ID
 			, 'N'                                           AS W_DELETE_FLG
 			, 'N' 											AS W_UPDATE_FLG
-			, 8                                             AS W_DATASOURCE_NUM_ID
+			, 3                                             AS W_DATASOURCE_NUM_ID
 			, DATEADD(HH, 7, GETDATE())                     AS W_INSERT_DT
 			, DATEADD(HH, 7, GETDATE())                     AS W_UPDATE_DT
 			, @p_batch_id                                   AS W_BATCH_ID
-		INTO #W_EXCEL_SPP_SPENDING_AOP_tmp
-		FROM FND.W_EXCEL_SPP_MARKET_PRICE_F
+		INTO #W_EXCEL_SPP_MARKET_PRICE_tmp
+		FROM FND.W_EXCEL_SPP_MARKET_PRICE_F F
+		LEFT JOIN [dbo].[W_PRODUCT_D] PRODUCT ON 1=1
+			AND SPP_CODE = PRODUCT.PRODUCT_CODE
+			AND PRODUCT.W_DATASOURCE_NUM_ID = 1
+		LEFT JOIN [dbo].[W_SAP_PLANT_EXTENDED_D] PL_X ON 1=1
+			AND PL_X.STo_LOC = ISNULL(F.STO_LOC, '')
+			AND F.PLANT = PL_X.PLANT
+		WHERE 1=1
+			AND SPP_CODE IS NOT NULL
 		;
+
 
 
 		-- 3. Update main table using W_INTEGRATION_ID
@@ -112,9 +131,9 @@ BEGIN
 		-- 3.1. Mark existing records by flag 'Y'
 		PRINT '3.1. Mark existing records by flag ''Y'''
 
-		UPDATE #W_EXCEL_SPP_SPENDING_AOP_tmp
+		UPDATE #W_EXCEL_SPP_MARKET_PRICE_tmp
 		SET W_UPDATE_FLG = 'Y'
-		FROM #W_EXCEL_SPP_SPENDING_AOP_tmp tg
+		FROM #W_EXCEL_SPP_MARKET_PRICE_tmp tg
 		INNER JOIN [dbo].[W_EXCEL_SPP_MARKET_PRICE_F] sc 
 		ON sc.W_INTEGRATION_ID = tg.W_INTEGRATION_ID
 
@@ -123,14 +142,19 @@ BEGIN
 
 		UPDATE  [dbo].[W_EXCEL_SPP_MARKET_PRICE_F]
 		SET 
-			CODE = src.CODE
+			DATE_WID = src.DATE_WID
+			, PRODUCT_WID = src.PRODUCT_WID
+			, PLANT_WID = src.PLANT_WID
+
 			, PLANT = src.PLANT
-			, SPP_CODE = src.SPP_CODE
+			, PLANT_NAME = src.PLANT_NAME
+			, STORAGE_LOCATION = src.STORAGE_LOCATION
+			, MATERIAL_NUMBER = src.MATERIAL_NUMBER
+			, MARKET_PRICE = src.MARKET_PRICE
+
 			, [DESCRIPTION] = src.DESCRIPTION
 			, BASE_UNIT = src.BASE_UNIT
-			, PRICE = src.PRICE
-			, PLANT_NAME = src.PLANT_NAME
-			, [PERIOD] = src.PERIOD
+			, CODE = src.CODE
 
 			, W_DELETE_FLG = src.W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID = src.W_DATASOURCE_NUM_ID
@@ -139,21 +163,25 @@ BEGIN
 			, W_INTEGRATION_ID = src.W_INTEGRATION_ID
 			, W_UPDATE_DT = DATEADD(HH, 7, GETDATE())
 		FROM [dbo].[W_EXCEL_SPP_MARKET_PRICE_F] tgt
-		INNER JOIN #W_EXCEL_SPP_SPENDING_AOP_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID
+		INNER JOIN #W_EXCEL_SPP_MARKET_PRICE_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID
 
 
 		-- 4. Insert non-existed records to main table from temp table
 		PRINT '4. Insert non-existed records to main table from temp table'
 
 		INSERT INTO [dbo].[W_EXCEL_SPP_MARKET_PRICE_F](
-			CODE
-			, PLANT
-			, SPP_CODE
+			[DATE_WID]
+			, [PRODUCT_WID]
+			, [PLANT_WID]
+
+			, [PLANT]
+			, [PLANT_NAME]
+			, [STORAGE_LOCATION]
+			, [MATERIAL_NUMBER] 
+			, [MARKET_PRICE]
 			, [DESCRIPTION]
-			, BASE_UNIT
-			, PRICE
-			, PLANT_NAME
-			, [PERIOD]
+			, [BASE_UNIT]
+			, [CODE]
 
 			, W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID
@@ -163,14 +191,18 @@ BEGIN
 			, W_INTEGRATION_ID
 		)
 		SELECT
-			CODE
-			, PLANT
-			, SPP_CODE
+			[DATE_WID]
+			, [PRODUCT_WID]
+			, [PLANT_WID]
+
+			, [PLANT]
+			, [PLANT_NAME]
+			, [STORAGE_LOCATION]
+			, [MATERIAL_NUMBER] 
+			, [MARKET_PRICE]
 			, [DESCRIPTION]
-			, BASE_UNIT
-			, PRICE
-			, PLANT_NAME
-			, [PERIOD]
+			, [BASE_UNIT]
+			, [CODE]
 
 			, W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID
@@ -178,7 +210,7 @@ BEGIN
 			, W_UPDATE_DT
 			, W_BATCH_ID
 			, W_INTEGRATION_ID
-		FROM #W_EXCEL_SPP_SPENDING_AOP_tmp
+		FROM #W_EXCEL_SPP_MARKET_PRICE_tmp
 		where W_UPDATE_FLG = 'N'
 
 
@@ -208,7 +240,7 @@ BEGIN
             AND W_BATCH_ID = @p_batch_id
             AND W_DELETE_FLG = 'N'
 
-		SET @src_rownum = ( SELECT COUNT(1) FROM #W_EXCEL_SPP_SPENDING_AOP_tmp );
+		SET @src_rownum = ( SELECT COUNT(1) FROM #W_EXCEL_SPP_MARKET_PRICE_tmp );
 		SET @tgt_rownum = ( 
             SELECT 
                 COUNT(DISTINCT W_INTEGRATION_ID)

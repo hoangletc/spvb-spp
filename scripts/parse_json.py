@@ -161,12 +161,24 @@ def parser_asset(d: dict, schemas: dict = None) -> dict:
 
         return str(a)
 
-    asset, asset_status = d, d.get('assetstatus', None)
+    asset, asset_status, asset_ancestor = d, d.get('assetstatus', None), d.get('assetancestor', None)
 
     if asset_status in ({}, []):
         asset_status = None
+    if asset_ancestor in ({}, []):
+        asset_ancestor = None
 
     # Parse
+    if asset_ancestor:
+        if isinstance(asset_ancestor, dict):
+            asset_ancestor = [asset_ancestor]
+
+        asset_ancestor = [
+            parser_default(x, "asset_ancestor", schemas['asset_ancestor'])[
+                'asset_ancestor']
+            for x in asset_ancestor
+        ]
+
     if asset_status:
         if isinstance(asset_status, dict):
             asset_status = [asset_status]
@@ -239,68 +251,73 @@ def parser_asset(d: dict, schemas: dict = None) -> dict:
             logging.error(f"Datetime format không đúng: {asset_tmp['changedate']}")
 
     # Supplement info for 'asset'
-    if 'assetancestor' in asset and asset['assetancestor'] is not None:
-        if isinstance(asset['assetancestor'], list):
-            assetancestor = asset['assetancestor']
-        else:
-            assetancestor = [asset['assetancestor']]
+    # if 'assetancestor' in asset and asset['assetancestor'] is not None:
+    #     if isinstance(asset['assetancestor'], list):
+    #         assetancestor = asset['assetancestor']
+    #     else:
+    #         assetancestor = [asset['assetancestor']]
 
-        asset_tmp['asset_hierachical_count'] = len(assetancestor)
+    #     asset_tmp['asset_hierachical_count'] = len(assetancestor)
 
-        if len(assetancestor) == 1:
-            # Asset là 'line'
-            asset_tmp['asset_hierachical_type'] = "line"
-            asset_tmp['line_asset_num'] = asset_tmp['assetnum']
+    #     if len(assetancestor) == 1:
+    #         # Asset là 'line'
+    #         asset_tmp['asset_hierachical_type'] = "line"
+    #         asset_tmp['line_asset_num'] = asset_tmp['assetnum']
 
-        elif len(assetancestor) == 2:
-            # Asset là 'machine'
-            asset_tmp['asset_hierachical_type'] = "machine"
-            asset_tmp['machine_asset_num'] = asset_tmp['assetnum']
+    #     elif len(assetancestor) == 2:
+    #         # Asset là 'machine'
+    #         asset_tmp['asset_hierachical_type'] = "machine"
+    #         asset_tmp['machine_asset_num'] = asset_tmp['assetnum']
 
-            # Get parent asset
-            parent = None
-            for x in assetancestor:
-                if x['hierarchylevels'] == 1:
-                    parent = x
-                    break
-            assert parent is not None, "asset['assetancestor'] không có machine asset (hierarchylevels = 1)"
+    #         # Get parent asset
+    #         parent = None
+    #         for x in assetancestor:
+    #             if x['hierarchylevels'] == 1:
+    #                 parent = x
+    #                 break
+    #         assert parent is not None, "asset['assetancestor'] không có machine asset (hierarchylevels = 1)"
 
-            asset_tmp['line_asset_num'] = _to_str(parent['ancestor'])
+    #         asset_tmp['line_asset_num'] = _to_str(parent['ancestor'])
 
-        elif len(assetancestor) == 3:
-            # Asset là 'component'
-            asset_tmp['asset_hierachical_type'] = "component"
-            asset_tmp['component_asset_num'] = asset_tmp['assetnum']
+    #     elif len(assetancestor) == 3:
+    #         # Asset là 'component'
+    #         asset_tmp['asset_hierachical_type'] = "component"
+    #         asset_tmp['component_asset_num'] = asset_tmp['assetnum']
 
-            # Get parent asset
-            parent = None
-            for x in assetancestor:
-                if x['hierarchylevels'] == 1:
-                    parent = x
-                    break
-            assert parent is not None, "asset['assetancestor'] không có machine asset (hierarchylevels = 1)"
+    #         # Get parent asset
+    #         parent = None
+    #         for x in assetancestor:
+    #             if x['hierarchylevels'] == 1:
+    #                 parent = x
+    #                 break
+    #         assert parent is not None, "asset['assetancestor'] không có machine asset (hierarchylevels = 1)"
 
-            asset_tmp['machine_asset_num'] = _to_str(parent['ancestor'])
+    #         asset_tmp['machine_asset_num'] = _to_str(parent['ancestor'])
 
-            # Get grandparent asset
-            grandparent = None
-            for x in assetancestor:
-                if x['hierarchylevels'] == 2:
-                    grandparent = x
-                    break
-            assert grandparent is not None, "asset['assetancestor'] không có line asset (hierarchylevels = 2)"
+    #         # Get grandparent asset
+    #         grandparent = None
+    #         for x in assetancestor:
+    #             if x['hierarchylevels'] == 2:
+    #                 grandparent = x
+    #                 break
+    #         assert grandparent is not None, "asset['assetancestor'] không có line asset (hierarchylevels = 2)"
 
-            asset_tmp['line_asset_num'] = _to_str(grandparent['ancestor'])
+    #         asset_tmp['line_asset_num'] = _to_str(grandparent['ancestor'])
 
-        elif len(assetancestor) >= 4:
-            print(f"asset_num đang bị lỗi: {asset_tmp['assetnum']}")
-            # TODO: HoangLe [Feb-22]: Fix this
-        else:
-            raise NotImplementedError()
+    #     elif len(assetancestor) >= 4:
+    #         print(f"asset_num đang bị lỗi: {asset_tmp['assetnum']}")
+    #         # TODO: HoangLe [Feb-22]: Fix this
+    #     else:
+    #         raise NotImplementedError()
 
     # Supplement info for 'asset_status'
     if asset_status:
         for x in asset_status:
+            x['assetnum'] = asset_tmp['assetnum']
+            x['assetuid'] = asset_tmp['assetuid']
+            x['ancestor'] = asset_tmp['ancestor']
+    if asset_ancestor:
+        for x in asset_ancestor:
             x['assetnum'] = asset_tmp['assetnum']
             x['assetuid'] = asset_tmp['assetuid']
 
@@ -312,7 +329,7 @@ def parser_asset(d: dict, schemas: dict = None) -> dict:
     else:
         asset = []
 
-    return {'asset': asset, 'asset_status': asset_status}
+    return {'asset': asset, 'asset_status': asset_status, 'asset_ancestor': asset_ancestor}
 
 
 def parser_inventory(d: dict, schemas: dict = None) -> dict:
@@ -419,7 +436,7 @@ if __name__ == '__main__':
     # folder lưu kết quả xử lí
     path_out_root = Path(r"D:\TC_Data\_data\_post_processed")
     # folder chứa file JSON
-    path_in = Path(r"D:\TC_Data\_data\_pre_processed\item")
+    path_in = Path(r"D:\TC_Data\_data\_pre_processed\inventory_trans")
     # đường dẫn tới
     path_schema = r"D:\TC_Data\spvb-spp\scripts\schemmas.json"
 

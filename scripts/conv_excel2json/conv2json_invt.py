@@ -8,8 +8,9 @@ import pandas as pd
 logging.getLogger().setLevel(logging.DEBUG)
 
 if __name__ == '__main__':
-    path = Path(r"D:\TC Data\_data\prod_Feb24\INVTRANS.xlsx")
-    path_dir_out = Path(r"D:\TC Data\SPP API JSONs\SPP\inventory_trans")
+    path = Path(r"D:\TC_Data\_data\prod_Feb25\INVTRANS.xlsx")
+    path_dir_out = Path(r"D:\TC_Data\_data\_pre_processed\inventory_trans")
+    path_dir_out.mkdir(parents=True, exist_ok=True)
 
     excel = pd.ExcelFile(path)
 
@@ -22,7 +23,6 @@ if __name__ == '__main__':
 
         columns_map = {x: x.lower() for x in df.columns}
         out = df.rename(columns=columns_map) \
-            .drop(columns=['transdate_1']) \
             .replace({np.nan: None}) \
             .to_dict(orient='records')
 

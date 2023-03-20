@@ -21,19 +21,10 @@
     },
     {
       "source": {
-        "path": "$[''changedate'']"
+        "path": "$[''assetstatus_changedate'']"
       },
       "sink": {
         "name": "CHANGEDATE",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''changedate_org'']"
-      },
-      "sink": {
-        "name": "CHANGEDATE_ORG",
         "type": "String"
       }
     },
@@ -43,16 +34,7 @@
       },
       "sink": {
         "name": "DOWNTIME",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''downtime_org'']"
-      },
-      "sink": {
-        "name": "DOWNTIME_ORG",
-        "type": "String"
+        "type": "Float"
       }
     },
     {
@@ -60,7 +42,7 @@
         "path": "$[''isrunning'']"
       },
       "sink": {
-        "name": "ISRUNNING",
+        "name": "IS_RUNNING",
         "type": "String"
       }
     },
@@ -69,7 +51,7 @@
         "path": "$[''assetstatusid'']"
       },
       "sink": {
-        "name": "ASSETSTATUSID",
+        "name": "ASSETSTATUS_ID",
         "type": "String"
       }
     },
@@ -87,7 +69,7 @@
         "path": "$[''assetnum'']"
       },
       "sink": {
-        "name": "ASSETNUM",
+        "name": "ASSET_NUM",
         "type": "String"
       }
     },
@@ -97,15 +79,6 @@
       },
       "sink": {
         "name": "ASSET_UID",
-        "type": "String"
-      }
-    },
-    {
-      "source": {
-        "path": "$[''operational'']"
-      },
-      "sink": {
-        "name": "OPERATIONAL",
         "type": "String"
       }
     },
@@ -156,10 +129,10 @@
     },
     {
       "source": {
-        "path": "$[''is_split'']"
+        "path": "$[''spvb_relateddowntime'']"
       },
       "sink": {
-        "name": "IS_SPLIT",
+        "name": "SPVB_RELATEDDOWNTIME",
         "type": "Int64"
       }
     },

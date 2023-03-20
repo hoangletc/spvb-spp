@@ -85,21 +85,26 @@ BEGIN
         PRINT '2. Select everything into temp table'
 
 		SELECT
-			[PLANT]
+			[PERIOD] * 100 + 1 				AS DATE_WID
+			, ISNULL(P.PLANT_WID, 0)		AS PLANT_WID
+
+			, F.[PLANT]
 			, [PERIOD]
 			, [WRITEOFF_REUSE]
 			
-			, W_INTEGRATION_ID                              AS W_INTEGRATION_ID
-			, 'N'                                           AS W_DELETE_FLG
-			, 'N' 											AS W_UPDATE_FLG
-			, 8                                             AS W_DATASOURCE_NUM_ID
-			, DATEADD(HH, 7, GETDATE())                     AS W_INSERT_DT
-			, DATEADD(HH, 7, GETDATE())                     AS W_UPDATE_DT
-			, @p_batch_id                                   AS W_BATCH_ID
+			, F.W_INTEGRATION_ID            AS W_INTEGRATION_ID
+			, 'N'                          	AS W_DELETE_FLG
+			, 'N' 							AS W_UPDATE_FLG
+			, 8                            	AS W_DATASOURCE_NUM_ID
+			, DATEADD(HH, 7, GETDATE())    	AS W_INSERT_DT
+			, DATEADD(HH, 7, GETDATE())    	AS W_UPDATE_DT
+			, @p_batch_id                  	AS W_BATCH_ID
 		INTO #W_EXCEL_SPP_SPENDING_AOP_tmp
-		FROM FND.W_EXCEL_SPP_WRITE_OFF_FROMREUSE_F
+		FROM FND.W_EXCEL_SPP_WRITE_OFF_FROMREUSE_F F
+			LEFT JOIN [dbo].[W_SAP_PLANT_EXTENDED_D] P ON 1=1
+					AND P.PLANT_NAME_2 = LEFT(F.PLANT, 3)
+					AND P.STO_LOC = ''
 		;
-
 
 		-- 3. Update main table using W_INTEGRATION_ID
 		PRINT '3. Update main table using W_INTEGRATION_ID'
@@ -116,9 +121,12 @@ BEGIN
 		-- 3.2. Start updating
 		PRINT '3.2. Start updating'
 
-		UPDATE  [dbo].[W_EXCEL_SPP_WRITE_OFF_FROMREUSE_F]
+		UPDATE [dbo].[W_EXCEL_SPP_WRITE_OFF_FROMREUSE_F]
 		SET 
-			[PLANT] = src.[PLANT]
+			[PLANT_WID] = src.[PLANT_WID]
+			, [DATE_WID] = src.[DATE_WID]
+
+			, [PLANT] = src.[PLANT]
 			, [PERIOD] = src.[PERIOD]
 			, [WRITEOFF_REUSE] = src.[WRITEOFF_REUSE]
 
@@ -136,7 +144,10 @@ BEGIN
 		PRINT '4. Insert non-existed records to main table from temp table'
 
 		INSERT INTO [dbo].[W_EXCEL_SPP_WRITE_OFF_FROMREUSE_F](
-			[PLANT]
+			[PLANT_WID]
+			, [DATE_WID]
+
+			, [PLANT]
 			, [PERIOD]
 			, [WRITEOFF_REUSE]
 
@@ -148,7 +159,10 @@ BEGIN
 			, W_INTEGRATION_ID
 		)
 		SELECT
-			[PLANT]
+			[PLANT_WID]
+			, [DATE_WID]
+			
+			, [PLANT]
 			, [PERIOD]
 			, [WRITEOFF_REUSE]
 

@@ -1,65 +1,96 @@
-DECLARE @p_batch_id NVARCHAR(8) = '20230220';
+DECLARE @p_batch_id NVARCHAR(8) = '20230318';
 
-WITH TMP_ASSET AS (
-    SELECT 
-        *
-        , LOWER([DESCRIPTION]) AS TMP_DES
-    FROM [FND].[W_CMMS_ASSET_D]
+WITH TMP AS (
+    SELECT
+        ASSET_UID
+        , COUNT(ASSET_UID)          AS NUM_ANCESTOR
+    FROM FND.W_CMMS_ASSET_ANCESTOR_D
+    GROUP BY ASSET_UID
+), TMP_AST_HIER_TYPE AS (
+    SELECT
+        ASSET_UID
+        , CASE WHEN NUM_ANCESTOR = 1 THEN 'line'
+            WHEN NUM_ANCESTOR = 2 THEN 'machine'
+            WHEN NUM_ANCESTOR = 3 THEN 'component'
+            WHEN NUM_ANCESTOR = 4 THEN 'sub_component1'
+            WHEN NUM_ANCESTOR = 5 THEN 'sub_component2'
+        END     AS ASSET_HIERACHICAL_TYPE
+    FROM TMP
+), TMP_AST_LINE_MACHINE AS (
+    SELECT
+        F.ASSET_UID
+        , A_LINE.ANCESTOR                                   AS LINE_ASSET_NUM
+        , A_MACHINE.ANCESTOR                                AS MACHINE_ASSET_NUM
+        , A_LINE_INFO.[DESCRIPTION]                         AS LINE_DESC
+        , A_MACHINE_INFO.[DESCRIPTION]                      AS MACHINE_DESC
+        , CONVERT(NVARCHAR(100), 
+                LOWER(A_MACHINE_INFO.[DESCRIPTION]), 100)   AS TMP_M_DESC
+    FROM FND.W_CMMS_ASSET_D F
+        LEFT JOIN TMP ON 1=1
+            AND TMP.ASSET_UID = F.ASSET_UID
+        LEFT JOIN FND.W_CMMS_ASSET_ANCESTOR_D A_LINE ON 1=1
+            AND A_LINE.ASSET_UID = F.ASSET_UID
+            AND A_LINE.HIERARCHY_LEVELS = TMP.NUM_ANCESTOR - 1
+        LEFT JOIN FND.W_CMMS_ASSET_ANCESTOR_D A_MACHINE ON 1=1
+            AND A_MACHINE.ASSET_UID = F.ASSET_UID
+            AND A_MACHINE.HIERARCHY_LEVELS = TMP.NUM_ANCESTOR - 2
+        LEFT JOIN FND.W_CMMS_ASSET_D A_LINE_INFO ON 1=1
+            AND A_LINE_INFO.ASSET_NUM = A_LINE.ANCESTOR
+            AND A_LINE_INFO.SITE_ID = F.SITE_ID
+        LEFT JOIN FND.W_CMMS_ASSET_D A_MACHINE_INFO ON 1=1
+            AND A_MACHINE_INFO.ASSET_NUM = A_MACHINE.ANCESTOR
+            AND A_MACHINE_INFO.SITE_ID = F.SITE_ID
 
 )
     SELECT
         ISNULL(LOC_X.LOC_WID, 0)                                    AS LOCATION_WID
 
-        , CONVERT(nvarchar(50), AST.SPVB_COSTCENTER)                AS SPVB_COSTCENTER
-        , CONVERT(nvarchar(50), AST.CHANGE_DATE)                    AS CHANGE_DATE
-        , CONVERT(nvarchar(50), AST.SPVB_FIXEDASSETNUM)             AS SPVB_FIXEDASSETNUM
-        , CONVERT(nvarchar(50), AST.TOTAL_COST)                     AS TOTAL_COST
-        , CONVERT(nvarchar(50), AST.[STATUS])                       AS [STATUS]
-        , CONVERT(nvarchar(50), AST.[STATUS_DESCRIPTION])           AS STATUS_DESCRIPTION
-        , CONVERT(nvarchar(50), AST.TOTAL_DOWNTIME)                 AS TOTAL_DOWNTIME
-        , CONVERT(nvarchar(50), AST.ASSET_NUM)                      AS ASSET_NUM
-        , CONVERT(nvarchar(50), AST.ASSET_TYPE)                     AS ASSET_TYPE
-        , CONVERT(nvarchar(500), AST.SPVB_COSTCENTER_DESCRIPTION)   AS SPVB_COSTCENTER_DESCRIPTION
-        , CONVERT(DECIMAL(38, 20), AST.INV_COST)                    AS INV_COST
-        , CASE WHEN AST.ISRUNNING = 'True' THEN 1 ELSE 0 END        AS IS_RUNNING
-        , CONVERT(nvarchar(50), AST.[LOCATION])                     AS [LOCATION]
-        , CONVERT(nvarchar(50), AST.SITE_ID)                        AS SITE_ID
-        , CONVERT(nvarchar(50), AST.ASSET_HIERACHICAL_TYPE)         AS ASSET_HIERACHICAL_TYPE
-        , CONVERT(nvarchar(50), AST.LINE_ASSET_NUM)                 AS LINE_ASSET_NUM
-        , CONVERT(nvarchar(1000), AST2.[DESCRIPTION])               AS LINE_ASSET_DES
-        , CONVERT(nvarchar(50), AST.MACHINE_ASSET_NUM)              AS MACHINE_ASSET_NUM
-        , CONVERT(nvarchar(50), AST.COMPONENT_ASSET_NUM)            AS COMPONENT_ASSET_NUM
-        , CONVERT(nvarchar(1000), AST.[DESCRIPTION])                AS [DESCRIPTION]
-        , CASE WHEN AST.ASSET_HIERACHICAL_TYPE <> 'machine' THEN NULL
-            WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'B02' THEN 'Building'
-            WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'CIP' THEN 'CIP'
-            WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'S02' THEN 'Sugar'
-            WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'S03' THEN 'Syrup'
-            WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'U03' THEN 'Utilities'
-            WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'W03' THEN 'Wastewater'
-            WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'W04' THEN 'Water treatment'
-            WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'W05' THEN 'Workshop'
-            WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'W06' THEN 'Warehouse'
-            WHEN SUBSTRING(AST.[LOCATION], 5, 3) = 'Q01' THEN 'QC'
-            WHEN CHARINDEX('máy', TMP_DES) = 1
-                THEN (
-                    CASE WHEN CHARINDEX('line', TMP_DES) = 0
-                    THEN TRIM(SUBSTRING(TMP_DES, 5, LEN(TMP_DES) - 3))
-                    ELSE TRIM(SUBSTRING(TMP_DES, 5, CHARINDEX('line', TMP_DES) - 5))
-                    END
-                )
-            WHEN CHARINDEX('line', TMP_DES) = 1
-                THEN TRIM(SUBSTRING(TMP_DES, 6, CHARINDEX('line', TMP_DES, 2) - 7))
-                -- THEN NULL
-            ELSE TRIM(SUBSTRING(TMP_DES, 0, CHARINDEX('line', TMP_DES)))
-            -- ELSE NULL
+        , CONVERT(nvarchar(50), F.ASSET_UID)                        AS ASSET_UID
+        , CONVERT(nvarchar(50), F.ASSET_NUM)                        AS ASSET_NUM
+        , CONVERT(nvarchar(50), F.ANCESTOR)                         AS ANCESTOR
+        , CONVERT(nvarchar(50), F.[LOCATION])                       AS [LOCATION]
+        , CONVERT(nvarchar(50), F.SITE_ID)                          AS SITE_ID
+        , CONVERT(nvarchar(1000), F.[DESCRIPTION])                  AS [DESCRIPTION]
+        , CONVERT(varchar, A_HIER.ASSET_HIERACHICAL_TYPE)           AS ASSET_HIERACHICAL_TYPE
+
+        , CONVERT(nvarchar(50), A_LM.LINE_ASSET_NUM)                AS LINE_ASSET_NUM
+        , CONVERT(nvarchar(1000), A_LM.LINE_DESC)                   AS LINE_ASSET_DESCRIPTION
+        , CONVERT(nvarchar(50), A_LM.MACHINE_ASSET_NUM)             AS MACHINE_ASSET_NUM
+        , CONVERT(nvarchar(1000), A_LM.MACHINE_DESC)                AS MACHINE_ASSET_DESCRIPTION
+        , CASE 
+            WHEN SUBSTRING(F.[LOCATION], 5, 3) = 'B02' THEN 'Building'
+            WHEN SUBSTRING(F.[LOCATION], 5, 3) = 'CIP' THEN 'CIP'
+            WHEN SUBSTRING(F.[LOCATION], 5, 3) = 'S02' THEN 'Sugar'
+            WHEN SUBSTRING(F.[LOCATION], 5, 3) = 'S03' THEN 'Syrup'
+            WHEN SUBSTRING(F.[LOCATION], 5, 3) = 'U03' THEN 'Utilities'
+            WHEN SUBSTRING(F.[LOCATION], 5, 3) = 'W03' THEN 'Wastewater'
+            WHEN SUBSTRING(F.[LOCATION], 5, 3) = 'W04' THEN 'Water treatment'
+            WHEN SUBSTRING(F.[LOCATION], 5, 3) = 'W05' THEN 'Workshop'
+            WHEN SUBSTRING(F.[LOCATION], 5, 3) = 'W06' THEN 'Warehouse'
+            WHEN SUBSTRING(F.[LOCATION], 5, 3) = 'Q01' THEN 'QC'
+            WHEN CHARINDEX('máy', A_LM.TMP_M_DESC) > 0 AND CHARINDEX('line', A_LM.TMP_M_DESC) > CHARINDEX('máy', A_LM.TMP_M_DESC)
+                THEN TRIM(SUBSTRING(
+                    A_LM.TMP_M_DESC
+                    , CHARINDEX('máy', A_LM.TMP_M_DESC) + 4
+                    , CHARINDEX('line', A_LM.TMP_M_DESC) - CHARINDEX('máy', A_LM.TMP_M_DESC) - 4
+                ))
+            WHEN CHARINDEX('line', A_LM.TMP_M_DESC) > 1 
+                THEN TRIM(LEFT(A_LM.TMP_M_DESC, CHARINDEX('line', A_LM.TMP_M_DESC) - 2))
+            ELSE ''
         END                                                         AS [MACHINE_SHORT_NAME]
 
-        , CONVERT(
-            nvarchar(200), 
-            CONCAT(AST.ASSET_UID, '~', AST.SPVB_COSTCENTER, '~',
-                    AST.SPVB_FIXEDASSETNUM, '~', AST.[LOCATION])
-        )                                                           AS W_INTEGRATION_ID
+        , CONVERT(nvarchar(50), F.ASSET_TYPE)                       AS ASSET_TYPE
+        , CONVERT(nvarchar(500), F.SPVB_COSTCENTER_DESCRIPTION)     AS SPVB_COSTCENTER_DESCRIPTION
+        , CONVERT(DECIMAL(38, 20), F.INV_COST)                      AS INV_COST
+        , CONVERT(INT, IS_RUNNING)                                  AS IS_RUNNING
+        , CONVERT(nvarchar(50), F.SPVB_COSTCENTER)                  AS SPVB_COSTCENTER
+        , CONVERT(nvarchar(50), F.CHANGE_DATE)                      AS CHANGEDATE
+        , CONVERT(nvarchar(50), F.SPVB_FIXEDASSETNUM)               AS SPVB_FIXEDASSETNUM
+        , CONVERT(nvarchar(50), F.TOTAL_COST)                       AS TOTAL_COST
+        , CONVERT(nvarchar(50), F.[STATUS_DESCRIPTION])             AS STATUS_DESCRIPTION
+        , CONVERT(nvarchar(50), F.TOTAL_DOWNTIME)                   AS TOTAL_DOWNTIME
+
+        , CONCAT(F.ASSET_UID, '~', F.ASSET_NUM, '~', F.SITE_ID)     AS W_INTEGRATION_ID
         , 'N'                                                       AS W_DELETE_FLG
         , 'N' 											            AS W_UPDATE_FLG
         , 8                                                         AS W_DATASOURCE_NUM_ID
@@ -67,22 +98,131 @@ WITH TMP_ASSET AS (
         , DATEADD(HH, 7, GETDATE())                                 AS W_UPDATE_DT
         , @p_batch_id                                               AS W_BATCH_ID
     INTO #W_CMMS_ASSET_D_tmp
-    FROM TMP_ASSET AST
+    FROM FND.W_CMMS_ASSET_D F
         LEFT JOIN [dbo].[W_CMMS_LOC_D] LOC_X ON 1=1
-            AND LOC_X.[LOCATION] = LEFT(AST.[LOCATION], 7)
-        OUTER APPLY (
-            SELECT TOP 1 * FROM [FND].[W_CMMS_ASSET_D] AS AST_TMP
-            WHERE 1=1
-                AND AST_TMP.LINE_ASSET_NUM = AST.ASSET_NUM
-                AND LEFT(AST_TMP.LOCATION, 3) = LEFT(AST.LOCATION, 3)
-        ) AST2
-    ;
+            AND LOC_X.[LOCATION] = LEFT(F.[LOCATION], 7)
+        LEFT JOIN TMP_AST_HIER_TYPE A_HIER ON 1=1
+            AND A_HIER.ASSET_UID = F.ASSET_UID
+        LEFT JOIN TMP_AST_LINE_MACHINE A_LM ON 1=1
+            AND A_LM.ASSET_UID = F.ASSET_UID
+;
+
+UPDATE dbo.W_CMMS_ASSET_D SET
+    LOCATION_WID = T.LOCATION_WID
+
+    , ASSET_UID = T.ASSET_UID
+    , ASSET_NUM = T.ASSET_NUM
+    , ANCESTOR = T.ANCESTOR
+    , [LOCATION] = T.[LOCATION]
+    , SITE_ID = T.SITE_ID
+    , [DESCRIPTION] = T.[DESCRIPTION]
+    , ASSET_HIERACHICAL_TYPE = T.ASSET_HIERACHICAL_TYPE
+
+    , LINE_ASSET_NUM = T.LINE_ASSET_NUM
+    , LINE_ASSET_DESCRIPTION = T.LINE_ASSET_DESCRIPTION
+    , MACHINE_ASSET_NUM = T.MACHINE_ASSET_NUM
+    , [MACHINE_SHORT_NAME] = T.[MACHINE_SHORT_NAME]
+
+    , ASSET_TYPE = T.ASSET_TYPE
+    , SPVB_COSTCENTER_DESCRIPTION = T.SPVB_COSTCENTER_DESCRIPTION
+    , INV_COST = T.INV_COST
+    , IS_RUNNING = T.IS_RUNNING
+    , SPVB_COSTCENTER = T.SPVB_COSTCENTER
+    , CHANGEDATE = T.CHANGEDATE
+    , SPVB_FIXEDASSETNUM = T.SPVB_FIXEDASSETNUM
+    , TOTAL_COST = T.TOTAL_COST
+    , STATUS_DESCRIPTION = T.STATUS_DESCRIPTION
+    , TOTAL_DOWNTIME = T.TOTAL_DOWNTIME
+
+    , W_INTEGRATION_ID = T.W_INTEGRATION_ID
+    , W_DELETE_FLG = T.W_DELETE_FLG
+    , W_DATASOURCE_NUM_ID = T.W_DATASOURCE_NUM_ID
+    , W_INSERT_DT = T.W_INSERT_DT
+    , W_UPDATE_DT = T.W_UPDATE_DT
+    , W_BATCH_ID = T.W_BATCH_ID
+FROM dbo.W_CMMS_ASSET_D F
+JOIN #W_CMMS_ASSET_D_tmp T ON
+    T.ASSET_UID = F.ASSET_UID
+
+
+
+
+
+
+select top 100 * from #W_CMMS_ASSET_D_tmp;
+SELECT TOP 10 * FROM dbo.W_CMMS_ASSET_D;
+
+
+EXEC sp_rename 'dbo.W_CMMS_ASSET_D.CHANGE_DATE', 'CHANGEDATE', 'COLUMN';
+
 
 
 -- drop table #W_CMMS_ASSET_D_tmp;
+select top 10 * from FND.W_CMMS_ASSET_DS
+where ASSET_NUM = '130150000000';
+
+
+
+SELECT * FROM FND.W_CMMS_ASSET_DS
+WHERE ANCESTOR = '170040000000'
+
+
 
 select distinct [MACHINE_SHORT_NAME] from #W_CMMS_ASSET_D_tmp;
 
 select * from #W_CMMS_ASSET_D_tmp where MACHINE_SHORT_NAME like N'kiểm tra áp chai filtech';
 
 -- select top 50 * from FND.W_CMMS_MATR_F ORDER BY ACTUALDATE DESC;
+
+select top 50
+    LINE_ASSET_NUM
+    , LINE_ASSET_DES
+    , ASSET_NUM
+from dbo.W_CMMS_ASSET_D
+
+where ASSET_NUM = '170160000000';
+
+select TOP 800
+    ASSET_NUM
+    , ASSET_UID
+    , [DESCRIPTION]
+FROM FND.W_CMMS_ASSET_DS
+WHERE 1=1
+    AND SUBSTRING([LOCATION], 5, 3) NOT IN ('B02', 'CIP', 'S02', 'S03', 'U03', 'W03', 'W04', 'W05', 'W06', 'Q01')
+    -- AND [DESCRIPTION] LIKE 'Line%'
+;
+
+SELECT
+    ASSET_UID
+    , CASE WHEN COUNT(ASSET_UID) > 1 THEN 1 ELSE 0 END AS FLAG
+FROM FND.W_CMMS_ASSET_DS
+GROUP BY ASSET_UID
+
+SELECT
+    ASSET_UID
+    , A_LINE.ANCESTOR AS LINE_ASSET_NUM
+    , A_MACHINE.ANCESTOR AS MACHINE_ASSET_NUM
+FROM FND.W_CMMS_ASSET_DS F
+    OUTER APPLY (
+        SELECT TOP 1
+            ANCESTOR
+            , HIERARCHY_LEVELS
+        FROM FND.W_CMMS_ASSET_ANCESTOR_D TMP 
+        WHERE 1=1
+            AND TMP.ASSET_UID = F.ASSET_UID
+            ORDER BY HIERARCHY_LEVELS DESC
+    ) A_LINE
+    OUTER APPLY (
+        SELECT TOP 1
+            ANCESTOR
+            , HIERARCHY_LEVELS
+        FROM FND.W_CMMS_ASSET_ANCESTOR_D TMP 
+        WHERE 1=1
+            AND TMP.ASSET_UID = F.ASSET_UID
+            AND TMP.HIERARCHY_LEVELS < A_LINE.HIERARCHY_LEVELS
+            ORDER BY HIERARCHY_LEVELS DESC
+    ) A_MACHINE
+WHERE ASSET_UID = 12598;
+
+
+

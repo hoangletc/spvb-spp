@@ -1,0 +1,70 @@
+{
+  "type": "TabularTranslator",
+  "mappings": [
+    {
+      "source": {
+        "path": "$[''assetancestorid'']"
+      },
+      "sink": {
+        "name": "ASSETANCESTOR_ID",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''hierarchylevels'']"
+      },
+      "sink": {
+        "name": "HIERARCHY_LEVELS",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''ancestor'']"
+      },
+      "sink": {
+        "name": "ANCESTOR",
+        "type": "STRING"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''assetuid'']"
+      },
+      "sink": {
+        "name": "ASSET_UID",
+        "type": "STRING"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''FILE_NAME'']"
+      },
+      "sink": {
+        "name": "FILE_NAME",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''W_BATCH_ID'']"
+      },
+      "sink": {
+        "name": "W_BATCH_ID",
+        "type": "Int64"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''W_INSERT_DT'']"
+      },
+      "sink": {
+        "name": "W_INSERT_DT",
+        "type": "String"
+      }
+    }
+  ],
+  "collectionReference": "",
+  "mapComplexValuesToString": true
+}

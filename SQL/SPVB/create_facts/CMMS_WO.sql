@@ -3,10 +3,10 @@ DECLARE @p_batch_id NVARCHAR(8) = '20230220';
 SELECT
     ISNULL(PLANT.PLANT_WID, 0)                              AS PLANT_WID
     , ISNULL(AST.LOCATION_WID, 0)                           AS LOC_WID
-    , CASE WHEN SCHEDSTART IS NULL OR SCHEDSTART = ''
+    , CASE WHEN SCHEDFINISH IS NULL OR SCHEDFINISH = ''
         THEN 0
         ELSE FORMAT(
-            CONVERT(DATETIME2, SCHEDSTART, 103), 
+            CONVERT(DATETIME2, SCHEDFINISH, 103), 
             'yyyyMMdd'
         )
     END                                                     AS DATE_WID
@@ -14,6 +14,7 @@ SELECT
 
     , CONVERT(NVARCHAR(30), WO.WORKORDER_ID)                AS WORKORDER_ID
     , CONVERT(NVARCHAR(30), WO.WONUM)                       AS WORK_ORDERS
+    , CONVERT(NVARCHAR(30), WO.PARENT)                      AS WORK_ORDERS_PARENT
     , CONVERT(NVARCHAR(100), WO.[DESCRIPTION])              AS [DESCRIPTION]
     , CONVERT(nvarchar(5), WORKTYPE)                        AS [TYPE]
     , CASE WHEN SPVB_OVERHAUL = '0'
@@ -105,7 +106,7 @@ SELECT
     , 8                                                     AS W_DATASOURCE_NUM_ID
     , DATEADD(HH, 7, GETDATE())                             AS W_INSERT_DT
     , DATEADD(HH, 7, GETDATE())                             AS W_UPDATE_DT
-    , @p_batch_id                                           AS WATCH_ID
+    , @p_batch_id                                           AS W_BATCH_ID
 INTO #W_CMMS_WO_F_tmp
 FROM [FND].[W_CMMS_WO_F] WO
     LEFT JOIN [dbo].[W_SAP_PLANT_EXTENDED_D] PLANT ON 1=1
