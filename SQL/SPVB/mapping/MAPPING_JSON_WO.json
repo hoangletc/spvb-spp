@@ -147,6 +147,24 @@
     },
     {
       "source": {
+        "path": "$[''schedfinish_org'']"
+      },
+      "sink": {
+        "name": "SCHEDFINISH_ORG",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
+        "path": "$[''schedstart_org'']"
+      },
+      "sink": {
+        "name": "SCHEDSTART_ORG",
+        "type": "String"
+      }
+    },
+    {
+      "source": {
         "path": "$[''spvb_overhaul'']"
       },
       "sink": {

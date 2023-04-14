@@ -3,7 +3,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE PROC [dbo].[CMMS_proc_load_w_spp_invul_d]
+ALTER PROC [dbo].[CMMS_proc_load_w_spp_invul_d]
     @p_batch_id [bigint]
 AS
 BEGIN
@@ -121,13 +121,9 @@ BEGIN
             , CONVERT(nvarchar(200), ENTER_BY)                  AS ENTER_BY
             , CONVERT(nvarchar(200), SPVB_WONUMREF)             AS SPVB_WONUMREF
             , CONVERT(nvarchar(200), SPVB_REASON)               AS SPVB_REASON
-            , MATU_ID                                           AS MATU_ID
+            , [FROM]
 
-            , CONVERT(
-                nvarchar(200), 
-                CONCAT(INVUSELINE_ID, '~', MATU_ID, 
-                        '~', ASSET_NUM, '~', ITEM_NUM)
-            )                                                   AS W_INTEGRATION_ID
+            , W_INTEGRATION_ID
             , 'N'                                               AS W_DELETE_FLG
             , 'N' 											    AS W_UPDATE_FLG
             , 8                                                 AS W_DATASOURCE_NUM_ID
@@ -186,7 +182,7 @@ BEGIN
             , ENTER_BY = src.ENTER_BY
             , SPVB_WONUMREF = src.SPVB_WONUMREF
             , SPVB_REASON = src.SPVB_REASON
-            , MATU_ID = src.MATU_ID
+            , [FROM] = src.[FROM]
 
 			, W_DELETE_FLG = src.W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID = src.W_DATASOURCE_NUM_ID
@@ -233,7 +229,7 @@ BEGIN
             , ENTER_BY
             , SPVB_WONUMREF
             , SPVB_REASON
-            , MATU_ID
+            , [FROM]
 
             , W_DELETE_FLG
             , W_DATASOURCE_NUM_ID
@@ -274,7 +270,7 @@ BEGIN
             , ENTER_BY
             , SPVB_WONUMREF
             , SPVB_REASON
-            , MATU_ID
+            , [FROM]
 
             , W_DELETE_FLG
             , W_DATASOURCE_NUM_ID

@@ -23,7 +23,7 @@ CREATE TABLE [dbo].[W_CMMS_INVU_D]
 	[STATUS] [nvarchar](200) NULL,
 	[ITEM_NUM] [nvarchar](200) NULL,
 	[ASSET_NUM] [nvarchar](200) NULL,
-	[MATU_ID] [bigint] NULL,
+	[FROM] NVARCHAR(10),
 
     [W_DELETE_FLG] VARCHAR(1) NULL,
     [W_DATASOURCE_NUM_ID] INT NULL,

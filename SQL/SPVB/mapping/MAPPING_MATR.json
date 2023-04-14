@@ -195,7 +195,7 @@
         "path": "$[''matrectransid'']"
       },
       "sink": {
-        "name": "MATRECTRANSID",
+        "name": "MATR_ID",
         "type": "String"
       }
     },

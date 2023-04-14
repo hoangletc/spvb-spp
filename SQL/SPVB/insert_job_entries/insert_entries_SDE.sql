@@ -1,4 +1,4 @@
-DECLARE @dt [datetime] = GETDATE()
+DECLARE @dt [datetime] = DATEADD(HH, 7, GETDATE());
 
 insert into [dbo].[SAP_ETL_JOB]
     (
@@ -25,17 +25,17 @@ insert into [dbo].[SAP_ETL_JOB]
     )
 VALUES
     (
-        20420,
-        'SDE_JSON2STG',
+        20198,
+        'SDE_PARQUET2STG',
         7,
-        'SPVB_SAP_SDE_JSON2STG',
-        'STG.W_CMMS_INVE_FS',
-        'Load data from JSON (dev) to STG (dev)',
+        'DEV_LANDING2STG',
+        'STG.W_SAP_MBEWH_DS',
+        'Load data from Parquet (dev) to STG (dev)',
         'Y',
         'SDE',
         'SDE',
-        'INVE',
-        'STG.W_CMMS_INVE_FS',
+        'MBEWH',
+        'STG.W_SAP_MBEWH_DS',
         'Y',
         NULL,
         100,

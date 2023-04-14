@@ -33,10 +33,10 @@ VALUES (
     , 'Y'
     , 'SDE'
     , 'SDE'
-    , 'MAPPING_ASSET_TYPE.xlsx'
+    , 'Write-off*'
     , 'STG.W_EXCEL_SPP_MAPPING_ASSETTYPE_DS'
     , 'Y'
-    , 'Sheet1~A1:C100'
+    , 'Price list~A4:F10000'
     , NULL
     , 100
     , -1
@@ -44,7 +44,7 @@ VALUES (
     , DATEADD(HH, 7, GETDATE())
     , DATEADD(HH, 7, GETDATE())
     , 'AZURE'
-    , 'raw_excel_file'
+    , 'raw_excel_file/market_price'
     , 0
     , 'Y'
 );

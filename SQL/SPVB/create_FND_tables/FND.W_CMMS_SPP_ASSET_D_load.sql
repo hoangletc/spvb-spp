@@ -3,9 +3,9 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-ALTER PROC [dbo].[EXCEL_proc_load_fnd_w_spp_asset_d] @p_batch_id [bigint] AS
+ALTER PROC [dbo].[CMMS_proc_load_fnd_w_spp_asset_d] @p_batch_id [bigint] AS
 BEGIN
-	DECLARE	@tgt_TableName nvarchar(200) = N'FND.W_EXCEL_SPP_ASSET_D',
+	DECLARE	@tgt_TableName nvarchar(200) = N'FND.W_CMMS_ASSET_D',
 			@sql nvarchar(max),
 	        @column_name varchar(4000),
 	        @no_row bigint	,
@@ -57,66 +57,37 @@ BEGIN
 	BEGIN TRY
 	
 		/*Update soft delete flg for old data*/
-		UPDATE FND.W_EXCEL_SPP_ASSET_D SET 
+		UPDATE FND.W_CMMS_ASSET_D SET 
 			W_DELETE_FLG = 'Y'
 			, W_UPDATE_DT = DATEADD(HH, 7, GETDATE())
 			, W_BATCH_ID = @p_batch_id
 		WHERE W_DELETE_FLG = 'N'
-			AND FILE_PATH IN (SELECT DISTINCT FILE_PATH FROM STG.W_EXCEL_SPP_ASSET_DS /*WHERE W_BATCH_ID = @p_batch_id*/)
+			AND FILE_NAME IN (SELECT DISTINCT FILE_NAME FROM STG.W_CMMS_ASSET_DS /*WHERE W_BATCH_ID = @p_batch_id*/)
 		;
 
 
 		
-		INSERT INTO FND.W_EXCEL_SPP_ASSET_D(
-			  [MATERIAL]
-			, [VALUATION_TYPE]
-			, [PLANT]
-			, [STORAGE_LOCATION]
-			, [BATCH]
-			, [COMPANY_CODE]
-			, [VALUATION_AREA]
-			, [VALUATION_CLASS]
-			, [GL_ACCOUNT]
-			, [MATERIAL_TYPE]
-			, [MATERIAL_GROUP]
-			, [EXT_MATERIAL_GROUP]
-			, [OLD_MATERIAL_NUMBER]
-			, [PURCHASING_GROUP]
-			, [MATERIAL_DESCRIPTION]
-			, [BASE_UNIT_OF_MEASURE]
-			, [CURRENCY]
-			, [PRICE_CONTROL]
-			, [STOCK_QUANTITY_ON_PERIOD_START]
-			, [VALUE_ON_PERIOD_START]
-			, [TOTAL_GOODS_RECEIPT_QUANTITY]
-			, [TOTAL_GOODS_RECEIPT_VALUE]
-			, [TOTAL_GOODS_ISSUE_QUANTITY]
-			, [TOTAL_GOODS_ISSUE_VALUE]
-			, [STOCK_QUANTITY_ON_PERIOD_END]
-			, [STOCK_VALUE_ON_PERIOD_END]
-			, [RECEIPT_FROM_PURCHASE_QUANTITY]
-			, [RECEIPT_FROM_PURCHASE_VALUE]
-			, [ISSUE_TO_SALES_QUANTITY]
-			, [ISSUE_TO_SALES_VALUE]
-			, [RECEIPT_FROM_MANUFACT_QUANTITY]
-			, [RECEIPT_FROM_MANUFACT_VALUE]
-			, [ISSUE_TO_MANUFACT_QUANTITY]
-			, [ISSUE_TO_MANUFACT_VALUE]
-			, [RECEIPT_FROM_TRANSFER_QUANTITY]
-			, [RECEIPT_FROM_TRANSFER_VALUE]
-			, [ISSUE_TO_TRANSFER_QUANTITY]
-			, [ISSUE_TO_TRANSFER_VALUE]
-			, [QUANTITY_OF_OTHER_RECEIVED_GOODS]
-			, [VALUE_OF_OTHER_RECEIVED_GOODS]
-			, [QUANTITY_OF_OTHER_ISSUED_GOODS]
-			, [VALUE_OF_OTHER_ISSUED_GOODS]
-			, [ISSUE_TO_INTERNAL_PURPOSES_QTY]
-			, [ISSUE_TO_INTERNAL_PURPOSES_VAL]
-			, [DEBIT_REVALUATION]
-			, [CREDIT_REVALUATION]
+		INSERT INTO FND.W_CMMS_ASSET_D(
+			[ASSET_UID]
+			, [ASSET_NUM]
+			, [LOCATION]
+			, [SITE_ID]
+			, [DESCRIPTION]
+			, [ANCESTOR]
+			, [ASSET_TYPE]
+			, [SPVB_COSTCENTER_DESCRIPTION]
+			, [INV_COST]
+			, [IS_RUNNING]
+			, [SPVB_COSTCENTER]
+			, [TOTAL_COST]
+			, [STATUS_DESCRIPTION]
+			, [SPVB_FIXEDASSETNUM]
+			, [CHANGE_DATE]
+			, [TOTAL_DOWNTIME]
+			, [STATUS]
+			, [SPVB_BOTTLENECK]
 
-			, [FILE_PATH]
-			, [PERIOD]
+			, [FILE_NAME]
 
 			, [W_DELETE_FLG]
 			, [W_DATASOURCE_NUM_ID]
@@ -126,68 +97,35 @@ BEGIN
 			, [W_INTEGRATION_ID]
 		)
 		SELECT 
-			  CONVERT(nvarchar(10), [Material]) 							AS MATERIAL                                             
-			, CONVERT(nvarchar(10), [Valuation Type]) 						AS VALUATION_TYPE                                 
-			, CONVERT(nvarchar(5), [Plant]) 								AS PLANT                                                   
-			, CONVERT(nvarchar(5), [Storage location])						AS STORAGE_LOCATION                             
-			, CONVERT(nvarchar(10), [Batch]) 								AS BATCH                                                   
-			, CONVERT(nvarchar(5), [Company Code]) 							AS COMPANY_CODE                                     
-			, CONVERT(nvarchar(5), [Valuation area]) 						AS VALUATION_AREA                                 
-			, CONVERT(nvarchar(5), [Valuation Class]) 						AS VALUATION_CLASS                               
-			, CONVERT(nvarchar(100), [G/L Account]) 						AS GL_ACCOUNT                                       
-			, CONVERT(nvarchar(5), [Material type]) 						AS MATERIAL_TYPE
-			, CONVERT(nvarchar(8), [Material Group]) 						AS MATERIAL_GROUP
-			, CONVERT(nvarchar(100), [Ext. Material Group]) 				AS EXT_MATERIAL_GROUP
-			, CONVERT(nvarchar(10), [Old material number]) 					AS OLD_MATERIAL_NUMBER
-			, CONVERT(nvarchar(5), [Purchasing Group]) 						AS PURCHASING_GROUP
-			, CONVERT(nvarchar(1000), [Material description]) 				AS MATERIAL_DESCRIPTION
-			, CONVERT(nvarchar(5), [Base Unit of Measure]) 					AS BASE_UNIT_OF_MEASURE
-			, CONVERT(nvarchar(5), [Currency]) 			 					AS CURRENCY
-			, CONVERT(nvarchar(3), [Price control]) 		 				AS PRICE_CONTROL
-			, CONVERT(decimal(38, 20), [Stock Quantity on Period Start]) 	AS STOCK_QUANTITY_ON_PERIOD_START 
-			, CONVERT(decimal(38, 20), [Value on Period Start]) 			AS VALUE_ON_PERIOD_START
-			, CONVERT(decimal(38, 20), [Total Goods Receipt Quantity]) 		AS TOTAL_GOODS_RECEIPT_QUANTITY     
-			, CONVERT(decimal(38, 20), [Total Goods Receipt Value]) 		AS TOTAL_GOODS_RECEIPT_VALUE
-			, CONVERT(decimal(38, 20), [Total Goods Issue Quantity]) 		AS TOTAL_GOODS_ISSUE_QUANTITY
-			, CONVERT(decimal(38, 20), [Total Goods Issue Value]) 			AS TOTAL_GOODS_ISSUE_VALUE
-			, CONVERT(decimal(38, 20), [Stock Quantity on Period End]) 		AS STOCK_QUANTITY_ON_PERIOD_END     
-			, CONVERT(decimal(38, 20), [Stock Value on Period End]) 		AS STOCK_VALUE_ON_PERIOD_END
-			, CONVERT(decimal(38, 20), [Receipt From Purchase Quantity]) 	AS RECEIPT_FROM_PURCHASE_QUANTITY 
-			, CONVERT(decimal(38, 20), [Receipt From Purchase Value]) 		AS RECEIPT_FROM_PURCHASE_VALUE       
-			, CONVERT(decimal(38, 20), [Issue To Sales Quantity]) 			AS ISSUE_TO_SALES_QUANTITY
-			, CONVERT(decimal(38, 20), [Issue To Sales Value]) 				AS ISSUE_TO_SALES_VALUE
-			, CONVERT(decimal(38, 20), [Receipt From Manuf. Quantity]) 		AS RECEIPT_FROM_MANUFACT_QUANTITY     
-			, CONVERT(decimal(38, 20), [Receipt From Manuf. Value]) 		AS RECEIPT_FROM_MANUFACT_VALUE
-			, CONVERT(decimal(38, 20), [Issue To Manuf. Quantity]) 			AS ISSUE_TO_MANUFACT_QUANTITY
-			, CONVERT(decimal(38, 20), [Issue To Manuf. Value]) 			AS ISSUE_TO_MANUFACT_VALUE
-			, CONVERT(decimal(38, 20), [Receipt From Transfer Quantity]) 	AS RECEIPT_FROM_TRANSFER_QUANTITY 
-			, CONVERT(decimal(38, 20), [Receipt From Transfer Value]) 		AS RECEIPT_FROM_TRANSFER_VALUE       
-			, CONVERT(decimal(38, 20), [Issue To Transfer Quantity]) 		AS ISSUE_TO_TRANSFER_QUANTITY
-			, CONVERT(decimal(38, 20), [Issue To Transfer Value]) 			AS ISSUE_TO_TRANSFER_VALUE
-			, CONVERT(decimal(38, 20), [Quantity of Other Received Goods])	AS QUANTITY_OF_OTHER_RECEIVED_GOODS
-			, CONVERT(decimal(38, 20), [Value of Other Received Goods]) 	AS VALUE_OF_OTHER_RECEIVED_GOODS   
-			, CONVERT(decimal(38, 20), [Quantity of Other Issued Goods]) 	AS QUANTITY_OF_OTHER_ISSUED_GOODS 
-			, CONVERT(decimal(38, 20), [Value of Other Issued Goods]) 		AS VALUE_OF_OTHER_ISSUED_GOODS       
-			, CONVERT(decimal(38, 20), [Issue To Internal Purposes Qty]) 	AS ISSUE_TO_INTERNAL_PURPOSES_QTY 
-			, CONVERT(decimal(38, 20), [Issue To Internal Purposes Val]) 	AS ISSUE_TO_INTERNAL_PURPOSES_VAL 
-			, CONVERT(decimal(38, 20), [Debit Revaluation]) 				AS DEBIT_REVALUATION
-			, CONVERT(decimal(38, 20), [Credit Revaluation]) 				AS CREDIT_REVALUATION
+			  CONVERT(BIGINT, [ASSET_UID])
+			, CONVERT(NVARCHAR(30), [ASSET_NUM])
+			, CONVERT(NVARCHAR(30), [LOCATION])
+			, CONVERT(NVARCHAR(30), [SITE_ID])
+			, CONVERT(NVARCHAR(1000), [DESCRIPTION])
 
-			, [FILE_PATH]
-			, CONVERT(INT, SUBSTRING([FILE_PATH], 15, 6))					AS [PERIOD]
+			, CONVERT(NVARCHAR(30), [ANCESTOR])
+			, CONVERT(NVARCHAR(30), [ASSET_TYPE])
+			, CONVERT(NVARCHAR(500), [SPVB_COSTCENTER_DESCRIPTION])
+			, CONVERT(DECIMAL(38, 20), [INV_COST])
+			, CONVERT(INT, [IS_RUNNING])
+			, CONVERT(NVARCHAR(30), [SPVB_COSTCENTER])
+			, CONVERT(DECIMAL(38, 20), [TOTAL_COST])
+			, CONVERT(NVARCHAR(30), [STATUS_DESCRIPTION])
+			, CONVERT(NVARCHAR(30), [SPVB_FIXEDASSETNUM])
+			, CONVERT(DATETIME2, [CHANGE_DATE], 103)
+			, CONVERT(DECIMAL(38, 20), [TOTAL_DOWNTIME])
+			, [STATUS]
+			, [SPVB_BOTTLENECK]
+
+			, [FILE_NAME]
 
 			, 'N' 															AS [W_DELETE_FLG]
-			, 3 															AS [W_DATASOURCE_NUM_ID]
+			, 8 															AS [W_DATASOURCE_NUM_ID]
 			, DATEADD(HH, 7, GETDATE()) 									AS [W_INSERT_DT]
 			, DATEADD(HH, 7, GETDATE()) 									AS [W_UPDATE_DT]
-			, @p_batch_id													AS [W_BATCH_ID]
-			, CONCAT([Material], '~', [Plant], '~',
-					[Storage location], '~', SUBSTRING([FILE_PATH], 15, 6))	AS W_INTEGRATION_ID
-		FROM STG.W_EXCEL_SPP_ASSET_DS
-		WHERE 1=1
-			AND [Material] IS NOT NULL
-			AND [Plant] IS NOT NULL
-			AND [Storage location] IS NOT NULL
+			, 20230321													AS [W_BATCH_ID]
+			, CONCAT([ASSET_UID], '~', [ASSET_NUM], '~', [SITE_ID])	AS W_INTEGRATION_ID
+		FROM STG.W_CMMS_ASSET_DS
 		;
 
 		/*delete & re-insert data refresh*/
@@ -208,8 +146,8 @@ BEGIN
 		WHERE W_BATCH_ID = @p_batch_id
 			AND W_DELETE_FLG = 'N'
 
-		SET @src_rownum = (SELECT COUNT(1) FROM [STG].[W_EXCEL_SPP_ASSET_DS] WHERE W_BATCH_ID = @p_batch_id);
-		SET @tgt_rownum = (SELECT COUNT(1) FROM FND.W_EXCEL_SPP_ASSET_D WHERE W_DELETE_FLG = 'N' AND  W_BATCH_ID = @p_batch_id);
+		SET @src_rownum = (SELECT COUNT(1) FROM [STG].[W_CMMS_ASSET_DS] WHERE W_BATCH_ID = @p_batch_id);
+		SET @tgt_rownum = (SELECT COUNT(1) FROM FND.W_CMMS_ASSET_D WHERE W_DELETE_FLG = 'N' AND  W_BATCH_ID = @p_batch_id);
 
 	END TRY
 

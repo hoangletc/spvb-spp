@@ -85,7 +85,7 @@ BEGIN
 
 		
 		SELECT
-			FORMAT(CONVERT(DATE, FROMDATE), 'yyyyMMdd')   AS DATE_WID
+			FORMAT(CONVERT(DATE, FROMDATE), 'yyyyMMdd')   	AS DATE_WID
 			, ISNULL(PLANT.PLANT_WID, 0)                    AS PLANT_WID
 			, ISNULL(LOC.LOC_WID, 0)                        AS LOCATION_WID
 			, ISNULL(A.ASSET_WID, 0)                    	AS ASSET_WID
@@ -98,14 +98,17 @@ BEGIN
 			, LINE_CAT.TO_DATE                              AS LINE_CAT_TO_DATE
 
 			, A.MACHINE_ASSET_NUM
-			, A.MACHINE_SHORT_NAME                          
+			, A.MACHINE_SHORT_NAME
 
 			, F.ASSETSTATUS_ID							    AS ASSET_STATUS_UID
 			, F.ASSET_UID                                   AS ASSET_UID
 			, F.ASSET_NUM                                   AS ASSET_NUM
-			, CONVERT(DECIMAL(38,20), DOWNTIME)             AS DOWNTIME
+			, F.DOWNTIME
+			, A.SITE_ID										AS SITE_ID
 			, FROMDATE
 			, TODATE
+			, FILLER
+			, FILLER_DOWNTIME
 			, CONVERT(nvarchar(100), A.DESCRIPTION)     	AS [NAME]
 			, IS_SPLIT
 			, N_SPLIT
@@ -149,10 +152,6 @@ BEGIN
 			LEFT JOIN [dbo].[W_EXCEL_SPP_LINE_CATEGORY_F] LINE_CAT ON 1=1 AND LINE_CAT.LINE_ASSET_NUM = A.LINE_ASSET_NUM 
 				AND LINE_CAT.FROM_DATE <= CONVERT(DATETIME2, FROMDATE) AND LINE_CAT.TO_DATE >= CONVERT(DATETIME2, CHANGEDATE)
 		;
-
-			
-
-
 
 		-- 3. Update main table using W_INTEGRATION_ID
 		PRINT '3. Update main table using W_INTEGRATION_ID'
@@ -200,6 +199,9 @@ BEGIN
 			, ISSUE = src.ISSUE
 			, IS_SPLIT = src.IS_SPLIT
 			, N_SPLIT = src.N_SPLIT
+			, SITE_ID = src.SITE_ID
+			, FILLER = src.FILLER
+			, FILLER_DOWNTIME = src.FILLER_DOWNTIME
 
 			, W_DELETE_FLG = src.W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID = src.W_DATASOURCE_NUM_ID
@@ -244,6 +246,9 @@ BEGIN
 			, ISSUE
 			, IS_SPLIT
 			, N_SPLIT
+			, SITE_ID
+			, [FILLER]
+			, [FILLER_DOWNTIME]
 
 			, W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID
@@ -282,6 +287,9 @@ BEGIN
 			, ISSUE
 			, IS_SPLIT
 			, N_SPLIT
+			, SITE_ID
+			, [FILLER]
+			, [FILLER_DOWNTIME]
 
 			, W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID

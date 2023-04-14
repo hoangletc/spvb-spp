@@ -2,12 +2,11 @@ SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
-
-ALTER PROC [dbo].[EXCEL_proc_load_fnd_w_spp_market_price_f] @p_batch_id [bigint] AS
+CREATE PROC [dbo].[SAP_proc_load_fnd_w_excel_spp_scrap_sales_f] @p_batch_id [bigint] AS
 
 BEGIN
 	--DECLARE @p_batch_id bigint = 2020111601
-	DECLARE	@tgt_TableName nvarchar(200) = N'FND.W_EXCEL_SPP_MARKET_PRICE_F',
+	DECLARE	@tgt_TableName nvarchar(200) = N'FND.W_EXCEL_SPP_SCRAP_SALES_F',
 			@sql nvarchar(max),
 	        @column_name varchar(4000),
 	        @no_row bigint	,
@@ -59,90 +58,68 @@ BEGIN
 	BEGIN TRY
 	
 		/*Update soft delete flg for old data*/
-		UPDATE FND.W_EXCEL_SPP_MARKET_PRICE_F SET 
-			W_DELETE_FLG = 'Y'
-			, W_UPDATE_DT = DATEADD(HH, 7, GETDATE())
-			, W_BATCH_ID = @p_batch_id
+		UPDATE FND.W_EXCEL_SPP_SCRAP_SALES_F SET W_DELETE_FLG = 'Y', W_UPDATE_DT = DATEADD(HH, 7, GETDATE()), W_BATCH_ID = @p_batch_id
 		WHERE W_DELETE_FLG = 'N'
-			AND FILE_PATH IN (SELECT DISTINCT FILE_PATH FROM STG.W_EXCEL_SPP_MARKET_PRICE_FS /*WHERE W_BATCH_ID = @p_batch_id*/)
+			AND FILE_NAME IN (SELECT DISTINCT FILE_NAME FROM STG.W_EXCEL_SPP_SCRAP_SALES_FS /*WHERE W_BATCH_ID = @p_batch_id*/)
 	;
 	WITH A AS (																	
 		SELECT 
-			CONVERT(NVARCHAR(100), Prop_0)								AS [CODE]
-			, CONVERT(NVARCHAR(100), Prop_1)							AS [PLANT]
-			, CONVERT(NVARCHAR(100), Prop_2)							AS [SPP_CODE]
-			, CONVERT(NVARCHAR(1000), Prop_3)							AS [DESCRIPTION]
-			, CONVERT(NVARCHAR(100), Prop_4)							AS [BASE_UNIT]
-			, CASE WHEN Prop_5 IS NULL OR ISNUMERIC(Prop_5) = 0 
-					OR Prop_5 = ' - ' THEN 0.0 		
-				ELSE CONVERT(decimal(38, 20), Prop_5)
-			END 														AS PRICE
-			, LEFT(REPLACE(FILE_PATH, 'Write-off_', ''), 3)				AS PLANT_NAME
-			, SUBSTRING(REPLACE(FILE_PATH, 'Write-off_', ''), 5,6) 		AS [PERIOD]
-			, FILE_PATH
-
-			, CONCAT(
-				Prop_2
-				, '~'
-				, LEFT(REPLACE(FILE_PATH, 'Write-off_', ''), 3)
-				, '~'
-				, SUBSTRING(REPLACE(FILE_PATH, 'Write-off_', ''), 5,6)
-			) 															AS W_INTEGRATION_ID
-		FROM STG.W_EXCEL_SPP_MARKET_PRICE_FS
-		WHERE 1=1
-			AND Prop_2 IS NOT NULL
-			AND FILE_PATH LIKE 'Write-off_QNP_%'
+			  [Material type/ Loại vật tư] AS [MATERIAL_TYPE]
+			, Unit AS UNIT
+			, PLANT AS PLANT
+			, YEAR
+			, MONTH 
+			, CONVERT(DECIMAL(38,20), PRICE) AS PRICE
+			, CONVERT(DECIMAL(38,20), SCRAP_QTY) as SCRAP_QTY 
+			, FILE_NAME
+			, CONCAT([Material type/ Loại vật tư], '~', Unit, '~', PLANT, '~', YEAR, '~', MONTH) AS W_INTEGRATION_ID
+		FROM [STG].[W_EXCEL_SPP_SCRAP_SALES_FS] T
+		UNPIVOT  
+		   (SCRAP_QTY FOR MONTH IN   
+		      (JAN, FEB, MAR, APR, MAY, JUN, JUL, AUG, SEP, OCT, NOV, DEC)  
+		)AS unpvt
 	)
-	INSERT INTO FND.W_EXCEL_SPP_MARKET_PRICE_F(
-		CODE
+	INSERT INTO FND.W_EXCEL_SPP_SCRAP_SALES_F
+	(
+		  [MATERIAL_TYPE]
+		, UNIT
 		, PLANT
-		, SPP_CODE
-		, [DESCRIPTION]
-		, BASE_UNIT
+		, YEAR
+		, MONTH
 		, PRICE
-		, PLANT_NAME
-		, [PERIOD]
-		, FILE_PATH
-
-		, [W_DELETE_FLG]
+		, SCRAP_QTY
+		, W_DELETE_FLG
 		, W_DATASOURCE_NUM_ID
 		, W_INSERT_DT
 		, W_UPDATE_DT
 		, W_BATCH_ID
 		, W_INTEGRATION_ID
+		, FILE_NAME
 	)
 	select 
-		CODE
+		  [MATERIAL_TYPE]
+		, UNIT
 		, PLANT
-		, SPP_CODE
-		, [DESCRIPTION]
-		, BASE_UNIT
+		, YEAR
+		, MONTH
 		, PRICE
-
-		, PLANT_NAME
-		, [PERIOD]
-		, FILE_PATH
-
-		, 'N' 						AS [W_DELETE_FLG]
-		, 3 						AS [W_DATASOURCE_NUM_ID]
-		, DATEADD(HH, 7, GETDATE()) AS [W_INSERT_DT]
-		, DATEADD(HH, 7, GETDATE()) AS [W_UPDATE_DT]
-		, @p_batch_id				AS [W_BATCH_ID]
+		, SCRAP_QTY
+		, 'N' AS [W_DELETE_FLG]
+		, 3 AS [W_DATASOURCE_NUM_ID]
+		, GETDATE() AS [W_INSERT_DT]
+		, GETDATE() AS [W_UPDATE_DT]
+		, @p_batch_id [W_BATCH_ID]
 		, W_INTEGRATION_ID
+		, FILE_NAME
 	from A
+	--WHERE ROW_NUM = 1
 	;
 
 /*
 		/*delete & re-insert data refresh*/
 		DELETE FROM [dbo].[SAP_ETL_DATAFRESH_CONF] WHERE UPPER(TABLE_NAME) = UPPER(@tgt_TableName)
 
-		INSERT INTO [dbo].[SAP_ETL_DATAFRESH_CONF] (
-			TABLE_NAME
-			, REFRESH_DATE
-			, IS_FULLLOAD
-			, IS_EXIST_SSAS
-			, LAST_UPDATE_DATE
-		)
+		INSERT INTO [dbo].[SAP_ETL_DATAFRESH_CONF] (TABLE_NAME, REFRESH_DATE, IS_FULLLOAD, IS_EXIST_SSAS, LAST_UPDATE_DATE)
 		SELECT DISTINCT @tgt_TableName, NULL, 'Y', 'Y', DATEADD(HH, 7, GETDATE())
 		FROM
 			( 
@@ -151,8 +128,8 @@ BEGIN
 		WHERE W_BATCH_ID = @p_batch_id
 			AND W_DELETE_FLG = 'N'
 */
-		SET @src_rownum = (SELECT COUNT(1) FROM [STG].[W_EXCEL_SPP_MARKET_PRICE_FS] WHERE W_BATCH_ID = @p_batch_id);
-		SET @tgt_rownum = (SELECT COUNT(1) FROM FND.W_EXCEL_SPP_MARKET_PRICE_F WHERE W_DELETE_FLG = 'N' AND  W_BATCH_ID = @p_batch_id);
+		SET @src_rownum = (SELECT COUNT(1) FROM [STG].[W_EXCEL_SPP_SCRAP_SALES_FS]  WHERE W_BATCH_ID = @p_batch_id);
+		SET @tgt_rownum = (SELECT COUNT(1) FROM [STG].[W_EXCEL_SPP_SCRAP_SALES_FS]  WHERE W_BATCH_ID = @p_batch_id);
 
 	END TRY
 

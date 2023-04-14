@@ -19,8 +19,8 @@ CREATE TABLE [FND].[W_CMMS_WO_F]
 	[PMNUM] [nvarchar](100) NULL,
 	[REPORTDATE] [nvarchar](100) NULL,
 	[SCHEDFINISH] [nvarchar](100) NULL,
-	[WSCHEDSTART] [nvarchar](100) NULL,
 	[SPVB_OVERHAUL] [nvarchar](100) NULL,
+	[SCHEDSTART] [nvarchar](100) NULL,
 	[SPVB_TASK_STATUS] [nvarchar](100) NULL,
 	[STATUS] [nvarchar](100) NULL,
 	[SUPERVISOR] [nvarchar](100) NULL,
@@ -32,6 +32,9 @@ CREATE TABLE [FND].[W_CMMS_WO_F]
 	[PARENT] [nvarchar](100) NULL,
 	[SUPPERVISORNAME] [nvarchar](100) NULL,
 	[FILE_NAME] [nvarchar](100) NULL,
+
+	[SCHEDSTART_ORG] [nvarchar](100) NULL,
+	[SCHEDFINISH_ORG] [nvarchar](100) NULL,
 
 	[W_BATCH_ID] BIGINT NULL,
 	[W_INSERT_DT] [nvarchar](100) NULL

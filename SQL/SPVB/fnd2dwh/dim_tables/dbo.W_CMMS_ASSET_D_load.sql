@@ -130,7 +130,7 @@ BEGIN
 
                 , CONVERT(nvarchar(50), F.ASSET_UID)                        AS ASSET_UID
                 , CONVERT(nvarchar(50), F.ASSET_NUM)                        AS ASSET_NUM
-                , CONVERT(nvarchar(50), F.ANCESTOR)                        AS ANCESTOR
+                , CONVERT(nvarchar(50), F.ANCESTOR)                         AS ANCESTOR
                 , CONVERT(nvarchar(50), F.[LOCATION])                       AS [LOCATION]
                 , CONVERT(nvarchar(50), F.SITE_ID)                          AS SITE_ID
                 , CONVERT(nvarchar(1000), F.[DESCRIPTION])                  AS [DESCRIPTION]
@@ -151,16 +151,16 @@ BEGIN
                     WHEN SUBSTRING(F.[LOCATION], 5, 3) = 'W05' THEN 'Workshop'
                     WHEN SUBSTRING(F.[LOCATION], 5, 3) = 'W06' THEN 'Warehouse'
                     WHEN SUBSTRING(F.[LOCATION], 5, 3) = 'Q01' THEN 'QC'
-                    WHEN CHARINDEX('máy', A_LM.TMP_M_DESC) > 0 AND CHARINDEX('line', A_LM.TMP_M_DESC) > CHARINDEX('máy', A_LM.TMP_M_DESC)
+                    WHEN CHARINDEX('máy', A_LM.MACHINE_DESC) > 0 AND CHARINDEX('line', A_LM.MACHINE_DESC) > CHARINDEX('máy', A_LM.MACHINE_DESC)
                         THEN TRIM(SUBSTRING(
-                            A_LM.TMP_M_DESC
-                            , CHARINDEX('máy', A_LM.TMP_M_DESC) + 4
-                            , CHARINDEX('line', A_LM.TMP_M_DESC) - CHARINDEX('máy', A_LM.TMP_M_DESC) - 4
+                            A_LM.MACHINE_DESC
+                            , CHARINDEX('máy', A_LM.MACHINE_DESC) + 4
+                            , CHARINDEX('line', A_LM.MACHINE_DESC) - CHARINDEX('máy', A_LM.MACHINE_DESC) - 4
                         ))
-                    WHEN CHARINDEX('line', A_LM.TMP_M_DESC) > 1 
-                        THEN TRIM(LEFT(A_LM.TMP_M_DESC, CHARINDEX('line', A_LM.TMP_M_DESC) - 2))
+                    WHEN CHARINDEX('line', A_LM.MACHINE_DESC) > 1 
+                        THEN TRIM(LEFT(A_LM.MACHINE_DESC, CHARINDEX('line', A_LM.MACHINE_DESC) - 2))
                     ELSE ''
-                END                                                         AS [SHORT_NAME]
+                END                                                         AS [MACHINE_SHORT_NAME]
 
                 , CONVERT(nvarchar(50), F.ASSET_TYPE)                       AS ASSET_TYPE
                 , CONVERT(nvarchar(500), F.SPVB_COSTCENTER_DESCRIPTION)     AS SPVB_COSTCENTER_DESCRIPTION
@@ -172,6 +172,8 @@ BEGIN
                 , CONVERT(nvarchar(50), F.TOTAL_COST)                       AS TOTAL_COST
                 , CONVERT(nvarchar(50), F.[STATUS_DESCRIPTION])             AS STATUS_DESCRIPTION
                 , CONVERT(nvarchar(50), F.TOTAL_DOWNTIME)                   AS TOTAL_DOWNTIME
+                , SPVB_BOTTLENECK
+                , F.[STATUS]
 
                 , CONCAT(F.ASSET_UID, '~', F.ASSET_NUM, '~', F.SITE_ID)     AS W_INTEGRATION_ID
                 , 'N'                                                       AS W_DELETE_FLG
@@ -211,16 +213,15 @@ BEGIN
 		UPDATE [dbo].[W_CMMS_ASSET_D]
 		SET
             LOCATION_WID = src.LOCATION_WID
+
             , LINE_ASSET_NUM = src.LINE_ASSET_NUM
-            , LINE_ASSET_DES = src.LINE_ASSET_DES
-			, SPVB_COSTCENTER = src.SPVB_COSTCENTER
-            , CHANGE_DATE = src.CHANGE_DATE
+            , LINE_ASSET_DESCRIPTION = src.LINE_ASSET_DESCRIPTION
+            , SPVB_COSTCENTER = src.SPVB_COSTCENTER
+            , CHANGEDATE = src.CHANGEDATE
             , SPVB_FIXEDASSETNUM = src.SPVB_FIXEDASSETNUM
             , TOTAL_COST = src.TOTAL_COST
-            , [STATUS] = src.STATUS
             , STATUS_DESCRIPTION = src.STATUS_DESCRIPTION
             , TOTAL_DOWNTIME = src.TOTAL_DOWNTIME
-            , ASSET_UID = src.ASSET_UID
             , ASSET_NUM = src.ASSET_NUM
             , ASSET_TYPE = src.ASSET_TYPE
             , SPVB_COSTCENTER_DESCRIPTION = src.SPVB_COSTCENTER_DESCRIPTION
@@ -230,9 +231,12 @@ BEGIN
             , SITE_ID = src.SITE_ID
             , ASSET_HIERACHICAL_TYPE = src.ASSET_HIERACHICAL_TYPE
             , MACHINE_ASSET_NUM = src.MACHINE_ASSET_NUM
-            , COMPONENT_ASSET_NUM = src.COMPONENT_ASSET_NUM
             , [DESCRIPTION] = src.DESCRIPTION
-            , [MACHINE_SHORT_NAME] = src.[MACHINE_SHORT_NAME]
+            , MACHINE_SHORT_NAME = src.MACHINE_SHORT_NAME
+            , ASSET_UID = src.ASSET_UID
+            , ANCESTOR = src.ANCESTOR
+            , SPVB_BOTTLENECK = src.SPVB_BOTTLENECK
+            , [STATUS] = src.[STATUS]
 
 			, W_DELETE_FLG = src.W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID = src.W_DATASOURCE_NUM_ID
@@ -249,13 +253,13 @@ BEGIN
 
         INSERT INTO [dbo].[W_CMMS_ASSET_D](
             LOCATION_WID
+
             , LINE_ASSET_NUM
-            , LINE_ASSET_DES 
+            , LINE_ASSET_DESCRIPTION
             , SPVB_COSTCENTER
-            , CHANGE_DATE
+            , CHANGEDATE
             , SPVB_FIXEDASSETNUM
             , TOTAL_COST
-            , [STATUS]
             , STATUS_DESCRIPTION
             , TOTAL_DOWNTIME
             , ASSET_NUM
@@ -267,10 +271,12 @@ BEGIN
             , SITE_ID
             , ASSET_HIERACHICAL_TYPE
             , MACHINE_ASSET_NUM
-            , COMPONENT_ASSET_NUM
             , [DESCRIPTION]
-            , [MACHINE_SHORT_NAME]
-            , [ASSET_UID]
+            , MACHINE_SHORT_NAME
+            , ASSET_UID
+            , ANCESTOR
+            , SPVB_BOTTLENECK
+            , [STATUS]
 
             , W_DELETE_FLG
             , W_DATASOURCE_NUM_ID
@@ -281,13 +287,13 @@ BEGIN
         )
         SELECT
             LOCATION_WID
+
             , LINE_ASSET_NUM
-            , LINE_ASSET_DES 
+            , LINE_ASSET_DESCRIPTION
             , SPVB_COSTCENTER
-            , CHANGE_DATE
+            , CHANGEDATE
             , SPVB_FIXEDASSETNUM
             , TOTAL_COST
-            , [STATUS]
             , STATUS_DESCRIPTION
             , TOTAL_DOWNTIME
             , ASSET_NUM
@@ -299,10 +305,12 @@ BEGIN
             , SITE_ID
             , ASSET_HIERACHICAL_TYPE
             , MACHINE_ASSET_NUM
-            , COMPONENT_ASSET_NUM
             , [DESCRIPTION]
-            , [MACHINE_SHORT_NAME]
-            , [ASSET_UID]
+            , MACHINE_SHORT_NAME
+            , ASSET_UID
+            , ANCESTOR
+            , SPVB_BOTTLENECK
+            , [STATUS]
 
             , W_DELETE_FLG
             , W_DATASOURCE_NUM_ID

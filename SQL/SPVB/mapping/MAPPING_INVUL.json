@@ -282,10 +282,10 @@
     },
     {
       "source": {
-        "path": "$[''matusetransid'']"
+        "path": "$[''from'']"
       },
       "sink": {
-        "name": "MATU_ID",
+        "name": "FROM",
         "type": "String"
       }
     },

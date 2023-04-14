@@ -3,7 +3,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE PROC [dbo].[CMMS_proc_load_w_spp_invu_d]
+ALTER PROC [dbo].[CMMS_proc_load_w_spp_invu_d]
     @p_batch_id [bigint]
 AS
 BEGIN
@@ -104,13 +104,9 @@ BEGIN
             , CONVERT(nvarchar(200), [STATUS])              AS [STATUS]
             , CONVERT(nvarchar(200), ITEM_NUM)              AS ITEM_NUM
             , CONVERT(nvarchar(200), ASSET_NUM)             AS ASSET_NUM
-            , MATU_ID                                       AS MATU_ID
+            , [FROM]
 
-            , CONVERT(
-                nvarchar(200), 
-                CONCAT(INVU_ID, '~', MATU_ID, '~',
-                        ASSET_NUM, '~', ITEM_NUM)
-            )                                               AS W_INTEGRATION_ID
+            , W_INTEGRATION_ID                              AS W_INTEGRATION_ID
             , 'N'                                           AS W_DELETE_FLG
             , 8                                             AS W_DATASOURCE_NUM_ID
             , DATEADD(HH, 7, GETDATE())                     AS W_INSERT_DT
@@ -155,7 +151,7 @@ BEGIN
             , [STATUS] = src.STATUS
             , ITEM_NUM = src.ITEM_NUM
             , ASSET_NUM = src.ASSET_NUM
-            , MATU_ID = src.MATU_ID
+            , [FROM] = src.[FROM]
 
 			, W_DELETE_FLG = src.W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID = src.W_DATASOURCE_NUM_ID
@@ -188,7 +184,7 @@ BEGIN
             , [STATUS]
             , ITEM_NUM
             , ASSET_NUM
-            , MATU_ID
+            , [FROM]
 
             , W_DELETE_FLG
             , W_DATASOURCE_NUM_ID
@@ -215,7 +211,7 @@ BEGIN
             , [STATUS]
             , ITEM_NUM
             , ASSET_NUM
-            , MATU_ID
+            , [FROM]
 
             , W_DELETE_FLG
             , W_DATASOURCE_NUM_ID

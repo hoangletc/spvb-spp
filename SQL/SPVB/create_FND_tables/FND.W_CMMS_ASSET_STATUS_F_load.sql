@@ -5,7 +5,7 @@ GO
 
 ALTER PROC [dbo].[CMMS_proc_load_fnd_w_spp_asset_status_f] @p_batch_id [bigint] AS
 BEGIN
-	DECLARE	@tgt_TableName nvarchar(200) = N'FND.W_CMMS_ASSET_STATUS_F',
+	DECLARE	@tgt_TableName nvarchar(200) = 'FND.W_CMMS_ASSET_STATUS_F',
 			@sql nvarchar(max),
 	        @column_name varchar(4000),
 	        @no_row bigint	,
@@ -59,7 +59,7 @@ BEGIN
 	BEGIN TRY
 	
 		/*Update soft delete flg for old data*/
-		--NOTE [HoangLe - Mar17]: Do ASSET_STATUS (DOWNTIME) bị tách ra khi downtime dôi qua ngày mới, 
+		--NOTE [HoangLe - Mar17]: Do ASSET_STATUS (DOWNTIME) bị tách ra khi downtime dôi qua tháng mới, 
 		-- nên cần cơ chế update hoàn toàn khác so với cái đang dùng mặc định, nên tạm thời đang disable đoạn code dưới
 
 		-- UPDATE FND.W_CMMS_ASSET_STATUS_F SET 
@@ -72,29 +72,64 @@ BEGIN
 
 		-- Step 0: Xoá các bảng tạm dùng trong quá trình tính toán
 		IF OBJECT_ID(N'tempdb..#TMP_1') IS NOT NULL BEGIN
-            PRINT N'DELETE temporary table #TMP_1'
-            DROP Table #TMP_1
-        END;
+			PRINT N'DELETE temporary table #TMP_1'
+			DROP Table #TMP_1
+		END;
 		IF OBJECT_ID(N'tempdb..#TMP_FINAL') IS NOT NULL BEGIN
-            PRINT N'DELETE temporary table #TMP_FINAL'
-            DROP Table #TMP_FINAL
+			PRINT N'DELETE temporary table #TMP_FINAL'
+			DROP Table #TMP_FINAL
+		END;
+		IF OBJECT_ID(N'tempdb..#TMP_STATUS') IS NOT NULL BEGIN
+			PRINT N'DELETE temporary table #TMP_STATUS'
+			DROP Table #TMP_STATUS
+		END;
+		IF OBJECT_ID(N'tempdb..#TMP_PRE_DOWNTIME') IS NOT NULL BEGIN
+			PRINT N'DELETE temporary table #TMP_PRE_DOWNTIME'
+			DROP Table #TMP_PRE_DOWNTIME
+		END;
+		IF OBJECT_ID(N'tempdb..#TMP_RELATED_DOWNTIME') IS NOT NULL BEGIN
+			PRINT N'DELETE temporary table #TMP_RELATED_DOWNTIME'
+			DROP Table #TMP_RELATED_DOWNTIME
+		END;
+
+		IF OBJECT_ID(N'tempdb..#W_CMMS_AS_ST_F_tmp') IS NOT NULL 
+        BEGIN
+            PRINT N'DELETE temporary table #W_CMMS_AS_ST_F_tmp'
+            DROP Table #W_CMMS_AS_ST_F_tmp
         END;
 
 		-- Step 1: Chọn ra tất cả các ASSET_STATUS có downtime bị dôi qua tháng hôm sau
-		SELECT
-			CONVERT(NVARCHAR(30), ASSETSTATUS_ID)       AS ASSETSTATUS_ID
-			, CONVERT(DATETIME2, CHANGEDATE, 103)		AS CHANGEDATE
-			, ROUND(DOWNTIME * 60, 0) 	                AS DOWNTIME
-			, 'N' 										AS FLAG_DELETE
-		INTO #TMP_1
-		FROM STG.W_CMMS_ASSET_STATUS_FS
-		WHERE 1=1
-			-- AND ASSETSTATUS_ID IN (793046, 705020, 825789)
-			AND DATEDIFF(MONTH,
-					DATEADD(MINUTE, -ROUND(DOWNTIME * 60, 0), CONVERT(DATETIME2, CHANGEDATE, 103)),
-					CONVERT(DATETIME2, CHANGEDATE, 103)) > 0
+		WITH A AS (
+			SELECT  
+				CODE
+				, ASSET_NUM
+				, ASSETSTATUS_ID
+				, SPVB_RELATEDDOWNTIME
+			FROM STG.W_CMMS_ASSET_STATUS_FS F
+			WHERE 1=1
+				-- AND F.ASSET_NUM = '120280620000'
+				-- AND F.CHANGEDATE LIKE '%11/2022%'
+				-- AND CODE LIKE 'A1'
+				AND CHANGEDATE <> ''
+				AND IS_RUNNING = 0
+		)
+			SELECT
+				CONVERT(BIGINT, A.ASSETSTATUS_ID)               AS ASSETSTATUS_ID
+				, CONVERT(DATETIME2, CHANGEDATE, 103)		    AS CHANGEDATE
+				, CONVERT(FLOAT, DOWNTIME) * 3600.0   			AS DOWNTIME
+				, CONVERT(BIGINT, A.SPVB_RELATEDDOWNTIME)       AS SPVB_RELATEDDOWNTIME
+				, 'N' 										    AS FLAG_DELETE
+			INTO #TMP_STATUS
+			FROM STG.W_CMMS_ASSET_STATUS_FS F
+			JOIN A ON 1=1
+				AND CONVERT(BIGINT, A.ASSETSTATUS_ID) + 1 = CONVERT(BIGINT, F.ASSETSTATUS_ID)
 		;
 
+		SELECT * INTO #TMP_1 FROM #TMP_STATUS
+		WHERE 1=1
+			-- AND ASSETSTATUS_ID IN (972831)
+			AND DATEDIFF(MONTH, DATEADD(SECOND, -DOWNTIME, CHANGEDATE), CHANGEDATE) > 0.0
+		;
 
 		-- Step 2: Lặp để khấu trừ dần DOWNTIME ở mỗi ASSET_STATUS
 		WHILE EXISTS(SELECT 1 FROM #TMP_1) BEGIN
@@ -108,20 +143,22 @@ BEGIN
 					ASSETSTATUS_ID
 					, CHANGEDATE
 					, DOWNTIME
+					, SPVB_RELATEDDOWNTIME
 					, IS_SPLIT
 					, N_SPLIT
 				) SELECT
 					ASSETSTATUS_ID
 					, CHANGEDATE
-					, CASE WHEN DOWNTIME < DATEDIFF(MINUTE, 
+					, CASE WHEN DOWNTIME < DATEDIFF(SECOND, 
 								DATETIME2FROMPARTS(YEAR(CHANGEDATE), MONTH(CHANGEDATE), 1, 0, 0, 0, 0, 0),
 								CHANGEDATE
-							) THEN DOWNTIME
-						ELSE DATEDIFF(MINUTE, 
+							) THEN DOWNTIME / 60.0
+						ELSE DATEDIFF(SECOND, 
 								DATETIME2FROMPARTS(YEAR(CHANGEDATE), MONTH(CHANGEDATE), 1, 0, 0, 0, 0, 0),
 								CHANGEDATE
-							)		    
+							) / 60.0
 					END                             AS DOWNTIME
+					, SPVB_RELATEDDOWNTIME
 					, 1 							AS IS_SPLIT
 					, @n_split						AS N_SPLIT
 				FROM #TMP_1
@@ -129,10 +166,11 @@ BEGIN
 				SELECT
 					ASSETSTATUS_ID
 					, CHANGEDATE
-					, DATEDIFF(MINUTE, 
+					, DATEDIFF(SECOND, 
 						DATETIME2FROMPARTS(YEAR(CHANGEDATE), MONTH(CHANGEDATE), 1, 0, 0, 0, 0, 0),
 						CHANGEDATE
-					)                               AS DOWNTIME
+					) / 60.0                        AS DOWNTIME
+					, SPVB_RELATEDDOWNTIME
 					, 1 							AS IS_SPLIT
 					, @n_split						AS N_SPLIT
 				INTO #TMP_FINAL
@@ -146,11 +184,11 @@ BEGIN
 			-- 		FLAG_DELETE: Nếu downtime bị âm thì sẽ set 'Y' để xoá dòng này khỏi bảng #TMP_1
 			UPDATE #TMP_1 SET
 				CHANGEDATE = DATEADD(SECOND, -1, DATETIME2FROMPARTS(YEAR(CHANGEDATE), MONTH(CHANGEDATE), 1, 0, 0, 0, 0, 0))
-				, DOWNTIME = DOWNTIME - DATEDIFF(MINUTE, 
+				, DOWNTIME = DOWNTIME - 1.0 * DATEDIFF(SECOND, 
 					DATETIME2FROMPARTS(YEAR(CHANGEDATE), MONTH(CHANGEDATE), 1, 0, 0, 0, 0, 0),
 					CHANGEDATE
 				)
-				, FLAG_DELETE = CASE WHEN DOWNTIME <= DATEDIFF(MINUTE, 
+				, FLAG_DELETE = CASE WHEN DOWNTIME <= DATEDIFF(SECOND, 
 											DATETIME2FROMPARTS(YEAR(CHANGEDATE), MONTH(CHANGEDATE), 1, 0, 0, 0, 0, 0),
 											CHANGEDATE) THEN 'Y' ELSE 'N' END
 			;
@@ -164,8 +202,184 @@ BEGIN
 
 
 		-- Step 3: INSERT toàn bộ bảng #TMP_FINAL union với asset_status không bị dôi
-		INSERT INTO FND.W_CMMS_ASSET_STATUS_F (
-			[ASSETSTATUS_ID]
+		SELECT * INTO #TMP_PRE_DOWNTIME FROM (
+			SELECT 
+				[ASSETSTATUS_ID]
+				, DATEADD(SECOND, -[DOWNTIME] * 60.0, [CHANGEDATE]) AS [FROMDATE]
+				, [CHANGEDATE]                                      AS [TODATE]
+				, [DOWNTIME]
+				, [SPVB_RELATEDDOWNTIME]
+					
+				, [IS_SPLIT]
+				, [N_SPLIT]
+			FROM #TMP_FINAL
+				
+			UNION ALL
+			SELECT 
+				[ASSETSTATUS_ID]
+				, DATEADD(SECOND, -[DOWNTIME], 
+						CONVERT(DATETIME2, CHANGEDATE, 103))	    AS [FROMDATE]
+				, CONVERT(DATETIME2, CHANGEDATE, 103)			    AS [TODATE]
+				, [DOWNTIME] / 60.0
+				, [SPVB_RELATEDDOWNTIME]
+
+				, 0
+				, NULL
+
+			FROM #TMP_STATUS
+			WHERE 1=1
+				AND DATEDIFF(MONTH, 
+						DATEADD(SECOND, -DOWNTIME, CHANGEDATE), 
+						CHANGEDATE) <= 0
+		) AAA
+		;
+
+
+		SELECT
+			CONVERT(BIGINT, F.ASSETSTATUS_ID)           AS ASSETSTATUS_ID 
+			, CONVERT(BIGINT, F.SPVB_RELATEDDOWNTIME)   AS SPVB_RELATEDDOWNTIME
+			, CONVERT(NVARCHAR(30), F.ASSET_NUM)        AS ASSET_NUM
+			, CONVERT(NVARCHAR(1000), T.[DESCRIPTION])  AS [DESCRIPTION]
+		INTO #TMP_RELATED_DOWNTIME
+		FROM STG.W_CMMS_ASSET_STATUS_FS F
+		JOIN dbo.W_CMMS_ASSET_D T ON 1=1
+			AND T.ASSET_UID = F.ASSET_UID
+		;
+
+
+
+		-- INSERT INTO FND.W_CMMS_ASSET_STATUS_F (
+			--   [ASSETSTATUS_ID]
+			-- , [FROMDATE]
+			-- , [TODATE]
+			-- , [DOWNTIME]
+				
+			-- , [CODE]
+			-- , [CODE_DESCRIPTION]
+			-- , [IS_RUNNING]
+			-- , [ASSET_NUM]
+			-- , [ASSET_UID]
+			-- , [LOCATION]
+
+			-- , [WONUM]
+			-- , [SPVB_ISSUE]
+			-- , [SPVB_CA] 
+			-- , [SPVB_PA] 
+			-- , [REMARKS] 
+			-- , [IS_SPLIT]
+			-- , [N_SPLIT]
+			-- , [FILLER]
+			-- , [FILLER_DOWNTIME]
+
+			-- , [W_INTEGRATION_ID]
+			-- , [W_BATCH_ID]
+			-- , [W_INSERT_DT]
+			-- , [W_DELETE_FLG]
+			-- , [W_DATASOURCE_NUM_ID]
+			-- , [W_UPDATE_DT]
+		-- )
+		SELECT
+			  CONVERT(BIGINT, F.ASSETSTATUS_ID)  									AS [ASSETSTATUS_ID]
+			, CONVERT(DATETIME2, F.[FROMDATE])										AS [FROMDATE]
+			, CONVERT(DATETIME2, F.[TODATE])										AS [TODATE]
+			, CONVERT(FLOAT, F.[DOWNTIME])											AS [DOWNTIME]
+
+			, CONVERT(NVARCHAR(100), A.[CODE])										AS [CODE]
+			, CONVERT(NVARCHAR(100), A.[CODE_DESCRIPTION])  						AS [CODE_DESCRIPTION]
+			, CONVERT(INT, A.[IS_RUNNING])											AS [IS_RUNNING]
+			, CONVERT(NVARCHAR(20), A.[ASSET_NUM])									AS [ASSET_NUM]
+			, CONVERT(BIGINT, A.[ASSET_UID])										AS [ASSET_UID]
+			, CONVERT(NVARCHAR(20), A.[LOCATION])									AS [LOCATION]
+
+			, CONVERT(NVARCHAR(100), A.[WONUM])										AS [WONUM]
+			, CONVERT(NVARCHAR(1000), A.[SPVB_ISSUE])								AS [SPVB_ISSUE]
+			, CONVERT(NVARCHAR(200), A.[SPVB_CA])									AS [SPVB_CA] 
+			, CONVERT(NVARCHAR(100), A.[SPVB_PA])									AS [SPVB_PA] 
+			, CONVERT(NVARCHAR(100), A.[REMARKS])									AS [REMARKS] 
+			, CONVERT(INT, F.[IS_SPLIT])											AS [IS_SPLIT]
+			, CONVERT(INT, F.[N_SPLIT])												AS [N_SPLIT]
+
+			, CONVERT(NVARCHAR(500), R.ASSET_NUM + ' - ' + R.DESCRIPTION) 			AS FILLER
+			, CONVERT(FLOAT, D.DOWNTIME)                          					AS FILLER_DOWNTIME
+
+			, CONCAT(F.[ASSETSTATUS_ID], '~', F.[IS_SPLIT], '~', F.[N_SPLIT])  		AS [W_INTEGRATION_ID]
+			, CONVERT(INT, @p_batch_id)  											AS [W_BATCH_ID]
+			, CONVERT(DATETIME2, DATEADD(HH, 7, GETDATE()))  						AS [W_INSERT_DT]
+			, 'N'  																	AS [W_DELETE_FLG]
+			, 8  																	AS [W_DATASOURCE_NUM_ID]
+			, CONVERT(DATETIME2, DATEADD(HH, 7, GETDATE()))  						AS [W_UPDATE_DT]
+			, 'N'																	AS [W_UPDATE_FLG]
+		INTO #W_CMMS_AS_ST_F_tmp
+		FROM #TMP_PRE_DOWNTIME F
+			LEFT JOIN [STG].[W_CMMS_ASSET_STATUS_FS] A ON 1=1
+				AND A.ASSETSTATUS_ID = F.ASSETSTATUS_ID
+			LEFT JOIN #TMP_RELATED_DOWNTIME R ON 1=1
+				AND R.SPVB_RELATEDDOWNTIME = F.ASSETSTATUS_ID
+			LEFT JOIN #TMP_PRE_DOWNTIME D ON 1=1
+				AND R.ASSETSTATUS_ID = D.ASSETSTATUS_ID
+				AND F.FROMDATE = D.FROMDATE
+		WHERE 1=1
+			AND (
+				F.SPVB_RELATEDDOWNTIME = 0
+				OR F.SPVB_RELATEDDOWNTIME IS NULL
+			)
+		;
+
+
+		-- 3. Update main table using W_INTEGRATION_ID
+		PRINT '3. Update main table using W_INTEGRATION_ID'
+
+		-- 3.1. Mark existing records by flag 'Y'
+		PRINT '3.1. Mark existing records by flag ''Y'''
+
+		UPDATE #W_CMMS_AS_ST_F_tmp
+		SET W_UPDATE_FLG = 'Y'
+		FROM #W_CMMS_AS_ST_F_tmp tg
+		INNER JOIN FND.W_CMMS_ASSET_STATUS_F sc 
+		ON sc.W_INTEGRATION_ID = tg.W_INTEGRATION_ID
+
+		-- 3.2. Start updating
+		PRINT '3.2. Start updating'
+
+		UPDATE FND.W_CMMS_ASSET_STATUS_F
+		SET 
+			[ASSETSTATUS_ID] = src.[ASSETSTATUS_ID]
+			, [FROMDATE] = src.[FROMDATE]
+			, [TODATE] = src.[TODATE]
+			, [DOWNTIME] = src.[DOWNTIME]
+
+			, [CODE] = src.[CODE]
+			, [CODE_DESCRIPTION] = src.[CODE_DESCRIPTION]
+			, [IS_RUNNING] = src.[IS_RUNNING]
+			, [ASSET_NUM] = src.[ASSET_NUM]
+			, [ASSET_UID] = src.[ASSET_UID]
+			, [LOCATION] = src.[LOCATION]
+
+			, [WONUM] = src.[WONUM]
+			, [SPVB_ISSUE] = src.[SPVB_ISSUE]
+			, [SPVB_CA]  = src.[SPVB_CA] 
+			, [SPVB_PA]  = src.[SPVB_PA] 
+			, [REMARKS]  = src.[REMARKS] 
+			, [IS_SPLIT] = src.[IS_SPLIT]
+			, [N_SPLIT] = src.[N_SPLIT]
+			, [FILLER] = src.[FILLER]
+			, [FILLER_DOWNTIME] = src.[FILLER_DOWNTIME]
+
+ 			, [W_INTEGRATION_ID] = src.[W_INTEGRATION_ID]
+			, [W_BATCH_ID] = src.[W_BATCH_ID]
+			, [W_INSERT_DT] = src.[W_INSERT_DT]
+			, [W_DELETE_FLG] = src.[W_DELETE_FLG]
+			, [W_DATASOURCE_NUM_ID] = src.[W_DATASOURCE_NUM_ID]
+			, [W_UPDATE_DT]  = src.[W_UPDATE_DT] 
+		FROM FND.W_CMMS_ASSET_STATUS_F tgt
+		INNER JOIN #W_CMMS_AS_ST_F_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID
+
+
+		-- 4. Insert non-existed records to main table from temp table
+		PRINT '4. Insert non-existed records to main table from temp table'
+
+		INSERT INTO FND.W_CMMS_ASSET_STATUS_F(
+			  [ASSETSTATUS_ID]
 			, [FROMDATE]
 			, [TODATE]
 			, [DOWNTIME]
@@ -184,6 +398,8 @@ BEGIN
 			, [REMARKS] 
 			, [IS_SPLIT]
 			, [N_SPLIT]
+			, [FILLER]
+			, [FILLER_DOWNTIME]
 
 			, [W_INTEGRATION_ID]
 			, [W_BATCH_ID]
@@ -192,45 +408,12 @@ BEGIN
 			, [W_DATASOURCE_NUM_ID]
 			, [W_UPDATE_DT]
 		)
-		SELECT 
-			F.[ASSETSTATUS_ID]
-			, DATEADD(MINUTE, -F.[DOWNTIME], F.[CHANGEDATE])
-			, F.[CHANGEDATE]
-			, F.[DOWNTIME]
+		SELECT
+			  [ASSETSTATUS_ID]
+			, [FROMDATE]
+			, [TODATE]
+			, [DOWNTIME]
 				
-			, AS_ST.[CODE]
-			, AS_ST.[CODE_DESCRIPTION]
-			, AS_ST.[IS_RUNNING]
-			, AS_ST.[ASSET_NUM]
-			, AS_ST.[ASSET_UID]
-			, AS_ST.[LOCATION]
-
-			, AS_ST.[WONUM]
-			, AS_ST.[SPVB_ISSUE]
-			, AS_ST.[SPVB_CA] 
-			, AS_ST.[SPVB_PA] 
-			, AS_ST.[REMARKS] 
-			, F.[IS_SPLIT]
-			, F.[N_SPLIT]
-
-			, CONCAT(F.[ASSETSTATUS_ID], '~', IS_SPLIT, '~', N_SPLIT)
-			, @p_batch_id
-			, DATEADD(HH, 7, GETDATE())
-			, 'N'
-			, 8
-			, DATEADD(HH, 7, GETDATE())
-		FROM #TMP_FINAL F
-			LEFT JOIN [STG].[W_CMMS_ASSET_STATUS_FS] AS_ST ON 1=1
-				AND AS_ST.ASSETSTATUS_ID = F.ASSETSTATUS_ID
-		UNION ALL
-		SELECT 
-			-- TOP 10
-			[ASSETSTATUS_ID]
-			, DATEADD(MINUTE, -ROUND([DOWNTIME] * 60, 0), 
-					CONVERT(DATETIME2, CHANGEDATE, 103))	AS [TODATE]
-			, CONVERT(DATETIME2, CHANGEDATE, 103)			AS [FROMDATE]
-			, ROUND([DOWNTIME] * 60, 0)						AS [DOWNTIME_ORG]
-
 			, [CODE]
 			, [CODE_DESCRIPTION]
 			, [IS_RUNNING]
@@ -243,24 +426,19 @@ BEGIN
 			, [SPVB_CA] 
 			, [SPVB_PA] 
 			, [REMARKS] 
-			, 0
-			, NULL
+			, [IS_SPLIT]
+			, [N_SPLIT]
+			, [FILLER]
+			, [FILLER_DOWNTIME]
 
-			, CONCAT([ASSETSTATUS_ID], '~', 0, '~', NULL)
-			, @p_batch_id
-			, DATEADD(HH, 7, GETDATE())
-			, 'N'
-			, 8
-			, DATEADD(HH, 7, GETDATE())
-		FROM STG.W_CMMS_ASSET_STATUS_FS
-		WHERE 1=1
-			AND ASSETSTATUS_ID <> ''
-			AND DOWNTIME <> 0
-			AND DATEDIFF(MONTH,
-					DATEADD(MINUTE, -ROUND(DOWNTIME * 60, 0), CONVERT(DATETIME2, CHANGEDATE, 103)),
-					CONVERT(DATETIME2, CHANGEDATE, 103)
-				) <= 0
-		;
+			, [W_INTEGRATION_ID]
+			, [W_BATCH_ID]
+			, [W_INSERT_DT]
+			, [W_DELETE_FLG]
+			, [W_DATASOURCE_NUM_ID]
+			, [W_UPDATE_DT]
+		FROM #W_CMMS_AS_ST_F_tmp
+		where W_UPDATE_FLG = 'N'
 
 
 		/*delete & re-insert data refresh*/

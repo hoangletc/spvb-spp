@@ -40,7 +40,7 @@ def read_excel(path: str, sheet_name: str) -> pd.DataFrame:
 
 
 if __name__ == '__main__':
-    path = Path(r"D:\TC_Data\_data\prod_Mar17\ASSET_Mar17.xlsx")
+    path = Path(r"D:\TC_Data\_data\prod_Mar22\ASSET 22MAR2023.xlsx")
     path_dir_out_ast = Path(r"D:\TC_Data\_data\_pre_processed\asset")
     path_dir_out_ast_status = Path(r"D:\TC_Data\_data\_pre_processed\asset_status")
     path_dir_out_ast_ancestor = Path(r"D:\TC_Data\_data\_pre_processed\asset_ancestor")
@@ -63,7 +63,7 @@ if __name__ == '__main__':
         df['ASSETSTATUSID'] = df['ASSETSTATUSID'].fillna(0).astype(np.int64).astype(str).replace('0', None)
         df['ASSETANCESTORID'] = df['ASSETANCESTORID'].fillna(0).astype(np.int64)
         df['HIERARCHYLEVELS'] = df['HIERARCHYLEVELS'].fillna(0).astype(np.int64)
-        df['SPVB_RELATEDDOWNTIME'] = df['SPVB_RELATEDDOWNTIME'].fillna(-123).astype(np.int64).replace(-123, None)
+        # df['SPVB_RELATEDDOWNTIME'] = df['SPVB_RELATEDDOWNTIME'].fillna(-123).astype(np.int64).replace(-123, None)
 
         logger.info("Extract Asset")
 
@@ -81,7 +81,7 @@ if __name__ == '__main__':
                 ids_ast.add(x['assetuid'])
                 ast.append(x)
 
-        path_ast = path_dir_out_ast / f"{sheet.replace(' ', '_')}.json"
+        path_ast = path_dir_out_ast / f"{path.stem}_{sheet.replace(' ', '_')}.json"
         with open(path_ast, 'w+', encoding='utf-8') as fp:
             json.dump(ast, fp, indent=2, ensure_ascii=False)
 
@@ -102,7 +102,7 @@ if __name__ == '__main__':
                 ids_ast_st.add(x['assetstatusid'])
                 ast_st.append(x)
 
-        path_ast_status = path_dir_out_ast_status / f"{sheet.replace(' ', '_')}.json"
+        path_ast_status = path_dir_out_ast_status / f"{path.stem}_{sheet.replace(' ', '_')}.json"
         with open(path_ast_status, 'w+', encoding='utf-8') as fp:
             json.dump(ast_st, fp, indent=2, ensure_ascii=False)
 
@@ -123,6 +123,6 @@ if __name__ == '__main__':
                 ids_ast_anc.add(x['assetancestorid'])
                 ast_anc.append(x)
 
-        path_ast_anc = path_dir_out_ast_ancestor / f"{sheet.replace(' ', '_')}.json"
+        path_ast_anc = path_dir_out_ast_ancestor / f"{path.stem}_{sheet.replace(' ', '_')}.json"
         with open(path_ast_anc, 'w+', encoding='utf-8') as fp:
             json.dump(ast_anc, fp, indent=2, ensure_ascii=False)

@@ -12,7 +12,7 @@ CREATE TABLE [FND].[W_CMMS_INVUL_D]
 	[SPVB_RETURNFROMISSUE] [nvarchar](100) NULL,
 	[SPVB_MUSTRETURN_ORG] [nvarchar](100) NULL,
 	[RETURNED_QTY] [real] NULL,
-	[REMARK] [nvarchar](150) NULL,
+	[REMARK] [nvarchar](300) NULL,
 	[LINE_TYPE] [nvarchar](100) NULL,
 	[DESCRIPTION] [nvarchar](1000) NULL,
 	[TO_SITEID] [nvarchar](100) NULL,
@@ -35,7 +35,7 @@ CREATE TABLE [FND].[W_CMMS_INVUL_D]
 	[ENTER_BY] [nvarchar](100) NULL,
 	[SPVB_WONUMREF] [nvarchar](100) NULL,
 	[SPVB_REASON] [nvarchar](100) NULL,
-	[MATU_ID] [bigint] NULL,
+	[FROM] MVARCHAR(30) NULL,
 	[FILE_NAME] NVARCHAR(100) NULL,
 
 	[W_BATCH_ID] [bigint] NULL,

@@ -4,51 +4,55 @@ SET QUOTED_IDENTIFIER ON
 GO
 CREATE TABLE [FND].[W_CMMS_MATR_F]
 (
-	[ACTUALCOST] [float] NULL,
-	[ACTUALDATE] DATETIME2 NULL,
-	[ASSETNUM] [nvarchar](50) NULL,
-	[BINNUM] [nvarchar](50) NULL,
-	[CURBAL] FLOAT NULL,
-	[CURRENCYCODE] [nvarchar](50) NULL,
-	[CURRENCYLINECOST] FLOAT NULL,
-	[DESCRIPTION] [nvarchar](1000) NULL,
-	[EXCHANGERATE] [float] NULL,
-	[FINANCIALPERIOD] [nvarchar](50) NULL,
-	[FROMSITEID] [nvarchar](50) NULL,
-	[FROMSTORELOC] [nvarchar](50) NULL,
-	[INVUSE_ID] [nvarchar](50) NULL,
-	[INVUSELINE_ID] [nvarchar](50) NULL,
-	[ISSUE] [nvarchar](50) NULL,
-	[ISSUETYPE] [nvarchar](50) NULL,
-	[ISSUEUNIT] [nvarchar](50) NULL,
-	[ITEMNUM] [nvarchar](50) NULL,
-	[LINECOST] [nvarchar](50) NULL,
-	[LINETYPE] [nvarchar](50) NULL,
-	[LINETYPE_DESCRIPTION] [nvarchar](1000) NULL,
-	[MATRECTRANSID] [nvarchar](50) NULL,
-	[MRNUM] [nvarchar](50) NULL,
-	[POLINENUM] [nvarchar](50) NULL,
-	[PONUM] [nvarchar](50) NULL,
-	[POSITEID] [nvarchar](50) NULL,
-	[QTYOVERRECEIVED] [nvarchar](50) NULL,
-	[QUANTITY] [float] NULL,
-	[RECEIVEDUNIT] [nvarchar](50) NULL,
-	[REFWO] [nvarchar](50) NULL,
-	[SHIPMENTNUM] [nvarchar](50) NULL,
-	[SITEID] [nvarchar](50) NULL,
-	[SPVB_DND] [nvarchar](50) NULL,
-	[SPVB_SAPPO] [nvarchar](50) NULL,
-	[SPVB_SAPRECEIPT] [nvarchar](50) NULL,
-	[SPVB_SAPREMARK] [nvarchar](500) NULL,
-	[TOBIN] [nvarchar](50) NULL,
-	[TOSTORELOC] [nvarchar](50) NULL,
-	[TOTALCURBAL] FLOAT NULL,
-	[TRANSDATE] DATETIME2 NULL,
-	[UNITCOST] FLOAT NULL,
-	[FILE_NAME] [nvarchar](100) NULL,
+	  [ACTUALCOST] [float] NULL
+	, [ACTUALDATE] DATETIME2 NULL
+	, [ASSETNUM] [nvarchar](50) NULL
+	, [BINNUM] [nvarchar](50) NULL
+	, [CURBAL] FLOAT NULL
+	, [CURRENCYCODE] [nvarchar](50) NULL
+	, [CURRENCYLINECOST] FLOAT NULL
+	, [DESCRIPTION] [nvarchar](1000) NULL
+	, [EXCHANGERATE] [float] NULL
+	, [FINANCIALPERIOD] [nvarchar](50) NULL
+	, [FROMSITEID] [nvarchar](50) NULL
+	, [FROMSTORELOC] [nvarchar](50) NULL
+	, [INVUSE_ID] [nvarchar](50) NULL
+	, [INVUSELINE_ID] [nvarchar](50) NULL
+	, [ISSUE] [nvarchar](50) NULL
+	, [ISSUETYPE] [nvarchar](50) NULL
+	, [ISSUEUNIT] [nvarchar](50) NULL
+	, [ITEMNUM] [nvarchar](50) NULL
+	, [LINECOST] [nvarchar](50) NULL
+	, [LINETYPE] [nvarchar](50) NULL
+	, [LINETYPE_DESCRIPTION] [nvarchar](1000) NULL
+	, [MATR_ID] [nvarchar](50) NULL
+	, [MRNUM] [nvarchar](50) NULL
+	, [POLINENUM] [nvarchar](50) NULL
+	, [PONUM] [nvarchar](50) NULL
+	, [POSITEID] [nvarchar](50) NULL
+	, [QTYOVERRECEIVED] [nvarchar](50) NULL
+	, [QUANTITY] [float] NULL
+	, [RECEIVEDUNIT] [nvarchar](50) NULL
+	, [REFWO] [nvarchar](50) NULL
+	, [SHIPMENTNUM] [nvarchar](50) NULL
+	, [SITEID] [nvarchar](50) NULL
+	, [SPVB_DND] [nvarchar](50) NULL
+	, [SPVB_SAPPO] [nvarchar](50) NULL
+	, [SPVB_SAPRECEIPT] [nvarchar](50) NULL
+	, [SPVB_SAPREMARK] [nvarchar](500) NULL
+	, [TOBIN] [nvarchar](50) NULL
+	, [TOSTORELOC] [nvarchar](50) NULL
+	, [TOTALCURBAL] FLOAT NULL
+	, [TRANSDATE] DATETIME2 NULL
+	, [UNITCOST] FLOAT NULL
+	, [FILE_NAME] [nvarchar](100) NULL
 
-	[W_BATCH_ID] [bigint] NULL,
-	[W_INSERT_DT] DATETIME2 NULL
+	, [W_INTEGRATION_ID] [nvarchar](4000) NULL
+	, [W_BATCH_ID] INT NULL
+	, [W_INSERT_DT] DATETIME2 NULL
+	, [W_DELETE_FLG] VARCHAR(1) NULL
+	, [W_DATASOURCE_NUM_ID] INT NULL
+	, [W_UPDATE_DT] DATETIME2 NULL
 )
 WITH
 (

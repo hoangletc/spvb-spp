@@ -1,0 +1,30 @@
+DECLARE @dt DATETIME2 = DATEADD(HH, 7, GETDATE());
+
+INSERT INTO FND.W_CMMS_ASSET_ANCESTOR_D (
+    ASSETANCESTOR_ID
+    , HIERARCHY_LEVELS
+    , ANCESTOR
+    , ASSET_UID
+    , FILE_NAME
+
+    , W_INSERT_DT
+    , W_UPDATE_DT
+    , W_INTEGRATION_ID
+    , W_DELETE_FLG
+    , W_DATASOURCE_NUM_ID
+    , W_BATCH_ID
+) SELECT
+      CONVERT(BIGINT, ASSETANCESTOR_ID)
+    , CONVERT(INT, HIERARCHY_LEVELS)
+    , CONVERT(NVARCHAR(100), ANCESTOR)
+    , CONVERT(BIGINT, ASSET_UID)
+    , CONVERT(NVARCHAR(100), FILE_NAME)
+    
+    , @dt                                       AS W_INSERT_DT
+    , @dt                                       AS W_UPDATE_DT
+    , CONCAT(ASSETANCESTOR_ID, '~', ASSET_UID)  AS W_INTEGRATION_ID
+    , 'N'                                       AS W_DELETE_FLG
+    , 8                                         AS W_DATASOURCE_NUM_ID
+    , W_BATCH_ID
+FROM STG.W_CMMS_ASSET_ANCESTOR_DS
+;

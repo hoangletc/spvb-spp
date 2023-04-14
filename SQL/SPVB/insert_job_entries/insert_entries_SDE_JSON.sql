@@ -1,7 +1,6 @@
-DECLARE @dt [datetime] = GETDATE()
+DECLARE @dt [datetime] = DATEADD(HH, 7, GETDATE());
 
-insert into [dbo].[SAP_ETL_JOB]
-    (
+insert into [dbo].[SAP_ETL_JOB] (
     JOB_ID,
     JOB_GROUP_NAME,
     BATCH_GROUP,
@@ -26,17 +25,17 @@ insert into [dbo].[SAP_ETL_JOB]
     )
 VALUES
     (
-        20429,
+        20473,
         'SDE_JSON2STG',
         7,
         'SPVB_SAP_SDE_JSON2STG',
-        'STG.W_CMMS_MATR_DS',
+        'STG.W_CMMS_ASSET_ANCESTOR_DS',
         'Load data from JSON (dev) to STG (dev)',
         'Y',
         'SDE',
         'SDE',
         '*.json',
-        'STG.W_CMMS_MATR_DS',
+        'STG.W_CMMS_ASSET_ANCESTOR_DS',
         'Y',
         NULL,
         100,
@@ -46,5 +45,5 @@ VALUES
         @dt,
         'JSON',
         0,
-        'API Sample Data/edited/material_receipt_trans'
+        'cmms_data/BI_ASSET_ANCESTOR'
     );

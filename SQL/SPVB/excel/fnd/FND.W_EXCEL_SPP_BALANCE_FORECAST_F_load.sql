@@ -3,11 +3,9 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-ALTER PROC [dbo].[EXCEL_proc_load_fnd_w_spp_market_price_f] @p_batch_id [bigint] AS
-
+ALTER PROC [dbo].[EXCEL_proc_load_fnd_w_spp_balance_forecast_f] @p_batch_id [bigint] AS
 BEGIN
-	--DECLARE @p_batch_id bigint = 2020111601
-	DECLARE	@tgt_TableName nvarchar(200) = N'FND.W_EXCEL_SPP_MARKET_PRICE_F',
+	DECLARE	@tgt_TableName nvarchar(200) = N'FND.W_EXCEL_SPP_BALANCE_FORECAST_F',
 			@sql nvarchar(max),
 	        @column_name varchar(4000),
 	        @no_row bigint	,
@@ -59,80 +57,86 @@ BEGIN
 	BEGIN TRY
 	
 		/*Update soft delete flg for old data*/
-		UPDATE FND.W_EXCEL_SPP_MARKET_PRICE_F SET 
+		UPDATE FND.W_EXCEL_SPP_BALANCE_FORECAST_F SET 
 			W_DELETE_FLG = 'Y'
 			, W_UPDATE_DT = DATEADD(HH, 7, GETDATE())
 			, W_BATCH_ID = @p_batch_id
 		WHERE W_DELETE_FLG = 'N'
-			AND FILE_PATH IN (SELECT DISTINCT FILE_PATH FROM STG.W_EXCEL_SPP_MARKET_PRICE_FS /*WHERE W_BATCH_ID = @p_batch_id*/)
-	;
-	WITH A AS (																	
+			AND FILE_PATH IN (SELECT DISTINCT FILE_PATH FROM STG.W_EXCEL_SPP_BALANCE_FORECAST_FS /*WHERE W_BATCH_ID = @p_batch_id*/)
+		;
+
+
+		INSERT INTO FND.W_EXCEL_SPP_BALANCE_FORECAST_F (
+			  [PLANT]
+			, [TYPE]
+			, [BALANCE]
+			, [YEAR]
+			, [MONTH]
+
+			, [FILE_PATH]
+
+			, [W_DELETE_FLG]
+			, [W_DATASOURCE_NUM_ID]
+			, [W_INSERT_DT]
+			, [W_UPDATE_DT]
+			, [W_BATCH_ID]
+			, [W_INTEGRATION_ID]
+		)
 		SELECT 
-			CONVERT(NVARCHAR(100), Prop_0)								AS [CODE]
-			, CONVERT(NVARCHAR(100), Prop_1)							AS [PLANT]
-			, CONVERT(NVARCHAR(100), Prop_2)							AS [SPP_CODE]
-			, CONVERT(NVARCHAR(1000), Prop_3)							AS [DESCRIPTION]
-			, CONVERT(NVARCHAR(100), Prop_4)							AS [BASE_UNIT]
-			, CASE WHEN Prop_5 IS NULL OR ISNUMERIC(Prop_5) = 0 
-					OR Prop_5 = ' - ' THEN 0.0 		
-				ELSE CONVERT(decimal(38, 20), Prop_5)
-			END 														AS PRICE
-			, LEFT(REPLACE(FILE_PATH, 'Write-off_', ''), 3)				AS PLANT_NAME
-			, SUBSTRING(REPLACE(FILE_PATH, 'Write-off_', ''), 5,6) 		AS [PERIOD]
-			, FILE_PATH
+			  CONVERT(nvarchar(10), [Prop_0]) 		AS PLANT
+			, CONVERT(nvarchar(100), [Prop_1]) 		AS [TYPE]
+			, CONVERT(decimal(38 ,20), [BALANCE]) 	AS BALANCE
+			, 2022
+			, CASE [MONTH] 
+				WHEN 'Prop_3' THEN 1
+				WHEN 'Prop_4' THEN 2
+				WHEN 'Prop_5' THEN 3
+				WHEN 'Prop_6' THEN 4
+				WHEN 'Prop_7' THEN 5
+				WHEN 'Prop_8' THEN 6
+				WHEN 'Prop_9' THEN 7
+				WHEN 'Prop_10' THEN 8
+				WHEN 'Prop_11' THEN 9
+				WHEN 'Prop_12' THEN 10
+				WHEN 'Prop_13' THEN 11
+				WHEN 'Prop_14' THEN 12
+			END                                 	AS [MONTH]
 
-			, CONCAT(
-				Prop_2
-				, '~'
-				, LEFT(REPLACE(FILE_PATH, 'Write-off_', ''), 3)
-				, '~'
-				, SUBSTRING(REPLACE(FILE_PATH, 'Write-off_', ''), 5,6)
-			) 															AS W_INTEGRATION_ID
-		FROM STG.W_EXCEL_SPP_MARKET_PRICE_FS
+			, CONVERT(nvarchar(100), [FILE_PATH]) 	AS FILE_PATH
+
+			, 'N' 									AS [W_DELETE_FLG]
+			, 3 									AS [W_DATASOURCE_NUM_ID]
+			, DATEADD(HH, 7, GETDATE()) 			AS [W_INSERT_DT]
+			, DATEADD(HH, 7, GETDATE()) 			AS [W_UPDATE_DT]
+			, @p_batch_id							AS [W_BATCH_ID]
+			, CONCAT([Prop_0], '~', [Prop_1], '~',
+					 2022, '~', [MONTH])			AS W_INTEGRATION_ID
+		FROM (
+			SELECT *
+			FROM  STG.W_EXCEL_SPP_BALANCE_FORECAST_FS
+			UNPIVOT (
+				BALANCE
+				FOR MONTH IN (
+					[Prop_3]
+					, [Prop_4]
+					, [Prop_5]
+					, [Prop_6]
+					, [Prop_7]
+					, [Prop_8]
+					, [Prop_9]
+					, [Prop_10]
+					, [Prop_11]
+					, [Prop_12]
+					, [Prop_13]
+					, [Prop_14]
+				)
+			
+			) AS TMP
+		) X
 		WHERE 1=1
-			AND Prop_2 IS NOT NULL
-			AND FILE_PATH LIKE 'Write-off_QNP_%'
-	)
-	INSERT INTO FND.W_EXCEL_SPP_MARKET_PRICE_F(
-		CODE
-		, PLANT
-		, SPP_CODE
-		, [DESCRIPTION]
-		, BASE_UNIT
-		, PRICE
-		, PLANT_NAME
-		, [PERIOD]
-		, FILE_PATH
+			AND Prop_1 <> 'Actual'
+		;
 
-		, [W_DELETE_FLG]
-		, W_DATASOURCE_NUM_ID
-		, W_INSERT_DT
-		, W_UPDATE_DT
-		, W_BATCH_ID
-		, W_INTEGRATION_ID
-	)
-	select 
-		CODE
-		, PLANT
-		, SPP_CODE
-		, [DESCRIPTION]
-		, BASE_UNIT
-		, PRICE
-
-		, PLANT_NAME
-		, [PERIOD]
-		, FILE_PATH
-
-		, 'N' 						AS [W_DELETE_FLG]
-		, 3 						AS [W_DATASOURCE_NUM_ID]
-		, DATEADD(HH, 7, GETDATE()) AS [W_INSERT_DT]
-		, DATEADD(HH, 7, GETDATE()) AS [W_UPDATE_DT]
-		, @p_batch_id				AS [W_BATCH_ID]
-		, W_INTEGRATION_ID
-	from A
-	;
-
-/*
 		/*delete & re-insert data refresh*/
 		DELETE FROM [dbo].[SAP_ETL_DATAFRESH_CONF] WHERE UPPER(TABLE_NAME) = UPPER(@tgt_TableName)
 
@@ -150,9 +154,9 @@ BEGIN
 			) M
 		WHERE W_BATCH_ID = @p_batch_id
 			AND W_DELETE_FLG = 'N'
-*/
-		SET @src_rownum = (SELECT COUNT(1) FROM [STG].[W_EXCEL_SPP_MARKET_PRICE_FS] WHERE W_BATCH_ID = @p_batch_id);
-		SET @tgt_rownum = (SELECT COUNT(1) FROM FND.W_EXCEL_SPP_MARKET_PRICE_F WHERE W_DELETE_FLG = 'N' AND  W_BATCH_ID = @p_batch_id);
+
+		SET @src_rownum = (SELECT COUNT(1) FROM [STG].[W_EXCEL_SPP_BALANCE_FORECAST_FS] WHERE W_BATCH_ID = @p_batch_id);
+		SET @tgt_rownum = (SELECT COUNT(1) FROM FND.W_EXCEL_SPP_BALANCE_FORECAST_F WHERE W_DELETE_FLG = 'N' AND  W_BATCH_ID = @p_batch_id);
 
 	END TRY
 
@@ -174,6 +178,4 @@ BEGIN
 			@tgt_chk_value 		= @tgt_chk_value
 
 END
-
-
 GO

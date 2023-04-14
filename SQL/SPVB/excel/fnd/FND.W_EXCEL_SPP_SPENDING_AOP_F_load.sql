@@ -1,4 +1,4 @@
-                                     SET ANSI_NULLS ON
+SET ANSI_NULLS ON
 GO
 SET QUOTED_IDENTIFIER ON
 GO
@@ -73,7 +73,9 @@ BEGIN
 
 		WITH A AS (																	
 			SELECT
-				Prop_4 											AS AP_ACCOUNT
+				Prop_2												AS COST_CENTER
+				, Prop_3											AS COST_CENTER_NAME
+				, Prop_4 											AS SAP_ACCOUNT
 				, Prop_5 											AS SAP_ACCOUNT_NAME
 				, Prop_6 											AS [DESCRIPTION]
 				, CASE WHEN Prop_7 = '' THEN 0.0 		
@@ -87,52 +89,53 @@ BEGIN
 					ELSE CONVERT(DECIMAL(38, 20), Prop_10) * 100
 				END													AS INC_DEC_PERCENT
 				, Prop_11 											AS [NOTE]
-				, CASE WHEN Prop_12 IS NULL OR Prop_12 = '' THEN 0.0
-					ELSE CONVERT(DECIMAL(38, 20), Prop_12)
-				END													AS [JANUARY]
 				, CASE WHEN Prop_13 IS NULL OR Prop_13 = '' THEN 0.0
 					ELSE CONVERT(DECIMAL(38, 20), Prop_13)
-				END													AS [FEBRUARY]
+				END													AS [JANUARY]
 				, CASE WHEN Prop_14 IS NULL OR Prop_14 = '' THEN 0.0
 					ELSE CONVERT(DECIMAL(38, 20), Prop_14)
-				END													AS [MARCH]
+				END													AS [FEBRUARY]
 				, CASE WHEN Prop_15 IS NULL OR Prop_15 = '' THEN 0.0
 					ELSE CONVERT(DECIMAL(38, 20), Prop_15)
-				END													AS [APRIL]
+				END													AS [MARCH]
 				, CASE WHEN Prop_16 IS NULL OR Prop_16 = '' THEN 0.0
 					ELSE CONVERT(DECIMAL(38, 20), Prop_16)
-				END													AS [MAY]
+				END													AS [APRIL]
 				, CASE WHEN Prop_17 IS NULL OR Prop_17 = '' THEN 0.0
 					ELSE CONVERT(DECIMAL(38, 20), Prop_17)
-				END													AS [JUNE]
+				END													AS [MAY]
 				, CASE WHEN Prop_18 IS NULL OR Prop_18 = '' THEN 0.0
 					ELSE CONVERT(DECIMAL(38, 20), Prop_18)
-				END													AS [JULY]
+				END													AS [JUNE]
 				, CASE WHEN Prop_19 IS NULL OR Prop_19 = '' THEN 0.0
 					ELSE CONVERT(DECIMAL(38, 20), Prop_19)
-				END													AS [AUGUST]
+				END													AS [JULY]
 				, CASE WHEN Prop_20 IS NULL OR Prop_20 = '' THEN 0.0
 					ELSE CONVERT(DECIMAL(38, 20), Prop_20)
-				END													AS [SEPTEMBER]
+				END													AS [AUGUST]
 				, CASE WHEN Prop_21 IS NULL OR Prop_21 = '' THEN 0.0
 					ELSE CONVERT(DECIMAL(38, 20), Prop_21)
-				END													AS [OCTOBER]
+				END													AS [SEPTEMBER]
 				, CASE WHEN Prop_22 IS NULL OR Prop_22 = '' THEN 0.0
 					ELSE CONVERT(DECIMAL(38, 20), Prop_22)
-				END													AS [NOVEMBER]
+				END													AS [OCTOBER]
 				, CASE WHEN Prop_23 IS NULL OR Prop_23 = '' THEN 0.0
 					ELSE CONVERT(DECIMAL(38, 20), Prop_23)
+				END													AS [NOVEMBER]
+				, CASE WHEN Prop_24 IS NULL OR Prop_24 = '' THEN 0.0
+					ELSE CONVERT(DECIMAL(38, 20), Prop_24)
 				END													AS [DECEMBER]
-				, Prop_25											AS [RM_TYPE]
-				, Prop_26											AS [LINE_FUNCTION_NAME]
-				, Prop_27											AS [MACHINE]
-				, Prop_28											AS [PM_CM_OVH]
-				, Prop_29											AS [SPP_SERVICE]
-				, SUBSTRING(FILE_PATH, 24, 3) 						AS PLANT_NAME
+				, Prop_27											AS [RM_TYPE]
+				, Prop_28											AS [LINE_FUNCTION_NAME]
+				, Prop_29											AS [MACHINE]
+				, Prop_30											AS [PM_CM_OVH]
+				, Prop_31											AS [SPP_SERVICE]
+				, REPLACE(SUBSTRING(FILE_PATH, 24, 3), '.', '') 	AS PLANT_NAME
 
 				, FILE_PATH
-				, CONCAT(Prop_4, '~', SUBSTRING(FILE_PATH, 24, 3)) 	AS W_INTEGRATION_ID
 			FROM STG.W_EXCEL_SPP_SPENDING_AOP_FS
+			WHERE 1=1
+				AND (Prop_1 IS NOT NULL OR Prop_4 IS NOT NULL)
 		), TMP_UNPIVOT AS (		
 			SELECT
 				TMP.*
@@ -157,7 +160,9 @@ BEGIN
 			) AS TMP
 		)
 			INSERT INTO FND.W_EXCEL_SPP_SPENDING_AOP_F (
-				AP_ACCOUNT
+				COST_CENTER
+				, COST_CENTER_NAME
+				, SAP_ACCOUNT
 				, SAP_ACCOUNT_NAME
 				, [DESCRIPTION]
 				, AOP_AMOUNT
@@ -183,7 +188,9 @@ BEGIN
 				, W_INTEGRATION_ID
 			)
 			select 
-				AP_ACCOUNT
+				COST_CENTER
+				, COST_CENTER_NAME
+				, SAP_ACCOUNT
 				, SAP_ACCOUNT_NAME
 				, [DESCRIPTION]
 				, AOP_AMOUNT
@@ -206,13 +213,13 @@ BEGIN
 				, DATEADD(HH, 7, GETDATE()) 						AS [W_INSERT_DT]
 				, DATEADD(HH, 7, GETDATE()) 						AS [W_UPDATE_DT]
 				, @p_batch_id										AS [W_BATCH_ID]
-				, CONCAT([PERIOD], '~', [LINE_FUNCTION_NAME], '~', [MACHINE],
-					'~', [AP_ACCOUNT], '~', [SPP_SERVICE], '~', [PLANT_NAME], 
-					'~', [SAP_ACCOUNT_NAME]
-				) 													AS INTEGRATION
+				, CONCAT([PERIOD], '~', [COST_CENTER],
+						 '~', [SAP_ACCOUNT], '~', [RM_TYPE],  
+						 '~', [MACHINE],'~', PLANT_NAME)			AS [W_INTEGRATION_ID]
+					
 			FROM TMP_UNPIVOT
 			WHERE 1=1
-				AND AP_ACCOUNT IS NOT NULL
+				AND SAP_ACCOUNT IS NOT NULL
 		;
 	/*
 		/*delete & re-insert data refresh*/

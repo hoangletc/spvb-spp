@@ -1,4 +1,4 @@
-DECLARE @dt [datetime] = GETDATE()
+DECLARE @dt [datetime] = DATEADD(HH, 7, GETDATE());
 
 insert into [dbo].[SAP_ETL_JOB]
     (
@@ -26,29 +26,24 @@ insert into [dbo].[SAP_ETL_JOB]
 VALUES
     -- SAP2Parquet
     (
-        20401,
+        20199,
         'SRI_SAP2PARQUET',
         7,
         'SPVB_SAP_SRI_SAP2PARQUET',
-        'MATDOC',
+        'MBEWH',
         'Load data from SAP (prod) to parquet (dev)',
         'Y',
         'SRI',
         'SRI',
-        'SAPHANADB.MATDOC',
-        'MATDOC',
+        'SAPHANADB.MBEWH',
+        'MBEWH',
         'Y',
-        'SELECT * FROM SAPHANADB.MATDOC 
-            WHERE 1=1 
-            AND MANDT = ''300'' 
-            AND BUDAT >= ''20211201''
-            AND BUDAT < ''20220331''
-        ',
+        'SELECT * FROM SAPHANADB.MBEWH',
         100,
         -1,
         'N',
         @dt,
         @dt,
-        'MATDOC',
+        'MBEWH',
         0
     );

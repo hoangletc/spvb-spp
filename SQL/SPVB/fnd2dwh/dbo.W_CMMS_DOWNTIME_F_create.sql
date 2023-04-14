@@ -22,7 +22,8 @@ CREATE TABLE [dbo].[W_CMMS_DOWNTIME_F]
     [ASSET_STATUS_UID] [nvarchar](30) NULL,
     [ASSET_UID] [nvarchar](30) NULL,
     [ASSET_NUM] [nvarchar](30) NULL,
-    [DOWNTIME] DECIMAL(38,20) NULL,
+    [SITE_ID] [nvarchar](10) NULL,
+    [DOWNTIME] FLOAT NULL,
     [FROMDATE] DATETIME2 NULL,
     [TODATE] DATETIME2 NULL,
     [NAME] [nvarchar](100) NULL,
@@ -36,6 +37,8 @@ CREATE TABLE [dbo].[W_CMMS_DOWNTIME_F]
     [CORRECTIVE_ACTION] [nvarchar](50) NULL,
     [PREVENTIVE_ACTION] [nvarchar](50) NULL,
     [REMARKS] [nvarchar](50) NULL,
+    [FILLER] [nvarchar](500) NULL,
+	[FILLER_DOWNTIME] FLOAT NULL,
 
     [W_DELETE_FLG] VARCHAR(1) NULL,
     [W_DATASOURCE_NUM_ID] INT NULL,

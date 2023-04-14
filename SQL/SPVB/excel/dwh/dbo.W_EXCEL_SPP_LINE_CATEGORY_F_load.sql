@@ -3,7 +3,7 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-CREATE PROC [dbo].[EXCEL_proc_load_w_spp_line_category_f] @p_batch_id [bigint] AS 
+ALTER PROC [dbo].[EXCEL_proc_load_w_spp_line_category_f] @p_batch_id [bigint] AS 
 BEGIN
     DECLARE	@tgt_TableName nvarchar(200) = N'dbo.W_EXCEL_SPP_LINE_CATEGORY_F',
 			@sql nvarchar(max),
@@ -89,6 +89,8 @@ BEGIN
 			, [CATEGORY]
 			, [FROM_DATE]
 			, [TO_DATE]
+			, [PLANT]
+			, [LINE_ASSET_DESCRIPTION]
 			
 			, W_INTEGRATION_ID                              AS W_INTEGRATION_ID
 			, 'N'                                           AS W_DELETE_FLG
@@ -123,6 +125,8 @@ BEGIN
 			, [CATEGORY] = src.[CATEGORY]
 			, [FROM_DATE] = src.[FROM_DATE]
 			, [TO_DATE] = src.[TO_DATE]
+			, [PLANT] = src.[PLANT]
+			, [LINE_ASSET_DESCRIPTION] = src.[LINE_ASSET_DESCRIPTION]
 
 			, W_DELETE_FLG = src.W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID = src.W_DATASOURCE_NUM_ID
@@ -142,6 +146,8 @@ BEGIN
 			, [CATEGORY]
 			, [FROM_DATE]
 			, [TO_DATE]
+			, [PLANT]
+			, [LINE_ASSET_DESCRIPTION]
 
 			, W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID
@@ -155,6 +161,8 @@ BEGIN
 			, [CATEGORY]
 			, [FROM_DATE]
 			, [TO_DATE]
+			, [PLANT]
+			, [LINE_ASSET_DESCRIPTION]
 
 			, W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID

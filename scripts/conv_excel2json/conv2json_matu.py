@@ -1,91 +1,150 @@
 import json
 import logging
+from io import StringIO
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from tqdm import tqdm, trange
+from loguru import logger
+from xlsx2csv import Xlsx2csv
 
 logging.getLogger().setLevel(logging.DEBUG)
-
 cols_main = [
-    'matusetrans.actualcost', 'matusetrans.assetnum', 'matusetrans.binnum', 'matusetrans.curbal',
-    'matusetrans.description', 'matusetrans.exchangerate', 'matusetrans.invuseid', 'matusetrans.invuselineid',
-    'matusetrans.issuetype', 'matusetrans.issueunit', 'matusetrans.itemnum', 'matusetrans.linecost',
-    'matusetrans.matusetransid', 'matusetrans.mrnum', 'matusetrans.orgid', 'matusetrans.ponum',
-    'matusetrans.refwo', 'matusetrans.storeloc', 'matusetrans.tositeid', 'matusetrans.transdate',
-    'matusetrans.unitcost', 'matusetrans.actualdate', 'matusetrans.currencycode', 'matusetrans.linetype',
-    'matusetrans.location', 'matusetrans.qtyrequested', 'matusetrans.quantity'
+    'ACTUALCOST', 'ASSETNUM', 'BINNUM', 'CURBAL', 'CURRENCYCODE',
+    'DESCRIPTION', 'EXCHANGERATE', 'INVUSEID', 'INVUSELINEID', 'ISSUETYPE',
+    'ISSUEUNIT', 'ITEMNUM', 'LINECOST', 'LINETYPE', 'LOCATION',
+    'MATUSETRANSID', 'MRNUM', 'ORGID', 'PONUM', 'QTYREQUESTED', 'QUANTITY',
+    'REFWO', 'STORELOC', 'TOSITEID', 'MATUSETRANS_TRANSDATE', 'UNITCOST',
+    'MATUSETRANS_ACTUALDATE'
 ]
 cols_invu = [
-    'invuse.description', 'invuse.currencycode', 'invuse.invusenum', 'invuse.invowner', 'invuse.invuseid',
-    'invuse.fromstoreloc', 'invuse.status_description', 'invuse.changedate', 'invuse.usetype_description',
-    'invuse.receipts_description', 'invuse.receipts', 'invuse.spvb_internal', 'invuse.usetype', 'invuse.status',
-    'invuse.exchangedate'
+    'DESCRIPTION_1', 'CURRENCYCODE_1',
+    'INVUSENUM', 'INVOWNER', 'INVUSEID_1', 'FROMSTORELOC',
+    'STATUS_DESCRIPTION', 'CHANGEDATE', 'USETYPE_DESCRIPTION',
+    'EXCHANGEDATE', 'RECEIPTS_DESCRIPTION', 'RECEIPTS', 'SPVB_INTERNAL',
+    'USETYPE', 'STATUS'
 ]
 cols_invul = [
-    'invuseline.invuselineid', 'invuseline.unitcost', 'invuseline.spvb_extreasoncode',
-    'invuseline.spvb_extreasoncode_description', 'invuseline.spvb_mustreturn', 'invuseline.spvb_returnfromissue',
-    'invuseline.spvb_mustreturn_org', 'invuseline.returnedqty', 'invuseline.remark', 'invuseline.linetype',
-    'invuseline.tositeid', 'invuseline.invusenum', 'invuseline.actualdate', 'invuseline.description',
-    'invuseline.receivedqty', 'invuseline.assetnum', 'invuseline.costcenter', 'invuseline.fromstoreloc',
-    'invuseline.linecost', 'invuseline.quantity', 'invuseline.refwo', 'invuseline.costcenter_description',
-    'invuseline.itemnum', 'invuseline.itemsetid', 'invuseline.location', 'invuseline.invuselinenum',
-    'invuseline.usetype', 'invuseline.enterby', 'invuseline.spvb_wonumref', 'invuseline.spvb_reason'
+    'INVUSELINEID_1', 'UNITCOST_1',
+    'SPVB_EXTREASONCODE', 'SPVB_EXTREASONCODE_DESCRIPTION',
+    'SPVB_MUSTRETURN', 'SPVB_RETURNFROMISSUE', 'SPVB_MUSTRETURN_ORG',
+    'RETURNEDQTY', 'REMARK', 'LINETYPE_1', 'DESCRIPTION_2', 'TOSITEID_1',
+    'INVUSENUM_1', 'ACTUALDATE', 'RECEIVEDQTY', 'ASSETNUM_1', 'COSTCENTER',
+    'FROMSTORELOC_1', 'REFWO_1', 'LINECOST_1', 'QUANTITY_1',
+    'COSTCENTER_DESCRIPTION', 'INVUSELINENUM', 'ITEMNUM_1', 'ITEMSETID',
+    'LOCATION_1', 'USETYPE_1', 'ENTERBY', 'SPVB_WONUMREF', 'SPVB_REASON'
 ]
 
-cols_main_map = {x: x.removeprefix('matusetrans.') for x in cols_main}
-cols_invu_map = {x: x.removeprefix('invuse.') for x in cols_invu}
-cols_invul_map = {x: x.removeprefix('invuseline.') for x in cols_invul}
+cols_total = cols_main + cols_invu + cols_invul
 
-cols_total_map = cols_main_map | cols_invu_map | cols_invul_map
+cols_main_map = {x: x.removeprefix('MATUSETRANS_').lower() for x in cols_main}
+cols_invu_map = {x: x.removeprefix('INVUSE_').removesuffix('_1').removesuffix('_2').lower() for x in cols_invu}
+cols_invul_map = {x: x.removeprefix('INVUSELINE_').removesuffix('_1').removesuffix('_2').lower() for x in cols_invul}
+
+
+def read_excel(path: str, sheet_name: str) -> pd.DataFrame:
+    buffer = StringIO()
+    Xlsx2csv(path, outputencoding="utf-8").convert(buffer, sheetname=sheet_name)
+    buffer.seek(0)
+
+    if sheet_name != "Export Worksheet":
+        df_ = pd.read_csv(buffer, header=None)
+        df_ = df_.set_axis(cols_total, axis=1, copy=False)
+    else:
+        df_ = pd.read_csv(buffer, header=0)
+
+    return df_
+
 
 if __name__ == '__main__':
-    path = Path(r"D:\TC Data\_data\prod_Feb24\matusetrans.xlsx")
-    path_dir_out = Path(r"D:\TC Data\SPP API JSONs\SPP")
-    sheet_name = 'Export Worksheet'
+    path = Path(r"D:\TC_Data\_data\UAT_Apr11\MATU_Xuat lai ngay 11Apr2023.xlsx")
+    path_dir_out_matu = Path(r"D:\TC_Data\_data\_post_processed\material_use_trans")
+    path_dir_out_invu = Path(r"D:\TC_Data\_data\_post_processed\inventory_use")
+    path_dir_out_invul = Path(r"D:\TC_Data\_data\_post_processed\inventory_use_line")
 
-    logging.info(f"Load sheet: {sheet_name}")
+    path_dir_out_matu.mkdir(parents=True, exist_ok=True)
+    path_dir_out_invu.mkdir(parents=True, exist_ok=True)
+    path_dir_out_invul.mkdir(parents=True, exist_ok=True)
 
-    df = pd.read_excel(path, sheet_name=sheet_name)
-    df = df.replace({np.nan: None})
+    logger.info(f"* Start processing: {path.stem}")
 
-    matu, invu, invul = [], [], []
+    ids_matu, ids_invu, ids_invul = set(), set(), set()
 
-    def f(r):
-        m, iu, iul = {}, {}, {}
+    for sheet in pd.ExcelFile(path).sheet_names:
+        if sheet == 'SQL':
+            continue
 
-        for c in cols_main:
-            m[c.removeprefix('matusetrans.')] = r[c]
+        logger.info(f"Load sheet: {sheet}")
 
-        for c in cols_invu:
-            iu[c.removeprefix('invuse.')] = r[c]
-        iu['matusetransid'] = m['matusetransid']
+        df = read_excel(path, sheet_name=sheet)
 
-        for c in cols_invul:
-            iul[c.removeprefix('invuseline.')] = r[c]
-        iul['matusetransid'] = m['matusetransid']
+        logger.info("Extract MATU")
 
-        matu.append(m)
-        invu.append(iu)
-        invul.append(iul)
+        df_matu = df.groupby(cols_main, dropna=False) \
+            .size() \
+            .reset_index() \
+            .rename(columns=cols_main_map) \
+            .drop([0], axis=1) \
+            .replace({np.nan: None})
 
-    logging.info("Start applying")
+        # Filter out duplication
+        matu = df_matu.to_dict(orient="records")
+        out = []
+        for x in matu:
+            if x['matusetransid'] not in ids_matu:
+                ids_matu.add(x['matusetransid'])
+                out.append(x)
 
-    tqdm.pandas()
-    df.progress_apply(f, axis=1)
+        path_matu = path_dir_out_matu / f"{path.stem}_{sheet}.json".replace(' ', '_')
+        with open(path_matu, 'w+', encoding='utf-8') as fp:
+            json.dump(out, fp, indent=2, ensure_ascii=False)
 
-    path_out = path_dir_out / f"material_use_trans_{sheet_name.replace(' ', '_')}.json"
-    with open(path_out, 'w+', encoding='utf-8') as fp:
-        json.dump({'member': matu}, fp,
-                  indent=2, ensure_ascii=False)
+        logger.info("Extract INVU_MATU")
 
-    path_out = path_dir_out / f"invuse_{sheet_name.replace(' ', '_')}.json"
-    with open(path_out, 'w+', encoding='utf-8') as fp:
-        json.dump({'member': invu}, fp,
-                  indent=2, ensure_ascii=False)
+        # Process: inventory_use
+        df_invu = df.groupby(cols_invu, dropna=False) \
+            .size() \
+            .reset_index() \
+            .rename(columns=cols_invu_map) \
+            .drop([0], axis=1) \
+            .replace({np.nan: None})
 
-    path_out = path_dir_out / f"invuseline_{sheet_name.replace(' ', '_')}.json"
-    with open(path_out, 'w+', encoding='utf-8') as fp:
-        json.dump({'member': invul}, fp,
-                  indent=2, ensure_ascii=False)
+        # Filter out duplication
+        invu = df_invu.to_dict(orient="records")
+        out = []
+        for x in invu:
+            if x['invuseid'] not in ids_invu:
+                ids_invu.add(x['invuseid'])
+
+                x['from'] = 'MATU'
+
+                out.append(x)
+
+        path_invu = path_dir_out_invu / f"{path.stem}_{sheet}.json".replace(' ', '_')
+        with open(path_invu, 'w+', encoding='utf-8') as fp:
+            json.dump(out, fp, indent=2, ensure_ascii=False)
+
+        logger.info("Extract INVUL_MATU")
+
+        # Process: inventory_use_line
+        df_invul = df.groupby(cols_invul, dropna=False) \
+            .size() \
+            .reset_index() \
+            .rename(columns=cols_invul_map) \
+            .drop([0], axis=1) \
+            .replace({np.nan: None})
+
+        # Filter out duplication
+        invul = df_invul.to_dict(orient="records")
+        out = []
+        for x in invul:
+            if x['invuselineid'] not in ids_invu:
+                ids_invul.add(x['invuselineid'])
+
+                x['from'] = 'MATU'
+
+                out.append(x)
+
+        path_invul = path_dir_out_invul / f"{path.stem}_{sheet}.json".replace(' ', '_')
+        with open(path_invul, 'w+', encoding='utf-8') as fp:
+            json.dump(out, fp, indent=2, ensure_ascii=False)

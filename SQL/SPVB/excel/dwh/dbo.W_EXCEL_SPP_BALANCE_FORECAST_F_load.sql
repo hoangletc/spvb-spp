@@ -3,9 +3,9 @@ GO
 SET QUOTED_IDENTIFIER ON
 GO
 
-ALTER PROC [dbo].[EXCEL_proc_load_w_spp_spending_aop_f] @p_batch_id [bigint] AS 
+ALTER PROC [dbo].[EXCEL_proc_load_w_spp_balance_forecast_f] @p_batch_id [bigint] AS 
 BEGIN
-    DECLARE	@tgt_TableName nvarchar(200) = N'dbo.W_EXCEL_SPP_SPENDING_AOP_F',
+    DECLARE	@tgt_TableName nvarchar(200) = N'dbo.W_EXCEL_SPP_BALANCE_FORECAST_F',
 			@sql nvarchar(max),
 	        @column_name varchar(4000),
 	        @no_row bigint	,
@@ -74,10 +74,10 @@ BEGIN
 		-- 1. Check existence and remove of temp table
         PRINT '1. Check existence and remove of temp table'
 
-        IF OBJECT_ID(N'tempdb..#W_EXCEL_SPP_SPENDING_AOP_tmp') IS NOT NULL 
+        IF OBJECT_ID(N'tempdb..#W_EXCEL_SPP_BALANCE_FORECAST_tmp') IS NOT NULL 
         BEGIN
-            PRINT N'DELETE temporary table #W_EXCEL_SPP_SPENDING_AOP_tmp'
-            DROP Table #W_EXCEL_SPP_SPENDING_AOP_tmp
+            PRINT N'DELETE temporary table #W_EXCEL_SPP_BALANCE_FORECAST_tmp'
+            DROP Table #W_EXCEL_SPP_BALANCE_FORECAST_tmp
         END;
 
 
@@ -85,42 +85,25 @@ BEGIN
         PRINT '2. Select everything into temp table'
 
 		SELECT
-			ISNULL(PLANT.PLANT_WID, 0)                      AS PLANT_WID
-			, ISNULL(C.COST_CENTER_WID, 0)                  AS COST_CENTER_WID
+			[YEAR] * 10000 + [MONTH] * 100 + 1		AS DATE_WID
+			, ISNULL(PL.PLANT_WID, 0)				AS PLANT_WID
 
-			, F.COST_CENTER
-			, F.COST_CENTER_NAME
-			, SAP_ACCOUNT
-			, SAP_ACCOUNT_NAME
-			, [DESCRIPTION]
-			, AOP_AMOUNT
-			, NORM_ONE_OFF
-			, JULF_22
-			, INC_DEC_PERCENT
-			, NOTE
-			, [PERIOD]
-			, [SPENDING_AMOUNT]
-			, RM_TYPE
-			, LINE_FUNCTION_NAME
-			, MACHINE
-			, PM_CM_OVH
-			, SPP_SERVICE
-			, PLANT_NAME
+			, F.[PLANT]
+			, [TYPE]
+			, [BALANCE]
 			
-			, F.W_INTEGRATION_ID                            AS W_INTEGRATION_ID
-			, 'N'                                           AS W_DELETE_FLG
-			, 'N' 											AS W_UPDATE_FLG
-			, 3                                             AS W_DATASOURCE_NUM_ID
-			, DATEADD(HH, 7, GETDATE())                     AS W_INSERT_DT
-			, DATEADD(HH, 7, GETDATE())                     AS W_UPDATE_DT
-			, @p_batch_id                                   AS W_BATCH_ID
-		INTO #W_EXCEL_SPP_SPENDING_AOP_tmp
-		FROM FND.W_EXCEL_SPP_SPENDING_AOP_F F
-			LEFT JOIN [dbo].[W_SAP_PLANT_EXTENDED_D] PLANT ON 1=1
-				AND PLANT.PLANT_NAME_2 = PLANT_NAME
-				AND STo_LOC = ''
-			LEFT JOIN [dbo].[W_SAP_COST_CENTER_D] C ON 1=1
-				AND C.COST_CENTER = F.COST_CENTER
+			, F.W_INTEGRATION_ID                    AS W_INTEGRATION_ID
+			, 'N'                                   AS W_DELETE_FLG
+			, 'N' 									AS W_UPDATE_FLG
+			, 3                                     AS W_DATASOURCE_NUM_ID
+			, DATEADD(HH, 7, GETDATE())             AS W_INSERT_DT
+			, DATEADD(HH, 7, GETDATE())             AS W_UPDATE_DT
+			, @p_batch_id                           AS W_BATCH_ID
+		INTO #W_EXCEL_SPP_BALANCE_FORECAST_tmp
+		FROM FND.W_EXCEL_SPP_BALANCE_FORECAST_F F
+			LEFT JOIN [dbo].[W_SAP_PLANT_EXTENDED_D] PL ON 1=1
+				AND PL.STO_LOC = ''
+				AND PL.PLANT_NAME_2 = F.PLANT
 		;
 
 
@@ -130,38 +113,23 @@ BEGIN
 		-- 3.1. Mark existing records by flag 'Y'
 		PRINT '3.1. Mark existing records by flag ''Y'''
 
-		UPDATE #W_EXCEL_SPP_SPENDING_AOP_tmp
+		UPDATE #W_EXCEL_SPP_BALANCE_FORECAST_tmp
 		SET W_UPDATE_FLG = 'Y'
-		FROM #W_EXCEL_SPP_SPENDING_AOP_tmp tg
-		INNER JOIN [dbo].[W_EXCEL_SPP_SPENDING_AOP_F] sc 
+		FROM #W_EXCEL_SPP_BALANCE_FORECAST_tmp tg
+		INNER JOIN [dbo].[W_EXCEL_SPP_BALANCE_FORECAST_F] sc 
 		ON sc.W_INTEGRATION_ID = tg.W_INTEGRATION_ID
 
 		-- 3.2. Start updating
 		PRINT '3.2. Start updating'
 
-		UPDATE  [dbo].[W_EXCEL_SPP_SPENDING_AOP_F]
-		SET
-			PLANT_WID = src.PLANT_WID
-			, COST_CENTER_WID = src.COST_CENTER_WID
-			
-			, COST_CENTER = src.COST_CENTER
-			, COST_CENTER_NAME = src.COST_CENTER_NAME
-			, SAP_ACCOUNT = src.SAP_ACCOUNT
-			, SAP_ACCOUNT_NAME = src.SAP_ACCOUNT_NAME
-			, [DESCRIPTION] = src.DESCRIPTION
-			, AOP_AMOUNT = src.AOP_AMOUNT
-			, NORM_ONE_OFF = src.NORM_ONE_OFF
-			, JULF_22 = src.JULF_22
-			, INC_DEC_PERCENT = src.INC_DEC_PERCENT
-			, NOTE = src.NOTE
-			, [PERIOD] = src.[PERIOD]
-			, [SPENDING_AMOUNT] = src.[SPENDING_AMOUNT]
-			, RM_TYPE = src.RM_TYPE
-			, LINE_FUNCTION_NAME = src.LINE_FUNCTION_NAME
-			, MACHINE = src.MACHINE
-			, PM_CM_OVH = src.PM_CM_OVH
-			, SPP_SERVICE = src.SPP_SERVICE
-			, PLANT_NAME = src.PLANT_NAME
+		UPDATE  [dbo].[W_EXCEL_SPP_BALANCE_FORECAST_F]
+		SET 
+			 [PLANT_WID] = src.[PLANT_WID]
+			, [DATE_WID] = src.[DATE_WID]
+
+			, [PLANT] = src.[PLANT]
+			, [TYPE] = src.[TYPE]
+			, [BALANCE] = src.[BALANCE]
 
 			, W_DELETE_FLG = src.W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID = src.W_DATASOURCE_NUM_ID
@@ -169,35 +137,20 @@ BEGIN
 			, W_BATCH_ID = src.W_BATCH_ID
 			, W_INTEGRATION_ID = src.W_INTEGRATION_ID
 			, W_UPDATE_DT = DATEADD(HH, 7, GETDATE())
-		FROM [dbo].[W_EXCEL_SPP_SPENDING_AOP_F] tgt
-		INNER JOIN #W_EXCEL_SPP_SPENDING_AOP_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID
+		FROM [dbo].[W_EXCEL_SPP_BALANCE_FORECAST_F] tgt
+		INNER JOIN #W_EXCEL_SPP_BALANCE_FORECAST_tmp src ON src.W_INTEGRATION_ID = tgt.W_INTEGRATION_ID
 
 
 		-- 4. Insert non-existed records to main table from temp table
 		PRINT '4. Insert non-existed records to main table from temp table'
 
-		INSERT INTO [dbo].[W_EXCEL_SPP_SPENDING_AOP_F](
+		INSERT INTO [dbo].[W_EXCEL_SPP_BALANCE_FORECAST_F](
 			[PLANT_WID]
-			, COST_CENTER_WID
+			, [DATE_WID]
 
-			, COST_CENTER
-			, COST_CENTER_NAME
-			, SAP_ACCOUNT
-			, SAP_ACCOUNT_NAME
-			, [DESCRIPTION]
-			, AOP_AMOUNT
-			, NORM_ONE_OFF
-			, JULF_22
-			, INC_DEC_PERCENT
-			, NOTE
-			, [PERIOD]
-			, [SPENDING_AMOUNT]
-			, RM_TYPE
-			, LINE_FUNCTION_NAME
-			, MACHINE
-			, PM_CM_OVH
-			, SPP_SERVICE
-			, PLANT_NAME
+			, [PLANT]
+			, [TYPE]
+			, [BALANCE]
 
 			, W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID
@@ -207,27 +160,12 @@ BEGIN
 			, W_INTEGRATION_ID
 		)
 		SELECT
-			PLANT_WID
-			, COST_CENTER_WID
+			[PLANT_WID]
+			, [DATE_WID]
 
-			, COST_CENTER
-			, COST_CENTER_NAME
-			, SAP_ACCOUNT
-			, SAP_ACCOUNT_NAME
-			, [DESCRIPTION]
-			, AOP_AMOUNT
-			, NORM_ONE_OFF
-			, JULF_22
-			, INC_DEC_PERCENT
-			, NOTE
-			, [PERIOD]
-			, [SPENDING_AMOUNT]
-			, RM_TYPE
-			, LINE_FUNCTION_NAME
-			, MACHINE
-			, PM_CM_OVH
-			, SPP_SERVICE
-			, PLANT_NAME
+			, [PLANT]
+			, [TYPE]
+			, [BALANCE]
 
 			, W_DELETE_FLG
 			, W_DATASOURCE_NUM_ID
@@ -235,8 +173,9 @@ BEGIN
 			, W_UPDATE_DT
 			, W_BATCH_ID
 			, W_INTEGRATION_ID
-		FROM #W_EXCEL_SPP_SPENDING_AOP_tmp
+		FROM #W_EXCEL_SPP_BALANCE_FORECAST_tmp
 		where W_UPDATE_FLG = 'N'
+
 
 
 		/*delete & re-insert data refresh*/
@@ -258,17 +197,17 @@ BEGIN
             DATEADD(HH, 7, GETDATE())
         FROM (
             SELECT *
-            FROM W_EXCEL_SPP_SPENDING_AOP_F
+            FROM W_EXCEL_SPP_BALANCE_FORECAST_F
         ) M
         WHERE 1=1
             AND W_BATCH_ID = @p_batch_id
             AND W_DELETE_FLG = 'N'
 
-		SET @src_rownum = ( SELECT COUNT(1) FROM #W_EXCEL_SPP_SPENDING_AOP_tmp );
+		SET @src_rownum = ( SELECT COUNT(1) FROM #W_EXCEL_SPP_BALANCE_FORECAST_tmp );
 		SET @tgt_rownum = ( 
             SELECT 
                 COUNT(DISTINCT W_INTEGRATION_ID)
-            FROM W_EXCEL_SPP_SPENDING_AOP_F
+            FROM W_EXCEL_SPP_BALANCE_FORECAST_F
             WHERE 1=1
                 AND W_DELETE_FLG = 'N' 
                 AND W_BATCH_ID = @p_batch_id
@@ -295,5 +234,3 @@ BEGIN
 			@tgt_chk_value 		= @tgt_chk_value
 END
 GO
-
-

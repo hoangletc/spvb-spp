@@ -1,3 +1,4 @@
+import json
 import logging
 from io import StringIO
 from pathlib import Path
@@ -10,14 +11,15 @@ from xlsx2csv import Xlsx2csv
 logging.getLogger().setLevel(logging.DEBUG)
 
 cols_main = [
-    'WORKORDERID', 'SITEID', 'WORKORDER_ACTFINISH', 'WORKORDER_ACTSTART',
-    'ASSETNUM', 'DESCRIPTION', 'GLACCOUNT', 'HASCHILDREN', 'ISTASK',
-    'JPNUM', 'LOCATION', 'PMDUEDATE', 'PMNUM', 'WORKORDER_REPORTDATE',
+    'WORKORDER_ACTFINISH', 'WORKORDER_ACTSTART', 'ASSETNUM', 'DESCRIPTION',
+    'GLACCOUNT', 'HASCHILDREN', 'ISTASK', 'JPNUM', 'LOCATION', 'PMDUEDATE',
+    'PMNUM', 'WORKORDERID', 'SITEID', 'WORKORDER_REPORTDATE',
     'WORKORDER_SCHEDFINISH', 'WORKORDER_SCHEDSTART', 'SPVB_OVERHAUL',
     'SPVB_TASK_STATUS', 'STATUS', 'SUPERVISOR', 'WORKORDER_TARGCOMPDATE',
     'WORKORDER_TARGSTARTDATE', 'WONUM', 'WOPRIORITY', 'WORKTYPE', 'PARENT',
     'SUPERVISOR_1', 'SUPPERVISORNAME'
 ]
+
 cols_status = ['WORKORDERID', 'PARENT_1', 'WOSTATUS_CHANGEDATE', 'WOSTATUSID', 'STATUS_1']
 
 cols_total = cols_main + cols_status[1:]
@@ -41,7 +43,7 @@ def read_excel(path: str, sheet_name: str) -> pd.DataFrame:
 
 
 if __name__ == '__main__':
-    path = Path(r"D:\TC_Data\_data\prod_Mar1\export_WO_04_1.xlsx")
+    path = Path(r"D:\TC_Data\_data\UAT_Mar25\WO.xlsx")
     path_dir_out_wo = Path(r"D:\TC_Data\_data\_post_processed\work_order")
     path_dir_out_wo_status = Path(r"D:\TC_Data\_data\_post_processed\work_order_status")
 
@@ -49,6 +51,8 @@ if __name__ == '__main__':
     path_dir_out_wo_status.mkdir(parents=True, exist_ok=True)
 
     logger.info(f"* Start processing: {path.stem}")
+
+    ids_wo, ids_wo_st = set(), set()
 
     for sheet in pd.ExcelFile(path).sheet_names:
         if sheet == 'SQL':
@@ -67,9 +71,18 @@ if __name__ == '__main__':
             .drop([0, 'supervisor_1'], axis=1) \
             .replace({np.nan: None})
 
+        # Filter out duplication
+        wo = df_wo.to_dict(orient="records")
+        out = []
+        for x in wo:
+            if x['workorderid'] not in ids_wo:
+                ids_wo.add(x['workorderid'])
+                out.append(x)
+        print(f"Sheet: {sheet} -- {len(out)}")
+
         path_wo = path_dir_out_wo / f"{path.stem.replace(' ', '_')}_{sheet}.json"
         with open(path_wo, 'w+', encoding='utf-8') as fp:
-            df_wo.to_json(fp, orient='records', indent=2, force_ascii=False)
+            json.dump(out, fp, indent=2, ensure_ascii=False)
 
         logger.info("Extract WorkOrder_Status")
 
@@ -81,6 +94,14 @@ if __name__ == '__main__':
             .drop([0], axis=1) \
             .replace({np.nan: None})
 
+        # Filter out duplication
+        wo_st = df_wo_status.to_dict(orient="records")
+        out = []
+        for x in wo_st:
+            if x['wostatusid'] not in ids_wo_st:
+                ids_wo_st.add(x['wostatusid'])
+                out.append(x)
+
         path_wo_status = path_dir_out_wo_status / f"{path.stem.replace(' ', '_')}_{sheet.replace(' ', '_')}.json"
         with open(path_wo_status, 'w+', encoding='utf-8') as fp:
-            df_wo_status.to_json(fp, orient='records', indent=2, force_ascii=False)
+            json.dump(out, fp, indent=2, ensure_ascii=False)
