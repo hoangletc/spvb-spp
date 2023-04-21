@@ -7,7 +7,7 @@ WITH ISSUE_S1 AS (
                 THEN WO.PARENT
             ELSE WO.WONUM
         END                                     AS WO_NUM
-        , SUM(F.QUANTITY)                       AS QUANTITY
+        , ISNULL(SUM(F.QUANTITY), 0)            AS QUANTITY
     FROM FND.W_CMMS_MATU_F F
         LEFT JOIN dbo.W_CMMS_INVUL_D I ON 1=1
             AND I.[FROM] = 'MATU'
@@ -43,7 +43,7 @@ ISSUE_R1 AS (
                 THEN WO.PARENT
             ELSE WO.WONUM
         END                                     AS WO_NUM
-        , SUM(F.QUANTITY)                       AS QUANTITY
+        , ISNULL(SUM(F.QUANTITY), 0)            AS QUANTITY
     FROM FND.W_CMMS_MATU_F F
         LEFT JOIN dbo.W_CMMS_INVUL_D I ON 1=1
             AND I.[FROM] = 'MATU'
@@ -126,8 +126,8 @@ ISSUE_R1 AS (
         , F.QUANTITY
 
         , F.ACTUAL_DATE                         AS ISSUE_DATE
-        , R1.QUANTITY                           AS ISSUE_QTY_R1
-        , S1.QUANTITY                           AS ISSUE_QTY_S1
+        , ISNULL(R1.QUANTITY, 0)                AS ISSUE_QTY_R1
+        , ISNULL(S1.QUANTITY, 0)                AS ISSUE_QTY_S1
         , F.QUANTITY                            AS ISSUE_QTY_TOTAL
 
         , F.SPVB_MUSTRETURN
@@ -162,13 +162,12 @@ WITH RETURN_REMARK AS (
         AND INVUL.[FROM] = 'MATU'
 )
 , WO_PARENT AS (
-    SELECT WO_NUM
+    SELECT
+        WO_NUM      AS WONUM
+        , I.WO_NUM  AS ISSUE_WO
     FROM FND.W_CMMS_WO_F W
     JOIN #TMP_ISSUE I ON 1=1
         AND I.WO_NUM = W.PARENT
-),
-RET_DATE AS (
-    
 )
     SELECT
         F.ITEM_NUM
@@ -181,32 +180,63 @@ RET_DATE AS (
         , CASE WHEN F.SPVB_MUSTRETURN_ORG = 1 THEN 'Y' ELSE 'N' END     AS MUST_RETURN_ORG
         , CASE WHEN F.SPVB_MUSTRETURN = 1 THEN 'Y' ELSE 'N' END         AS MUST_RETURN
         , R.SPVB_REASON                                                 AS REMARK
+        , F.TO_SITEID                                                   AS SITE_ID
 
         , F.ISSUE_DATE
         , F.ISSUE_QTY_R1
         , F.ISSUE_QTY_S1
         , F.ISSUE_QTY_TOTAL
 
-        , (
-            SELECT MAX(M.actualdate)
-            FROM dbo.W_CMMS_INVUL_D I
-                LEFT JOIN FND.W_CMMS_MATU_F M ON 1=1
-                    AND M.INVUSELINE_ID = I.INVUSELINE_ID
-            WHERE (
-                    I.SPVB_WONUMREF IN (SELECT WONUM FROM FND.W_CMMS_WO_F WHERE PARENT = F.WO_NUM)
+        , RET_DATE.RETURN_DATE
+        , RET_S1.RETURN_QTY_S1
+        , RET_R1.RETURN_QTY_R1
+        , RET_D1.RETURN_QTY_D1
+        , RET_TOTAL.RETURN_QTY_TOTAL
+
+        , (-1) * (F.ISSUE_QTY_R1 + F.ISSUE_QTY_S1) 
+        - (RET_S1.RETURN_QTY_S1 + RET_R1.RETURN_QTY_R1 
+            + RET_D1.RETURN_QTY_D1)                                     AS PENDING_QTY
+        , WO.DATE_CLOSED                                                AS CLOSED_WO_DATE
+        INTO #TMP_SPP_RETURN
+        
+        FROM #TMP_ISSUE F
+            LEFT JOIN dbo.W_CMMS_ITEM_D I ON 1=1
+                AND I.ITEM_NUM = F.ITEM_NUM
+            LEFT JOIN dbo.W_CMMS_ASSET_D A ON 1=1
+                AND A.ASSET_NUM = F.ASSET_NUM
+                AND A.SITE_ID = F.TO_SITEID
+            LEFT JOIN dbo.W_CMMS_ASSET_D A_LINE ON 1=1
+                AND A_LINE.ASSET_NUM = A.LINE_ASSET_NUM
+                AND A_LINE.SITE_ID = A.SITE_ID
+            LEFT JOIN dbo.W_CMMS_WO_F WO ON 1=1
+                AND WO.WORK_ORDERS = F.WO_NUM
+                AND WO.SITE = F.TO_SITEID
+            LEFT JOIN RETURN_REMARK R ON 1=1
+                AND R.ITEM_NUM = F.ITEM_NUM
+                AND R.REFWO = F.WO_NUM
+                AND R.ACTUALDATE = F.ACTUAL_DATE
+
+            OUTER APPLY (
+                SELECT
+                    MAX(M.ACTUALDATE)                                   AS RETURN_DATE
+                FROM dbo.W_CMMS_INVUL_D I
+                    LEFT JOIN FND.W_CMMS_MATU_F M ON 1=1
+                        AND M.INVUSELINE_ID = I.INVUSELINE_ID
+                WHERE (
+                    EXISTS (SELECT WONUM FROM WO_PARENT W WHERE W.ISSUE_WO = F.WO_NUM AND W.WONUM = I.SPVB_WONUMREF)
                     OR I.SPVB_WONUMREF = F.WO_NUM
                     OR (M.REFWO = F.WO_NUM AND I.USE_TYPE = 'RETURN')
                     OR (
-                        M.refwo IN (SELECT WONUM FROM FND.W_CMMS_WO_F WHERE PARENT = F.WO_NUM)
+                        EXISTS (SELECT WONUM FROM WO_PARENT W WHERE W.WONUM = M.refwo AND W.ISSUE_WO = F.WO_NUM)
                         AND I.USE_TYPE = 'RETURN'
                     )
                 )
                 AND M.ITEM_NUM = F.ITEM_NUM
                 AND M.TO_SITEID  = F.TO_SITEID
-        )                                                               AS RETURN_DATE
-        , (
-            SELECT 
-                ISNULL(SUM(M.QUANTITY),0)
+            ) AS RET_DATE
+            OUTER APPLY (
+                SELECT
+                    ISNULL(SUM(M.QUANTITY),0)                           AS RETURN_QTY_S1
             FROM dbo.W_CMMS_INVUL_D I
                 LEFT JOIN FND.W_CMMS_MATU_F M ON 1=1
                     AND M.INVUSELINE_ID = I.INVUSELINE_ID
@@ -223,10 +253,10 @@ RET_DATE AS (
                 AND M.STORELOC LIKE '%S1'
                 AND M.STORELOC <>'3S1.S1'
                 AND M.ISSUE_TYPE ='RETURN'
-        )                                                               AS RETURN_QTY_S1
-        , (
-            SELECT 
-                ISNULL(SUM(M.QUANTITY),0)
+            ) AS RET_S1
+            OUTER APPLY (
+                SELECT 
+                    ISNULL(SUM(M.QUANTITY),0)                   AS RETURN_QTY_R1
             FROM dbo.W_CMMS_INVUL_D I
                 LEFT JOIN FND.W_CMMS_MATU_F M ON 1=1
                     AND M.INVUSELINE_ID = I.INVUSELINE_ID
@@ -244,24 +274,25 @@ RET_DATE AS (
                 AND M.ITEM_NUM = F.ITEM_NUM
                 AND M.TO_SITEID = F.TO_SITEID
                 AND M.STORELOC LIKE '%R1'
-        )                                                               AS RETURN_QTY_R1
-        , (
-            SELECT 
-                ISNULL(SUM(M.QUANTITY),0)
-            FROM dbo.W_CMMS_INVUL_D I
-                LEFT JOIN FND.W_CMMS_MATU_F M ON 1=1
-                    AND M.INVUSELINE_ID = I.INVUSELINE_ID
-            WHERE 1=1
-                AND [FROM] = 'MATU'
-                AND I.SPVB_WONUMREF = F.WO_NUM
-                AND I.REFWO IS NULL
-                AND M.ITEM_NUM = F.ITEM_NUM
-                AND M.TO_SITEID = F.TO_SITEID
-                AND M.STORELOC LIKE '%D1'
-                AND M.ISSUE_TYPE = 'RETURN'
-        )                                                               AS RETURN_QTY_D1
-        , (
-            SELECT ISNULL(SUM(M.QUANTITY), 0)
+            ) AS RET_R1
+            OUTER APPLY (
+                SELECT 
+                    ISNULL(SUM(M.QUANTITY),0)                   AS RETURN_QTY_D1
+                FROM dbo.W_CMMS_INVUL_D I
+                    LEFT JOIN FND.W_CMMS_MATU_F M ON 1=1
+                        AND M.INVUSELINE_ID = I.INVUSELINE_ID
+                WHERE 1=1
+                    AND [FROM] = 'MATU'
+                    AND I.SPVB_WONUMREF = F.WO_NUM
+                    AND (I.REFWO IS NULL OR I.REFWO = '')
+                    AND M.ITEM_NUM = F.ITEM_NUM
+                    AND M.TO_SITEID = F.TO_SITEID
+                    AND M.STORELOC LIKE '%D1'
+                    AND M.ISSUE_TYPE = 'RETURN'
+            ) AS RET_D1
+            OUTER APPLY (
+                SELECT 
+                    ISNULL(SUM(M.QUANTITY),0)                   AS RETURN_QTY_TOTAL
             FROM W_CMMS_INVUL_D I
                 LEFT JOIN FND.W_CMMS_MATU_F M
                     ON M.INVUSELINE_ID = I.INVUSELINE_ID
@@ -272,76 +303,85 @@ RET_DATE AS (
                 AND M.ISSUE_TYPE = 'RETURN'
                 AND M.TO_SITEID = F.TO_SITEID
                 AND M.STORELOC NOT IN ('3S1.S1','7S0.H1','6S0.H1','4S0.H1')
-        )                                                               AS RETURN_QTY_TOTAL
-        FROM #TMP_ISSUE F
-            LEFT JOIN dbo.W_CMMS_ITEM_D I ON 1=1
-                AND I.ITEM_NUM = F.ITEM_NUM
-            LEFT JOIN dbo.W_CMMS_ASSET_D A ON 1=1
-                AND A.ASSET_NUM = F.ASSET_NUM
-                AND A.SITE_ID = F.TO_SITEID
-            LEFT JOIN dbo.W_CMMS_ASSET_D A_LINE ON 1=1
-                AND A_LINE.ASSET_NUM = A.LINE_ASSET_NUM
-                AND A_LINE.SITE_ID = A.SITE_ID
-            LEFT JOIN dbo.W_CMMS_WO_F WO ON 1=1
-                AND WO.WORK_ORDERS = F.WO_NUM
-                AND WO.SITE = F.TO_SITEID
-            LEFT JOIN RETURN_REMARK R ON 1=1
-                AND R.ITEM_NUM = F.ITEM_NUM
-                AND R.REFWO = F.WO_NUM
-                AND R.ACTUALDATE = F.ACTUAL_DATE
+            ) AS RET_TOTAL
+
+        -- WHERE 1=1
+        --     AND F.TO_SITEID = 160
+        --     AND F.ITEM_NUM = '61025778'
 ;
 
 ------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------
-WITH RETURN_REMARK AS (
-    SELECT DISTINCT
-        ITEM_NUM
-        , REFWO
-        , ACTUALDATE
-        , SPVB_REASON
-    FROM dbo.W_CMMS_INVUL_D INVUL
-    WHERE 1=1
-        AND INVUL.[FROM] = 'MATU'
-),
-A AS (
+WITH INVU_TMP AS (
     SELECT
-        ROW_ID
-        , F.ITEM_NUM
-        , F.WO_NUM
-        , F.ACTUAL_DATE
-    FROM #TMP_ISSUE F
-        -- LEFT JOIN dbo.W_CMMS_ITEM_D I ON 1=1
-        --     AND I.ITEM_NUM = F.ITEM_NUM
-        -- LEFT JOIN dbo.W_CMMS_ASSET_D A ON 1=1
-        --     AND A.ASSET_NUM = F.ASSET_NUM
-        --     AND A.SITE_ID = F.TO_SITEID
-        -- LEFT JOIN dbo.W_CMMS_ASSET_D A_LINE ON 1=1
-        --     AND A_LINE.ASSET_NUM = A.LINE_ASSET_NUM
-        --     AND A_LINE.SITE_ID = A.SITE_ID
-        -- LEFT JOIN dbo.W_CMMS_WO_F WO ON 1=1
-        --     AND WO.WORK_ORDERS = F.WO_NUM
-        --     AND WO.SITE = F.TO_SITEID
-        LEFT JOIN RETURN_REMARK R ON 1=1
-            AND R.ITEM_NUM = F.ITEM_NUM
-            AND R.REFWO = F.WO_NUM
-            AND R.ACTUALDATE = F.ACTUAL_DATE
+        M.REFWO
+        , M.ITEM_NUM
+        , M.TO_SITEID
+        , M.ACTUALDATE
+        , I.SPVB_WONUMREF
+        , I.USE_TYPE
+
+    FROM dbo.W_CMMS_INVUL_D I
+    LEFT JOIN FND.W_CMMS_MATU_F M ON 1=1
+        AND M.INVUSELINE_ID = I.INVUSELINE_ID
+
 )
-    SELECT 
-        ROW_ID
-        -- INVUSELINE_ID
-        , COUNt(ROW_ID)
-    FROM A
-    GROUP BY ROW_ID
-    HAVING COUNT(ROW_ID) > 1
-;
+, RET_DATE AS (
+    SELECT
+        F.ITEM_NUM
+        , F.WO_NUM
+        , F.TO_SITEID
+        , MAX(I.ACTUALDATE) AS RETURN_DATE
+    FROM #TMP_ISSUE F
+        LEFT JOIN FND.W_CMMS_WO_F WOOO1 ON 1=1
+            AND WOOO1.PARENT = F.WO_NUM
+        LEFT JOIN FND.W_CMMS_WO_F WOOO2 ON 1=1
+            AND WOOO2.PARENT = F.WO_NUM
+        left join INVU_TMP I ON 1=1
+            AND (
+                WOOO2.WONUM IS NOT NULL AND WOOO2.WONUM = I.SPVB_WONUMREF
+                OR I.SPVB_WONUMREF = F.WO_NUM
+                OR (I.REFWO = F.WO_NUM AND I.USE_TYPE = 'RETURN')
+                OR (
+                    WOOO1.WONUM IS NOT NULL 
+                    AND I.USE_TYPE = 'RETURN'
+                    AND WOOO1.WONUM = I.REFWO
+                )
+            )
+            AND I.ITEM_NUM = F.ITEM_NUM
+            AND I.TO_SITEID  = F.TO_SITEID
+    GROUP BY
+        F.ITEM_NUM
+        , F.WO_NUM
+        , F.TO_SITEID
+)
+    SELECT
+        F.ITEM_NUM
+        , F.WO_NUM                                                      AS WO_NUMBER
+        , F.TO_SITEID                                                   AS SITE_ID
+
+        , F.ISSUE_DATE
+        , F.ISSUE_QTY_R1
+        , F.ISSUE_QTY_S1
+        , F.ISSUE_QTY_TOTAL
+
+        , RD.RETURN_DATE       AS RETURN_DATE
+    
+        FROM #TMP_ISSUE F
+            LEFT JOIN RET_DATE RD ON 1=1
+                AND F.ITEM_NUM = RD.ITEM_NUM
+                AND F.WO_NUM = RD.WO_NUM
+                AND F.TO_SITEID = RD.TO_SITEID
+        WHERE 1=1
+            AND F.TO_SITEID = 160
+            -- AND F.ITEM_NUM = '61025778'
+;    
+    
 
 
-SELECT * FROM #TMP_ISSUE
-WHERE 1=1
-    AND ROW_ID = 5183
-;
+
 
 
 SELECT DISTINCT
