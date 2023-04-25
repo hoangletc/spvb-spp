@@ -21,7 +21,7 @@ with MB51 AS (
 			THEN CONVERT(DECIMAL(38, 20), F.STOCK_QTY)
 			ELSE 0 END
 		) 															AS GI
-		, SUM(CASE WHEN ISNULL(MV.[Group], 0) IN ('Transfer out plant', 'Transfer IN plant')
+		, SUM(CASE WHEN ISNULL(MV.[Group], 0) IN ('Transfer out plant', 'Transfer in plant')
 			THEN CONVERT(DECIMAL(38, 20), F.STOCK_QTY)
 			ELSE 0 END
 		) 															AS Transfer
@@ -67,9 +67,8 @@ with MB51 AS (
 		, PERIOD
 	FROM FND.W_EXCEL_LM_BALANCE_F
 	WHERE 1=1
-		AND PERIOD = 202301
+		AND PERIOD = 202302
 
--- 61174059 1050 OV01
 		-- and [MATERIAL] = '61174059'
 		-- AND [PLANT] = '1020'
 		-- AND [Storage location] = 'SP01'
@@ -105,7 +104,7 @@ with MB51 AS (
 		AND CONVERT(DECIMAL(38,20), STOCK_QUANTITY_ON_PERIOD_END) = 0
 		AND PERIOD = 202302
 )
-, MB51_RECAL as (	
+, MB51_RECAL as (
 	SELECT
 		MB51.MATNR
 		, WERKS
@@ -113,7 +112,6 @@ with MB51 AS (
 			WHEN LGORT = 'OV01' AND ISNULL(J3RF.STOCK_QUANTITY_ON_PERIOD_END, 0) <= 0 THEN 'SP01'
 			ELSE LGORT 
 		END 														AS LGORT
-		-- , ISNULL(OB.CB, 0) AS CB
 
 		, SUM(GR_AMT) 												AS GR_AMT
 		, SUM(GI_AMT) 												AS GI_AMT
@@ -129,15 +127,23 @@ with MB51 AS (
 				ELSE LGORT
 			END
 		) 															AS sap_code_mix
+
+        -- , OB.CB AS OB_CB
+        -- , MB51.sap_code_mix AS MB51_SAP_CODE_MIX
+        -- , GR_AMT
+        -- , GI_AMT
+        -- , GR
+        -- , GI
+        -- , Transfer
+        -- , Other
 	FROM MB51 
 	LEFT JOIN OB ON 1=1
 		AND OB.sap_code_mix = MB51.sap_code_mix
 	LEFT JOIN J3RF ON 1=1
 		AND MB51.sap_code_mix = J3RF.sap_code_mix
 
-	WHERE 1=1
-        -- AND MB51.MATNR = '61174059'
-
+	-- WHERE 1=1
+    --     AND MB51.MATNR = '61224499'
 
 	GROUP BY 
 		MB51.MATNR
@@ -160,7 +166,14 @@ with MB51 AS (
 		, CONCAT(J.MATERIAL, J.PLANT, 'SP01') 						AS Sap_code_mix2
 		, isnull(GR,0) 												AS GR
 		, isnull(GI,0) 												AS GI
-		, case when j.STORAGE_LOCATION is null 
+
+
+        -- M.sap_code_mix
+        -- , j.STORAGE_LOCATION AS STORAGE_LOCATION
+        -- , M.Transfer AS OLD_TRANSFER
+        -- , STOCK_QUANTITY_ON_PERIOD_END AS OLD_STOCK_QUANTITY_ON_PERIOD_END
+
+		, case when j.STORAGE_LOCATION is null
 				and STOCK_QUANTITY_ON_PERIOD_END = 0
 			then 0
 			else isnull(Transfer,0)
@@ -185,13 +198,13 @@ with MB51 AS (
 		AND OB.sap_code_mix = J.sap_code_mix
 
 	-- WHERE 1=1
-	-- 	AND J.MATERIAL = '61024549'
+	-- 	AND J.MATERIAL = '61224499'
+
 	--GROUP BY J.sap_code_mix,J.MATERIAL, J.PLANT, J.STORAGE_LOCATION, STOCK_QUANTITY_ON_PERIOD_START, VALUE_ON_PERIOD_START, 
 	--	STOCK_QUANTITY_ON_PERIOD_END, STOCK_VALUE_ON_PERIOD_END, [NET_REVALUATION]
-),
---SELECT * FROM J3RF_RECAL_QTY WHERE MATERIAL = '61364048'
 
-TRANSFER_OUT AS (
+)
+, TRANSFER_OUT AS (
 	SELECT
 		MV.[Group]
 		, RIGHT(F.MATNR, 8)											AS MATNR
@@ -219,7 +232,6 @@ TRANSFER_OUT AS (
 		LEFT JOIN [STG].[W_EXCEL_SPP_MOVEMENT_TYPE_DS] MV ON 1=1
 			AND MV.[Movement Type Name] = T.BTEXT
 	WHERE 1=1
-		-- AND RIGHT(MATNR,8) = '62191123' --AND WERKS IN ('1020')  
 	 	AND BUDAT >= '20230201' AND BUDAT < '20230301'
 		AND ISNULL(MV.[Group], '') IN ('Transfer out plant')
 		AND RECORD_TYPE <> 'MDOC_CP'
@@ -307,8 +319,8 @@ TRANSFER_OUT AS (
 		END PRICE
 	FROM J3RF_RECAL_QTY J
 		LEFT JOIN REVAL R ON 1=1
-			-- AND R.sap_code_mix = J.Sap_code_mix2
-			AND R.sap_code_mix = J.Sap_code_mix
+			AND R.sap_code_mix = J.Sap_code_mix2
+			-- AND R.sap_code_mix = J.Sap_code_mix
 )
 , J_TEMP AS (
 	SELECT
@@ -370,10 +382,10 @@ TRANSFER_OUT AS (
 			+ CASE WHEN J.Transfer    <= 0 THEN J.PRICE_STOCK * J.Transfer 	ELSE J.PRICE_sTOCK * J1_TRANSFER * (-1) end
 			+ J.other * J.PRICE_STOCK						
 		)														AS CB_AMT
-	INTO #TMP_HOANGLE_MARKET_PRICE
+	-- INTO #TMP_HOANGLE_MARKET_PRICE
 	FROM J_TEMP J
-	WHERE 1=1
-		-- AND J.MATERIAL = '61174059'
+	-- WHERE 1=1
+	-- 	AND J.MATERIAL = '61224499'
 ;
 
 
