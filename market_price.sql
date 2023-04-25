@@ -25,10 +25,10 @@ with MB51 AS (
 			THEN CONVERT(DECIMAL(38, 20), F.STOCK_QTY)
 			ELSE 0 END
 		) 															AS Transfer
-		, SUM(CASE WHEN ISNULL(MV.[Group], 0) = 'Other' 
+		, SUM(CASE WHEN MV.[Group] = 'Other' OR MV.[Group] IS NULL
 			then CONVERT(DECIMAL(38, 20), F.STOCK_QTY)
 			ELSE 0 END
-		)															AS Other
+		)															AS OTHER_QTY
 	
 	FROM fnd.w_sap_matdoc_f_TEMP F
 	LEFT JOIN [FND].[W_SAP_T156T_D] T ON 1=1
@@ -118,7 +118,7 @@ with MB51 AS (
 		, SUM(GR) 													AS GR
 		, SUM(GI) 													AS GI
 		, SUM(Transfer) 											AS Transfer
-		, SUM(Other) 												AS Other
+		, SUM(OTHER_QTY) 											AS OTHER_QTY
 		, concat(
 			MB51.MATNR
 			, WERKS
@@ -135,7 +135,8 @@ with MB51 AS (
         -- , GR
         -- , GI
         -- , Transfer
-        -- , Other
+        -- , OTHER_QTY
+
 	FROM MB51 
 	LEFT JOIN OB ON 1=1
 		AND OB.sap_code_mix = MB51.sap_code_mix
@@ -143,7 +144,7 @@ with MB51 AS (
 		AND MB51.sap_code_mix = J3RF.sap_code_mix
 
 	-- WHERE 1=1
-    --     AND MB51.MATNR = '61224499'
+    --     AND MB51.MATNR = '61164580'
 
 	GROUP BY 
 		MB51.MATNR
@@ -178,7 +179,7 @@ with MB51 AS (
 			then 0
 			else isnull(Transfer,0)
 		end 														AS Transfer
-		, isnull(Other,0) 											AS Other
+		, isnull(OTHER_QTY,0) 										AS OTHER_QTY
 		, isnull(GR,0)
 			+ isnull(GI,0) 
 			+ case when j.STORAGE_LOCATION is null
@@ -186,9 +187,9 @@ with MB51 AS (
 				then 0 
 				else isnull(Transfer, 0)
 			end 
-			+ isnull(Other,0)
+			+ isnull(OTHER_QTY,0)
 			+ STOCK_QUANTITY_ON_PERIOD_START						AS CB
-		, OB.AMOUNT 												AS Amount
+		, ISNULL(OB.AMOUNT, 0)										AS Amount
 		, isnull(GR_AMT,0) 											AS GR_AMT
 		, isnull(GI_AMT,0) 											AS GI_AMT
 	from J3RF j
@@ -295,7 +296,7 @@ with MB51 AS (
 		, J.GR
 		, J.GI
 		, J.Transfer
-		, J.Other
+		, J.OTHER_QTY
 		, J.CB
 		, J.Amount
 		, J.GI_AMT
@@ -371,8 +372,8 @@ with MB51 AS (
 			else J.PRICE_STOCK * J1_TRANSFER * (-1) 
 		END 													AS TRANSFER_AMT
 
-		, J.Other												AS OTHER
-		, J.other * J.PRICE_STOCK 								AS OTHER_AMT
+		, J.OTHER_QTY											AS OTHER
+		, J.OTHER_QTY * J.PRICE_STOCK 							AS OTHER_AMT
 
 		, j.CB													AS CB
 		, (
@@ -380,12 +381,12 @@ with MB51 AS (
 			+ isnull(J.GR_AMT, 0)
 			+ CASE WHEN J.PRICE_STOCK =  0 THEN J.GI_AMT 					ELSE J.GI * J.PRICE_STOCK END -- gi_amt
 			+ CASE WHEN J.Transfer    <= 0 THEN J.PRICE_STOCK * J.Transfer 	ELSE J.PRICE_sTOCK * J1_TRANSFER * (-1) end
-			+ J.other * J.PRICE_STOCK						
+			+ J.OTHER_QTY * J.PRICE_STOCK						
 		)														AS CB_AMT
 	-- INTO #TMP_HOANGLE_MARKET_PRICE
 	FROM J_TEMP J
-	-- WHERE 1=1
-	-- 	AND J.MATERIAL = '61224499'
+	WHERE 1=1
+		-- AND J.MATERIAL = '61164580'
 ;
 
 
